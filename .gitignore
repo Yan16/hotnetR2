@@ -1,0 +1,14 @@
+.DS_Store
+.Rhistory
+.Rproj.user/
+.RData
+*.tar.gz
+*.Rcheck/
+.Renviron
+renv/library/
+renv/staging/
+.cache/
+artifacts/
+reproduction-runs/
+Rlib/
+
