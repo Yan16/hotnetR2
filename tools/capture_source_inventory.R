@@ -8,7 +8,10 @@ if (length(args) != 2L) {
 }
 project_root <- normalizePath(args[[1]], mustWork = TRUE)
 source_root <- normalizePath(args[[2]], mustWork = TRUE)
-output_dir <- file.path(project_root, "hotnetR2", "docs", "inventory")
+script_arg <- commandArgs(trailingOnly = FALSE)
+script_file <- sub("^--file=", "", script_arg[startsWith(script_arg, "--file=")])
+package_root <- dirname(dirname(normalizePath(script_file, mustWork = TRUE)))
+output_dir <- file.path(package_root, "docs", "inventory")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 sources <- tibble::tibble(

@@ -1,11 +1,11 @@
 # Source inventory
 
 Generated from the existing hotnetR and the v2/v3 helper source trees before
-implementation. Run from the containing buas_paper_2026 repository root:
+implementation. Run from the hotnetR2 repository root:
 
 ```bash
-R_LIBS_USER="$PWD/v3_analysis2/Rlib" \
-  Rscript hotnetR2/tools/capture_source_inventory.R "$PWD" "$PWD/../hotnetR"
+R_LIBS_USER="$PWD/../buas_paper_2026/v3_analysis2/Rlib" \
+  Rscript tools/capture_source_inventory.R "$PWD/../buas_paper_2026" "$PWD/../hotnetR"
 ```
 
 The script needs dplyr, purrr, readr, stringr, tibble and digest. The existing

@@ -16,8 +16,10 @@ Read in order:
 6. [Architecture decisions and source findings](docs/decisions.md)
 7. [Captured source inventory](docs/inventory/README.md)
 
-The references are `../v2_analysis2` and `../v3_analysis2` in the containing
-project. Original hotnetR source is at `../../hotnetR`. These are development
+The references are `../buas_paper_2026/v2_analysis2` and
+`../buas_paper_2026/v3_analysis2`. Original hotnetR source is at `../hotnetR`.
+The three repositories are siblings under the same parent directory.
+These are development
 references, never runtime dependencies of the finished package.
 
 The first release must preserve names and arguments where their meaning is

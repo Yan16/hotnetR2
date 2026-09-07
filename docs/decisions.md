@@ -86,7 +86,9 @@ diagnostic within the recorded R environment, not cross-R-version identities.
 
 ## Git policy
 
-This new project has its own Git history. Commit planning first, then focused
+This new project has its own Git history and lives beside hotnetR and
+buas_paper_2026. Its GitHub remote will be configured separately by the owner.
+Commit planning first, then focused
 implementation increments with task IDs, tests, and evidence. Stage explicit
 paths. Do not amend original hotnetR history or include existing workspace
 changes. Release tags follow completed package and reproduction gates only.
