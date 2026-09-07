@@ -1,0 +1,324 @@
+source	file	name	formals	body_sha256	exported
+v2_helper	R/config.R	%||%	as.pairlist(alist(x = , y = ))	39c33217473a5dec75c017021d461e3a491b3bd5c969ce7dc34c7b3f8b6b4c23	FALSE
+v3_helper	R/config.R	%||%	as.pairlist(alist(x = , y = ))	39c33217473a5dec75c017021d461e3a491b3bd5c969ce7dc34c7b3f8b6b4c23	FALSE
+hotnetR	R/download_JEME.R	NCBI_feature_table	as.pairlist(alist(file = , keep_classes = NULL))	cf259429748188b06e6f4e3f812a7f573c70ecab2252795bf29823f399e7d2a1	TRUE
+hotnetR	R/graph.R	add_ARACNe	as.pairlist(alist(reg_net = , aracne = , MI_threshold = NULL))	ba4c60dd19062ceddb6a9df2f630b7dd060b5d64c970d8266162f603f4f57237	TRUE
+hotnetR	R/graph.R	add_ARACNe_by_MI	as.pairlist(alist(reg_net = , dta = , MI_threshold = NULL))	9f00be19393be315c541c4d7c3f2c3cd6a7d911a766f41d4aee49c88e62cf18c	TRUE
+hotnetR	R/string.R	add_STRINGdb_edges	as.pairlist(alist(ig = , stringdb_obj = , simplify = FALSE))	2bd2f28b507c5393f1390a140b4e7d42054247c464ac029a6da0481d18148290	TRUE
+v2_helper	R/network_construction.R	add_network_aracne_edges	as.pairlist(alist(graph = , aracne_edges = , mi_threshold = , preserve_duplicates = ))	a2be4af9aa31e909a27ea0ac6e5090e4443587247d1e847fa73c225bd0cdf5ec	FALSE
+v3_helper	R/network_construction.R	add_network_aracne_edges	as.pairlist(alist(graph = , aracne_edges = , mi_threshold = , preserve_duplicates = ))	a2be4af9aa31e909a27ea0ac6e5090e4443587247d1e847fa73c225bd0cdf5ec	FALSE
+hotnetR	R/graph.R	add_node_attributes	as.pairlist(alist(ig = , nodes = , node_name = ""gene"", rm_miss = TRUE, reverse_check = TRUE))	3c02a93f175325b9ef60a38aafc3a0bbeecdbfb2caa509ad8d2054cfceb328d1	TRUE
+v2_helper	R/config.R	analysis_paths	as.pairlist(alist(config = ))	c9889c83515090103ab081c77fab3b980788e10792fced7c94bf8c5aaaced2a2	TRUE
+v3_helper	R/config.R	analysis_paths	as.pairlist(alist(config = ))	c9889c83515090103ab081c77fab3b980788e10792fced7c94bf8c5aaaced2a2	TRUE
+v2_helper	R/ldak_annotations.R	annotation_output_file	as.pairlist(alist(config = , name = ))	40b01b2b39dd32819d75f18551bb3e6bdf090184be13bbeee9d760a05722176d	FALSE
+v3_helper	R/ldak_annotations.R	annotation_output_file	as.pairlist(alist(config = , name = ))	40b01b2b39dd32819d75f18551bb3e6bdf090184be13bbeee9d760a05722176d	FALSE
+v2_helper	R/ldak_annotations.R	annotation_provenance_summary	as.pairlist(alist(inputs = , annotation_type = ))	2fa15ac1cda17c52b0c465fb721034139e55b30982733b5e9d9ffe6a272e797e	FALSE
+v3_helper	R/ldak_annotations.R	annotation_provenance_summary	as.pairlist(alist(inputs = , annotation_type = ))	2fa15ac1cda17c52b0c465fb721034139e55b30982733b5e9d9ffe6a272e797e	FALSE
+v2_helper	R/promoter_harmonization.R	apply_all_tissue_jeme_ensg_map	as.pairlist(alist(jeme = , mapping = ))	15d5e41d4124b029f8896a857aa1417dcc01d1e630e63eeceb8769c992331483	FALSE
+v3_helper	R/promoter_harmonization.R	apply_all_tissue_jeme_ensg_map	as.pairlist(alist(jeme = , mapping = ))	15d5e41d4124b029f8896a857aa1417dcc01d1e630e63eeceb8769c992331483	FALSE
+v2_helper	R/network_construction.R	apply_network_self_loop_policy	as.pairlist(alist(edges = , preserve_self_loops = TRUE))	1cbc624406b6f0ec165c6f337f68e1a6c1a8f704a7f7a4be46b4c89f6a982e69	FALSE
+v3_helper	R/network_construction.R	apply_network_self_loop_policy	as.pairlist(alist(edges = , preserve_self_loops = TRUE))	1cbc624406b6f0ec165c6f337f68e1a6c1a8f704a7f7a4be46b4c89f6a982e69	FALSE
+v2_helper	R/aracne_harmonization.R	aracne_mapping_candidates	as.pairlist(alist(settings = , project_root = ))	d95914ae72709b84cd54aa00b135d97baf1ca7c1602c70d0b1a9b6b0a260a91a	FALSE
+v3_helper	R/aracne_harmonization.R	aracne_mapping_candidates	as.pairlist(alist(settings = , project_root = ))	d95914ae72709b84cd54aa00b135d97baf1ca7c1602c70d0b1a9b6b0a260a91a	FALSE
+v2_helper	R/config.R	assert_flag	as.pairlist(alist(x = , field = , allow_null = FALSE))	f5bf2904b6130c48c817d86bbc173aacc092988d484437a6811cf0505b2275ec	FALSE
+v3_helper	R/config.R	assert_flag	as.pairlist(alist(x = , field = , allow_null = FALSE))	f5bf2904b6130c48c817d86bbc173aacc092988d484437a6811cf0505b2275ec	FALSE
+v2_helper	R/config.R	assert_positive_integer	as.pairlist(alist(x = , field = , allow_zero = FALSE))	b95c6c6e345078433e3014d3ccbc9cba8ad139b5a609ae475aa9a12575208376	FALSE
+v3_helper	R/config.R	assert_positive_integer	as.pairlist(alist(x = , field = , allow_zero = FALSE))	b95c6c6e345078433e3014d3ccbc9cba8ad139b5a609ae475aa9a12575208376	FALSE
+v2_helper	R/config.R	assert_scalar	as.pairlist(alist(x = , field = , type = NULL, allow_null = FALSE))	5e381a269e4518eb044376fe65494ea6529d3d77b7028907c26bb7a69e1fedb3	FALSE
+v3_helper	R/config.R	assert_scalar	as.pairlist(alist(x = , field = , type = NULL, allow_null = FALSE))	5e381a269e4518eb044376fe65494ea6529d3d77b7028907c26bb7a69e1fedb3	FALSE
+v2_helper	R/ldak_summary.R	assert_unique_key	as.pairlist(alist(data = , key = , label = ))	8c06d89dc729975d0b6b758e1d7b7119dfea786096bf83be4428ed399230c924	FALSE
+v3_helper	R/ldak_summary.R	assert_unique_key	as.pairlist(alist(data = , key = , label = ))	8c06d89dc729975d0b6b758e1d7b7119dfea786096bf83be4428ed399230c924	FALSE
+v2_helper	R/config.R	available_networks	as.pairlist(alist(config = ))	8606759359329bdb566a6a8e2705f4b75a2ad54c33fd5c1c9bfb5f7b2cace8b1	TRUE
+v3_helper	R/config.R	available_networks	as.pairlist(alist(config = ))	8606759359329bdb566a6a8e2705f4b75a2ad54c33fd5c1c9bfb5f7b2cace8b1	TRUE
+v2_helper	R/promoter_harmonization.R	build_all_tissue_jeme_ensg_map	as.pairlist(alist(jeme_all = , gtf = ))	517063e24371cd8558e43c2fec1e6e0031d08b2da9cba98de10dcfe1b5c892b3	FALSE
+v3_helper	R/promoter_harmonization.R	build_all_tissue_jeme_ensg_map	as.pairlist(alist(jeme_all = , gtf = ))	517063e24371cd8558e43c2fec1e6e0031d08b2da9cba98de10dcfe1b5c892b3	FALSE
+v2_helper	R/network_construction.R	build_hhotnet_networks	as.pairlist(alist(config = , networks = NULL, dry_run = TRUE))	6d63f9849b03ad63c4e90ced77b71815f8327191532f7deb5e5f68b2cf7d2996	TRUE
+v3_helper	R/network_construction.R	build_hhotnet_networks	as.pairlist(alist(config = , networks = NULL, dry_run = TRUE))	6d63f9849b03ad63c4e90ced77b71815f8327191532f7deb5e5f68b2cf7d2996	TRUE
+hotnetR	R/data.R	calc_fdr	as.pairlist(alist(df = , pval.col = , by.col = NULL))	336b97c718707fcd11dfc148012b81857e25855c65c8bf163920e071e754774a	TRUE
+v2_helper	R/setup.R	check_analysis_inputs	as.pairlist(alist(config = , write_report = TRUE))	ff9d9d36f59b1424d4fe1780b66e73743d87cdcbbb2fd796e17d8bc588d57797	TRUE
+v3_helper	R/setup.R	check_analysis_inputs	as.pairlist(alist(config = , write_report = TRUE))	ff9d9d36f59b1424d4fe1780b66e73743d87cdcbbb2fd796e17d8bc588d57797	TRUE
+v2_helper	R/network_construction.R	classify_network_enhancer_edges	as.pairlist(alist(data = , config = ))	c95cf7e252d29429a987346b634379890986de4a9e309d28e28a0e2cc7c3a0c8	FALSE
+v3_helper	R/network_construction.R	classify_network_enhancer_edges	as.pairlist(alist(data = , config = ))	c95cf7e252d29429a987346b634379890986de4a9e309d28e28a0e2cc7c3a0c8	FALSE
+v2_helper	R/ldak_annotations.R	collapse_annotation_values	as.pairlist(alist(x = ))	46e065da2b7a41a4885a71005fe74fcda8d381c376db2d11e8ef21c09b697e88	FALSE
+v3_helper	R/ldak_annotations.R	collapse_annotation_values	as.pairlist(alist(x = ))	46e065da2b7a41a4885a71005fe74fcda8d381c376db2d11e8ef21c09b697e88	FALSE
+v2_helper	R/promoter_harmonization.R	collapse_harmonization_values	as.pairlist(alist(x = ))	67c3ac36e20b8198c17ccf2e34e4eb446730f79e0192d77d23e09386632272a8	FALSE
+v3_helper	R/promoter_harmonization.R	collapse_harmonization_values	as.pairlist(alist(x = ))	67c3ac36e20b8198c17ccf2e34e4eb446730f79e0192d77d23e09386632272a8	FALSE
+hotnetR	R/data.R	combine_jeme_hic	as.pairlist(alist(jeme_harmonized = , hic_harmonized = , harmonized = TRUE, verbose = TRUE))	104b581746e8d88fb9558cfac33d4a0f85b0695150cfe694afd0be2ccca4301c	TRUE
+v2_helper	R/network_construction.R	compare_hhotnet_networks	as.pairlist(alist(config = , networks = NULL))	6fb388b3e228d3076e0076b528dea9d5e4ee62f66280b4f9f2d4881b10dc1e86	TRUE
+v3_helper	R/network_construction.R	compare_hhotnet_networks	as.pairlist(alist(config = , networks = NULL))	6fb388b3e228d3076e0076b528dea9d5e4ee62f66280b4f9f2d4881b10dc1e86	TRUE
+v2_helper	R/ldak_summary.R	compare_ldak_results	as.pairlist(alist(result_file = , reference_file = , pvalue_column = ))	d4ee50f00b2a62819e686255847dd194b916c3d6706caf17cd663eb60baf42ad	FALSE
+v3_helper	R/ldak_summary.R	compare_ldak_results	as.pairlist(alist(result_file = , reference_file = , pvalue_column = ))	d4ee50f00b2a62819e686255847dd194b916c3d6706caf17cd663eb60baf42ad	FALSE
+v2_helper	R/ldak_summary.R	compare_ldak_standardized_results	as.pairlist(alist(config = ))	7769155e47818653c433ce57e8926192ca987f18be5e0ad55ce589c07329b94e	TRUE
+v3_helper	R/ldak_summary.R	compare_ldak_standardized_results	as.pairlist(alist(config = ))	7769155e47818653c433ce57e8926192ca987f18be5e0ad55ce589c07329b94e	TRUE
+v2_helper	R/ldak_summary.R	compare_ldak_summary_tables	as.pairlist(alist(observed_file = , reference_file = ))	0d1efc5db62a1145f2f7aa1a2bc78a0fb14cfac94af670483af144d614384f1a	FALSE
+v3_helper	R/ldak_summary.R	compare_ldak_summary_tables	as.pairlist(alist(observed_file = , reference_file = ))	0d1efc5db62a1145f2f7aa1a2bc78a0fb14cfac94af670483af144d614384f1a	FALSE
+v3_helper	R/ldak_annotations.R	convert_promoter_details_to_tss	as.pairlist(alist(promoter_details = ))	1946e1ab7b46384e07b406f084e1e927985452c7149b18aab32b5c982a64dbbd	FALSE
+hotnetR	R/graph.R	count_edges_per_component	as.pairlist(alist(g = ))	bd7e2ce8424f19d230c831cccaa05ed6b613edc84e7e990e5146a93f9606bfa9	TRUE
+hotnetR	R/download_GTEx.R	create_aracne_slurm	pairlist(tissue = ""Esophagus_Gastroesophageal_Junction"", output_dir = ""."", aracne_jar = ""../ARACNe/aracne.jar"", partition = ""rpci"", cpus = 32, mem = ""64G"", bootstrap = 500)	c803a6522704b17e5283842e0103056c1f32fd45daceb6faed87301c68f84c83	TRUE
+hotnetR	R/harmonization_setup.R	create_harmonization_references	pairlist(cache_dir = NULL, overwrite = FALSE, alias_file = NULL)	d3a4a2e11740d82dacfb6edbbd990b3a00e4d99380e4de15920df1b167503ced	TRUE
+hotnetR	R/summary.R	create_igraph_hotnet	as.pairlist(alist(edge_tbl = , nodes_tbl = , hotnet = ))	eac53c0b5f2ecbcbf9b72c51ca4af9dde1ba6276cbe41eb7cd2c3799f895e030	TRUE
+hotnetR	R/ldak_utils.R	create_ldak_promoter_boundary	pairlist(feature_file = NULL, cache_dir = NULL, output_file = NULL)	f34e75286bc763fe203c8b1c93cc52783d093dc5144d3ee7d63ec68a7dc484b1	TRUE
+v2_helper	R/hhotnet_results.R	cx2_aspect	as.pairlist(alist(cx2 = , name = ))	c184f44348bb166691ae531eaf8db8a2f9b838eb8304fbbf1c02a4e3acc91b04	FALSE
+v3_helper	R/hhotnet_results.R	cx2_aspect	as.pairlist(alist(cx2 = , name = ))	c184f44348bb166691ae531eaf8db8a2f9b838eb8304fbbf1c02a4e3acc91b04	FALSE
+v2_helper	R/hhotnet_results.R	cx2_attribute_declarations	as.pairlist(alist(data = ))	075329a05b1815c1a2eb34421f8e89c766cebad3a395c34df6e553bf1daf55ec	FALSE
+v3_helper	R/hhotnet_results.R	cx2_attribute_declarations	as.pairlist(alist(data = ))	075329a05b1815c1a2eb34421f8e89c766cebad3a395c34df6e553bf1daf55ec	FALSE
+v2_helper	R/hhotnet_results.R	cx2_type	as.pairlist(alist(x = ))	006b95c49c5eb9d5c7aa636fc5ccf1b979df4bd4813f3339d5d35bce0ba79a31	FALSE
+v3_helper	R/hhotnet_results.R	cx2_type	as.pairlist(alist(x = ))	006b95c49c5eb9d5c7aa636fc5ccf1b979df4bd4813f3339d5d35bce0ba79a31	FALSE
+v2_helper	R/network_construction.R	deduplicate_network_jeme	as.pairlist(alist(data = , enabled = FALSE))	8dab2f90c4cb5e1947230afb89fa80c9e07b1a0aea88b5da08550989bda1a8f2	FALSE
+v3_helper	R/network_construction.R	deduplicate_network_jeme	as.pairlist(alist(data = , enabled = FALSE))	8dab2f90c4cb5e1947230afb89fa80c9e07b1a0aea88b5da08550989bda1a8f2	FALSE
+v2_helper	R/aracne_harmonization.R	default_aracne_harmonization	pairlist(config = NULL)	417ee57d7bc689d33d8c9c500c3d612a5d324f2fe1efa881ef1b2228d9e7e74a	FALSE
+v3_helper	R/aracne_harmonization.R	default_aracne_harmonization	pairlist(config = NULL)	417ee57d7bc689d33d8c9c500c3d612a5d324f2fe1efa881ef1b2228d9e7e74a	FALSE
+hotnetR	R/r_utils.R	downloadAbsentFile	as.pairlist(alist(urlStr = , oD = tempdir()))	2a30ae4e5902c6c77c3ac73b1efcffeb2b4ff0b9daba8f0024f0e19d9746594d	FALSE
+hotnetR	R/download_HiC.R	download_HiC	pairlist(cache_dir = NULL, out_dir = NULL, overwrite = FALSE)	2be028d45bc0d4023c1670e79020f69aade00d348a176010f0db10342f84509a	TRUE
+hotnetR	R/download_JEME.R	download_JEME	pairlist(type = c(""lasso"", ""elasticnet""), cache_dir = NULL, out_dir = NULL, save_summarized = TRUE, overwrite = FALSE)	c1189100bcece9136ef76ac26636c5c8956987e5f097c7bfe42f77ee3c23246e	TRUE
+hotnetR	R/download_JEME.R	download_NBCI_feature_table	pairlist(cache_dir = NULL, url = NULL, overwrite = FALSE)	56991005f9d461807e69c922ae729b231c9df253ad76e28be5ec96f079c3f4dd	TRUE
+hotnetR	R/r_utils.R	download_file_cached	as.pairlist(alist(url = , dest_file = , overwrite = FALSE))	c493d2c097e31f14c0174ee394152279740c6ca64b5d6eeea3e7950f6ee13019	FALSE
+hotnetR	R/download_GTEx.R	download_gtex_gencode	pairlist(cache_dir = NULL, overwrite = FALSE)	53bd4d71658bd6caf36db5d62009f249807947c686a2ae20debd8ead0ede7216	TRUE
+hotnetR	R/download_GTEx.R	download_gtex_tpm	pairlist(tissue = ""Esophagus_Gastroesophageal_Junction"", datasetId = ""gtex_v10"", cache_dir = NULL, overwrite = FALSE)	d15de6375f5b57e805a9908ce640983bd946d318729a515ac97c5de7907c0b6c	TRUE
+hotnetR	R/download_GTEx.R	download_hgnc_complete	pairlist(cache_dir = NULL, overwrite = FALSE)	fd88923b637fd7121472aef1e9bdb3198a04a8f903060b12304c5a9d93888839	TRUE
+hotnetR	R/data.R	enhancer_loc	as.pairlist(alist(jeme = , hic = , verbose = TRUE))	9ba426286e96191b2e9cf5f63f912dd337b7af54756ce36ec9a0b6eb3e3cc5a6	TRUE
+hotnetR	R/data.R	exclude_MHC	as.pairlist(alist(df = , chr = 6, start = 28477797, end = 33448354))	bff1a4817d129ade5d72b52464932f7e19c33fff36e3179b4614918613d3b6eb	TRUE
+hotnetR	R/r_utils.R	exclude_MHC	as.pairlist(alist(df = , chr = 6, start = 28477797, end = 33448354))	9b6c4b48ff64c1ff6820693c4c1cbaffc6883f38061f1f671bbf94622b6d98e2	TRUE
+v2_helper	R/network_construction.R	exclude_network_mhc	as.pairlist(alist(nodes = , config = ))	94f55187d228b6852df242807fe95836c6068e104714d1a0bb095407c706159a	FALSE
+v3_helper	R/network_construction.R	exclude_network_mhc	as.pairlist(alist(nodes = , config = ))	94f55187d228b6852df242807fe95836c6068e104714d1a0bb095407c706159a	FALSE
+hotnetR	R/ldak_utils.R	export_enhancer_ldak	as.pairlist(alist(nodes = , output_file = NULL, source_type = c(""jeme"", ""hic""), cache_dir = NULL))	037e80880a0b12021f97e7e2659654f58ab9593a7def22968a08481d393895e7	TRUE
+hotnetR	R/download_GTEx.R	export_gtex_aracne	pairlist(tissue = ""Esophagus_Gastroesophageal_Junction"", output_dir = ""."", cache_dir = NULL, min_tpm = 0.009191)	56b044cc286ef2b1569cdbd7106b8241157b3872b9dd6468f1567849774344cf	TRUE
+v2_helper	R/hhotnet_results.R	export_hhotnet_graphs	as.pairlist(alist(config = , networks = NULL, filter_components = TRUE, size_range = c(20, 60)))	bd04b0df4d1f9f6cc6fa245fd1b5171bee9d221ab5f9d483f5a1f913e22b1a3b	TRUE
+v3_helper	R/hhotnet_results.R	export_hhotnet_graphs	as.pairlist(alist(config = , networks = NULL, filter_components = TRUE, size_range = c(20, 60)))	bd04b0df4d1f9f6cc6fa245fd1b5171bee9d221ab5f9d483f5a1f913e22b1a3b	TRUE
+hotnetR	R/ldak_utils.R	export_promoter_ldak	as.pairlist(alist(nodes = , output_file = NULL, cache_dir = NULL))	d8f0a4bd2ef13ba35068229c42fb64903c49f520ef4c7644cee2e07b583348b4	TRUE
+v2_helper	R/network_construction.R	extract_gene_nodes	as.pairlist(alist(jeme_nodes = , hic_nodes = , aracne = ))	4bee5cd33bb0b6c4b84d76c3df9f02a1d4d6bd608903df6d7a5fb004852b537d	FALSE
+v3_helper	R/network_construction.R	extract_gene_nodes	as.pairlist(alist(jeme_nodes = , hic_nodes = , aracne = ))	4bee5cd33bb0b6c4b84d76c3df9f02a1d4d6bd608903df6d7a5fb004852b537d	FALSE
+hotnetR	R/HiC_access.R	extract_hic_nodes	as.pairlist(alist(hic_data = ))	ff5bf122777023c80e14db436829a7bfc013c9b5d0016fda4a02e2656fd451f9	TRUE
+hotnetR	R/JEME_access.R	extract_jeme_nodes	as.pairlist(alist(jeme_data = ))	712c4088de32484211cfccee4684a489c39179186c7b6935a99cd5550afc81f7	TRUE
+hotnetR	R/data.R	filter_gene_network_ldak	as.pairlist(alist(net = , ldak = ))	470b4cd42a4c612d5c696fe14ef40e487e054c0f1fe4485f57a57a06edbdb152	TRUE
+v2_helper	R/hhotnet_results.R	filter_hhotnet_component_tables	as.pairlist(alist(nodes = , edges = ))	866f1aae1a2172a305e717c587d3222355aa7121a8aa51189e86abda2b40ff10	FALSE
+v3_helper	R/hhotnet_results.R	filter_hhotnet_component_tables	as.pairlist(alist(nodes = , edges = ))	866f1aae1a2172a305e717c587d3222355aa7121a8aa51189e86abda2b40ff10	FALSE
+hotnetR	R/summary.R	filter_igraph_hotnet	as.pairlist(alist(ig = ))	f9de3da59496fc2c61b30f14baf56a9566d35408c00f93ffe8a715bf8c2d3c9b	TRUE
+hotnetR	R/data.R	filter_ldak_gene_SD	as.pairlist(alist(df = , keep = NULL))	4265182453923a971390f59b308963463cb47ef6eb735bb580d7f6e4d7dd0f7e	TRUE
+hotnetR	R/data.R	filter_ldak_gene_elbow	as.pairlist(alist(df = , keep = NULL))	afcef4875577aec33ade6f39376323567fe13b10f6b3240eeaf99eaf060ab710	TRUE
+hotnetR	R/data.R	filter_ldak_gene_fdr	as.pairlist(alist(df = , pval.col = , by.col = NULL, threshold = 1, keep = NULL))	4ea420c7d41a0a1de16728e6de093731776c7b94cd03e6bf6d828b1704bcb490	TRUE
+hotnetR	R/data.R	filter_ldak_gene_pvalue	as.pairlist(alist(df = , pval.col = , threshold = 1, keep = NULL))	2581cee38be94c4c295e939fa61bd6b9acf3612ff96f1d8c911c31f8031a39f3	TRUE
+hotnetR	R/data.R	filter_ldak_gene_type	as.pairlist(alist(df = , gtf = , types = c(""protein_coding""), keep = NULL))	9c1ee2a04e04b1b358a6d7a19f764ac14274877f788da8b6410ce23ddf992180	TRUE
+hotnetR	R/data.R	filter_network_ldak	as.pairlist(alist(net_regulators = , nodes_all = , verbose = TRUE))	413f4d198eb0627b4615b1b1045279c9c6d048130a030b101ca9ca7472bcb788	TRUE
+v2_helper	R/network_construction.R	filter_network_ldak	as.pairlist(alist(data = , config = ))	7a26d2c9ab24e14000f8ad642f5f2ccbb54331dd1825658a46a374bdafa4ab91	FALSE
+v3_helper	R/network_construction.R	filter_network_ldak	as.pairlist(alist(data = , config = ))	7a26d2c9ab24e14000f8ad642f5f2ccbb54331dd1825658a46a374bdafa4ab91	FALSE
+v2_helper	R/network_construction.R	filter_network_regulatory_edges	as.pairlist(alist(edges = , nodes = , mode = , preserve_self_loops = TRUE))	06921f2566e85b1c770a369ecd2069759594595641bf54407260df695b668f7b	FALSE
+v3_helper	R/network_construction.R	filter_network_regulatory_edges	as.pairlist(alist(edges = , nodes = , mode = , preserve_self_loops = TRUE))	06921f2566e85b1c770a369ecd2069759594595641bf54407260df695b668f7b	FALSE
+hotnetR	R/r_utils.R	find_na	as.pairlist(alist(df = ))	afa6596900476fe6d2a0269d2dee01433689ba2299e48a83a02609843d07ff49	TRUE
+v2_helper	R/hhotnet_jobs.R	generate_hhotnet_job	as.pairlist(alist(config = , networks = NULL, dry_run = TRUE))	bd6331b52505c7a541e4d79be4012df06c7b1c9143f461a2266219ada8c22a3d	TRUE
+v3_helper	R/hhotnet_jobs.R	generate_hhotnet_job	as.pairlist(alist(config = , networks = NULL, dry_run = TRUE))	bd6331b52505c7a541e4d79be4012df06c7b1c9143f461a2266219ada8c22a3d	TRUE
+v2_helper	R/ldak_jobs.R	generate_ldak_jobs	as.pairlist(alist(config = , dry_run = TRUE))	c65c105207d615718c48aa3c50a16aac2dab7e16bee3bf129af618e5376a56de	TRUE
+v3_helper	R/ldak_jobs.R	generate_ldak_jobs	as.pairlist(alist(config = , dry_run = TRUE))	c65c105207d615718c48aa3c50a16aac2dab7e16bee3bf129af618e5376a56de	TRUE
+v2_helper	R/ldak_jobs.R	generate_ldak_local_runner	as.pairlist(alist(config = , dry_run = TRUE))	ccd1ba71bfddcc25307671b37cf7dde84f6a25af09205e9aa1be22b087361871	TRUE
+v3_helper	R/ldak_jobs.R	generate_ldak_local_runner	as.pairlist(alist(config = , dry_run = TRUE))	ccd1ba71bfddcc25307671b37cf7dde84f6a25af09205e9aa1be22b087361871	TRUE
+hotnetR	R/r_utils.R	get_cache_dir	pairlist(sub_dir = NULL, cache_dir = NULL)	9a6ed705232dc9a333f83b1457cb2436c610afc002e1e7dabf8be132b9b3fb47	FALSE
+hotnetR	R/r_utils.R	get_data_refs_dir	pairlist(data_refs_dir = NULL)	046ed4a4586441aa5408ac5d4f2b156c3a6772feab326c62f4ea2da6b9f33e98	FALSE
+hotnetR	R/HiC_access.R	get_hic	pairlist(tissue_type = NULL)	ea4da5f0901a1e56e0655c18773d8f58693943e98bebc846a87c131008ee41bd	TRUE
+hotnetR	R/HiC_access.R	get_hic_by_tissue	pairlist(tissue_type = NULL, edge_type = c(""PO"", ""PP""))	729deb4cfd11964c3430e6fecfbb7681049ac0879cd94e32246deeedbc8223dc	FALSE
+hotnetR	R/JEME_access.R	get_jeme	pairlist(key_column = NULL, value = NULL, method = c(""lasso"", ""elasticnet""), simplified = TRUE)	46c7a4b985f69f362539c761442cb3fbf7a2925c0c874cba1d5e1f3581908f65	TRUE
+hotnetR	R/JEME_access.R	get_jeme_by_tissue	as.pairlist(alist(nfile = , method = c(""lasso"", ""elasticnet"")))	b1ab370ddab58d50e3865a37d1923fef04ebe20591cee670e79bfd12eabbaffb	FALSE
+hotnetR	R/data.R	get_ldak	as.pairlist(alist(file = , cohort = NULL))	2be371035a4eae7338404081eeddc255763989968e0ea324488618f625459f30	TRUE
+hotnetR	R/data.R	get_regulator_LDAK_scores	as.pairlist(alist(param = , enhancers = , verbose = TRUE))	a4fc9aafc395453c7b06aab3927d490da0e8baa657557430b36804e5f9f83067	TRUE
+v2_helper	R/aracne_harmonization.R	harmonize_aracne_endpoints	as.pairlist(alist(aracne = , config = NULL, project_root = "".""))	fc748fa64409a13a08d3b57d0c58ccf9fe63fba7f4a2a032217a980143169ab4	TRUE
+v3_helper	R/aracne_harmonization.R	harmonize_aracne_endpoints	as.pairlist(alist(aracne = , config = NULL, project_root = "".""))	fc748fa64409a13a08d3b57d0c58ccf9fe63fba7f4a2a032217a980143169ab4	TRUE
+v2_helper	R/promoter_harmonization.R	harmonize_hic_gene_symbols	as.pairlist(alist(hic = , alias_file = ))	8f8b7b089cf8205be11406fb02b29bf73f0122430708fb6877ad92643b9c9f53	FALSE
+v3_helper	R/promoter_harmonization.R	harmonize_hic_gene_symbols	as.pairlist(alist(hic = , alias_file = ))	8f8b7b089cf8205be11406fb02b29bf73f0122430708fb6877ad92643b9c9f53	FALSE
+hotnetR	R/HiC_access.R	harmonize_hic_gtf	as.pairlist(alist(hic = , alias_link_file = , verbose = TRUE, rm_na = FALSE))	35ae114b4e83d97a4af31f47ef3fddfd164abce6fe3725aea429adf1f3b02ab5	TRUE
+hotnetR	R/JEME_access.R	harmonize_jeme_genecode	as.pairlist(alist(jeme = , gtf = NULL, verbose = TRUE))	6a1066c6810d7067beaa03fd0dd3f78acaf36e519169ff065115df3e26b54116	TRUE
+v2_helper	R/network_construction.R	harmonize_network_promoters	as.pairlist(alist(data = , settings = , analysis_config = ))	48670d00088c1806f7f31556716f1af1b124e645ccc8a733d5f4af1d07eb4ad7	FALSE
+v3_helper	R/network_construction.R	harmonize_network_promoters	as.pairlist(alist(data = , settings = , analysis_config = ))	48670d00088c1806f7f31556716f1af1b124e645ccc8a733d5f4af1d07eb4ad7	FALSE
+v2_helper	R/ldak_annotations.R	harmonize_promoter_aliases	as.pairlist(alist(promoter_sources = , config = ))	5a790918d7bf447ed32e813a5799e041c0221f6018b531ddb53bbed8d287ed97	FALSE
+v3_helper	R/ldak_annotations.R	harmonize_promoter_aliases	as.pairlist(alist(promoter_sources = , config = ))	5a790918d7bf447ed32e813a5799e041c0221f6018b531ddb53bbed8d287ed97	FALSE
+hotnetR	R/JEME_access.R	harmonize_promoter_by_ensg	as.pairlist(alist(df = , gtf = NULL, verbose = TRUE))	6cafb6604edadefd21bb88a213d286ccb61065de3b8f7414f041bdbca83a6a46	TRUE
+v2_helper	R/hhotnet_results.R	hhotnet_cluster_result_file	as.pairlist(alist(config = , network = ))	21c5f070fb3133caf913bc29e826641e6888000f6feb44d48ecd32a00080fa02	FALSE
+v3_helper	R/hhotnet_results.R	hhotnet_cluster_result_file	as.pairlist(alist(config = , network = ))	21c5f070fb3133caf913bc29e826641e6888000f6feb44d48ecd32a00080fa02	FALSE
+v2_helper	R/hhotnet_results.R	hhotnet_export_prefix	as.pairlist(alist(config = , network = , filter_components = ))	4c480e9caa31a6c875d470e9973b6ef8b13c7897181141bf22c46eba96875437	FALSE
+v3_helper	R/hhotnet_results.R	hhotnet_export_prefix	as.pairlist(alist(config = , network = , filter_components = ))	4c480e9caa31a6c875d470e9973b6ef8b13c7897181141bf22c46eba96875437	FALSE
+v2_helper	R/hhotnet_results.R	hhotnet_header_field	as.pairlist(alist(header = ))	527f2f5a076aea6f689b9f1f3478ecc5d3575855f11f537f1cdeb0caf9c379b2	FALSE
+v3_helper	R/hhotnet_results.R	hhotnet_header_field	as.pairlist(alist(header = ))	527f2f5a076aea6f689b9f1f3478ecc5d3575855f11f537f1cdeb0caf9c379b2	FALSE
+v2_helper	R/hhotnet_results.R	hhotnet_igraph_from_tables	as.pairlist(alist(nodes = , edges = ))	7a8a5a81d41de9d10566ec20ab22841fdf036265475bfa5d196d113e0e38e43d	FALSE
+v3_helper	R/hhotnet_results.R	hhotnet_igraph_from_tables	as.pairlist(alist(nodes = , edges = ))	7a8a5a81d41de9d10566ec20ab22841fdf036265475bfa5d196d113e0e38e43d	FALSE
+v2_helper	R/hhotnet_results.R	hhotnet_result_data	as.pairlist(alist(config = , network = ))	68655958e381335180dfd81b62f6747929f639a3645717c04fef215e74f4d5dd	FALSE
+v3_helper	R/hhotnet_results.R	hhotnet_result_data	as.pairlist(alist(config = , network = ))	68655958e381335180dfd81b62f6747929f639a3645717c04fef215e74f4d5dd	FALSE
+v2_helper	R/hhotnet_results.R	hhotnet_score_name	as.pairlist(alist(config = ))	ae71af190013012fa5925b27d62c8cc0519f3687fdfa24942d4722333d1e51bf	FALSE
+v3_helper	R/hhotnet_results.R	hhotnet_score_name	as.pairlist(alist(config = ))	ae71af190013012fa5925b27d62c8cc0519f3687fdfa24942d4722333d1e51bf	FALSE
+hotnetR	R/summary.R	hotnet_cluster_df	as.pairlist(alist(res_net = ))	bbb7a61777f749c09a74131f48ad0bdb110cd8e57f44a2effb35583bb919cafe	TRUE
+hotnetR	R/graph.R	igraph_to_hotnet	as.pairlist(alist(ig = ))	bb22639c3bb82ec9da0ddb1114cbb44c2c59bee4db5b780be61511fe8408675c	TRUE
+v2_helper	R/config.R	input_paths	as.pairlist(alist(config = ))	3d8af119e49cc06482bf2e7af375c2f4c64f0a27c0600ad9b5c3988350edaec6	FALSE
+v3_helper	R/config.R	input_paths	as.pairlist(alist(config = ))	3d8af119e49cc06482bf2e7af375c2f4c64f0a27c0600ad9b5c3988350edaec6	FALSE
+v2_helper	R/config.R	is_absolute_path	as.pairlist(alist(path = ))	df80624996ab3d846d9d2af0c3ff3a6b02a53c94f4a22a0b49e895572376c3c2	FALSE
+v3_helper	R/config.R	is_absolute_path	as.pairlist(alist(path = ))	df80624996ab3d846d9d2af0c3ff3a6b02a53c94f4a22a0b49e895572376c3c2	FALSE
+hotnetR	R/ldak_utils.R	jeme_promoter_to_loc	as.pairlist(alist(promoters = , output_file = NULL, annotation_src = c(""NCBI"", ""jeme""), ncbi_tbl = NULL))	00b5441a122155ce2fb41d4eda5f10ce1330edc8fd3c51cfb84c919f88690157	TRUE
+v2_helper	R/ldak_annotations.R	ldak_annotation_config	as.pairlist(alist(config = ))	29df71630d7361fb85d422be1fb03fe6f7c4f7e501663494e88aec73fbb05dc9	FALSE
+v3_helper	R/ldak_annotations.R	ldak_annotation_config	as.pairlist(alist(config = ))	29df71630d7361fb85d422be1fb03fe6f7c4f7e501663494e88aec73fbb05dc9	FALSE
+v2_helper	R/config.R	ldak_flank_bp	as.pairlist(alist(config = , node_type = ))	31e4c14b126fdfd21cd323add49773729b27fb0331a700e78c0c2e90b0a09322	FALSE
+v3_helper	R/config.R	ldak_flank_bp	as.pairlist(alist(config = , node_type = ))	31e4c14b126fdfd21cd323add49773729b27fb0331a700e78c0c2e90b0a09322	FALSE
+v2_helper	R/ldak_jobs.R	ldak_job_specs	as.pairlist(alist(config = ))	d2c2cad1ce5fc6b7ca6ffd9192756e444e36db030bc8fb8d2149ae4aad00bacf	FALSE
+v3_helper	R/ldak_jobs.R	ldak_job_specs	as.pairlist(alist(config = ))	d2c2cad1ce5fc6b7ca6ffd9192756e444e36db030bc8fb8d2149ae4aad00bacf	FALSE
+v2_helper	R/ldak_annotations.R	ldak_reference_bounds	as.pairlist(alist(config = ))	d23b3eff9abc04c185061e21975cb310e500786a7890d51b978ac5fccf8c10b9	FALSE
+v3_helper	R/ldak_annotations.R	ldak_reference_bounds	as.pairlist(alist(config = ))	d23b3eff9abc04c185061e21975cb310e500786a7890d51b978ac5fccf8c10b9	FALSE
+v2_helper	R/ldak_summary.R	ldak_reference_result_file	as.pairlist(alist(config = , node_type = ))	705426b129473525c0b139b1ecce7324fe6cae16a8e65ea0a4c8c610cac4e0a4	FALSE
+v3_helper	R/ldak_summary.R	ldak_reference_result_file	as.pairlist(alist(config = , node_type = ))	705426b129473525c0b139b1ecce7324fe6cae16a8e65ea0a4c8c610cac4e0a4	FALSE
+v2_helper	R/ldak_summary.R	ldak_reference_summary_file	as.pairlist(alist(config = , node_type = ))	d54493117cfd5ee375b6e93d6d168af267bb5c7c220a5318c955ee4c110f4944	FALSE
+v3_helper	R/ldak_summary.R	ldak_reference_summary_file	as.pairlist(alist(config = , node_type = ))	d54493117cfd5ee375b6e93d6d168af267bb5c7c220a5318c955ee4c110f4944	FALSE
+v2_helper	R/config.R	ldak_result_subdir	as.pairlist(alist(config = , node_type = ))	4cdbcb02c8b84888164d966f4a07d038066c6f54a52175c1fd89da4368141d3c	FALSE
+v3_helper	R/config.R	ldak_result_subdir	as.pairlist(alist(config = , node_type = ))	4cdbcb02c8b84888164d966f4a07d038066c6f54a52175c1fd89da4368141d3c	FALSE
+v2_helper	R/ldak_summary.R	ldak_summary_specs	as.pairlist(alist(config = ))	7cb5fb2a61ac1cc8d898be0c6c93d3fde9f88b6ca1461d466f183ee01a2ace2b	FALSE
+v3_helper	R/ldak_summary.R	ldak_summary_specs	as.pairlist(alist(config = ))	7cb5fb2a61ac1cc8d898be0c6c93d3fde9f88b6ca1461d466f183ee01a2ace2b	FALSE
+hotnetR	R/HiC_access.R	load_hic	as.pairlist(alist(param = , verbose = TRUE, rm_na = FALSE))	7bed35a8b49aeb68f6c08e5532dab7d63627badfb1a0ec46540afa995cf4b47e	FALSE
+hotnetR	R/summary.R	load_hotnet_input	as.pairlist(alist(net_prefix = ""network_1"", data_dir = ))	defc0ca46220e12b71b4d61926880c98efda74549ac9b44581b978cf56858d14	TRUE
+hotnetR	R/summary.R	load_hotnet_results	as.pairlist(alist(network = ""network_1"", result_dir = , exclude_single = FALSE))	3887fb5b2c51531f3b5a7237d0faaa7dccc5b41e9da4a577aa924162a05be62d	TRUE
+hotnetR	R/JEME_access.R	load_jeme	as.pairlist(alist(param = , verbose = TRUE))	f6ad003b389d4f368b3b1a698f21c6bfac9d690ebef5639b403953ce85b92952	FALSE
+v2_helper	R/network_construction.R	load_network_sources	as.pairlist(alist(config = ))	4fd0f2e1abbc877a430d1d917bb0aac15463a8c4ab35360cdae288161c8e9fa8	FALSE
+v3_helper	R/network_construction.R	load_network_sources	as.pairlist(alist(config = ))	4fd0f2e1abbc877a430d1d917bb0aac15463a8c4ab35360cdae288161c8e9fa8	FALSE
+v2_helper	R/provenance.R	log_analysis_event	as.pairlist(alist(config = , event = , detail = """", level = ""INFO""))	ec525f3886faab94be1a46aef5430b7f77485855b6933c6a4afaf98a7f2ba163	TRUE
+v3_helper	R/provenance.R	log_analysis_event	as.pairlist(alist(config = , event = , detail = """", level = ""INFO""))	ec525f3886faab94be1a46aef5430b7f77485855b6933c6a4afaf98a7f2ba163	TRUE
+v2_helper	R/hhotnet_jobs.R	make_hhotnet_job_lines	as.pairlist(alist(config = , networks = NULL))	f73ca95cfa09578de1ca37e9414c984c745d4c6e90a3d46b11b9564f5b2aa266	FALSE
+v3_helper	R/hhotnet_jobs.R	make_hhotnet_job_lines	as.pairlist(alist(config = , networks = NULL))	f73ca95cfa09578de1ca37e9414c984c745d4c6e90a3d46b11b9564f5b2aa266	FALSE
+v2_helper	R/ldak_jobs.R	make_ldak_job_lines	as.pairlist(alist(config = , node_type = , annotation = , output = ))	f6b59b5f76b2fdf7f1eaf63ab05af0e95dfc01c93b6334cd2dcae7efc360eda6	FALSE
+v3_helper	R/ldak_jobs.R	make_ldak_job_lines	as.pairlist(alist(config = , node_type = , annotation = , output = ))	f6b59b5f76b2fdf7f1eaf63ab05af0e95dfc01c93b6334cd2dcae7efc360eda6	FALSE
+v2_helper	R/network_construction.R	make_network_graph	as.pairlist(alist(edges = , nodes = ))	cb35f2a5ecb3ef6c80a27290c95df6839870e836cadac2f9d3dfc8f8f15c92f4	FALSE
+v3_helper	R/network_construction.R	make_network_graph	as.pairlist(alist(edges = , nodes = ))	cb35f2a5ecb3ef6c80a27290c95df6839870e836cadac2f9d3dfc8f8f15c92f4	FALSE
+v2_helper	R/provenance.R	manifest_file_info	as.pairlist(alist(path = , checksum = FALSE))	85361261af8990272960f62550fc32b0088ec7ffae7671160b4d908d69a33229	FALSE
+v3_helper	R/provenance.R	manifest_file_info	as.pairlist(alist(path = , checksum = FALSE))	85361261af8990272960f62550fc32b0088ec7ffae7671160b4d908d69a33229	FALSE
+v2_helper	R/aracne_harmonization.R	map_aracne_identifiers	as.pairlist(alist(x = , mapping = ))	e1935609d90233b0cde92f9f5f5dbcc6b6a9b2e94ade037c5e967e1a3d439a70	FALSE
+v3_helper	R/aracne_harmonization.R	map_aracne_identifiers	as.pairlist(alist(x = , mapping = ))	e1935609d90233b0cde92f9f5f5dbcc6b6a9b2e94ade037c5e967e1a3d439a70	FALSE
+hotnetR	R/r_utils.R	merge.with.order	as.pairlist(alist(x = , y = , ... = , sort = TRUE))	772b3424846c01a2428336e181c3df9ada45421b5370dff2b9a9accf2dc75881	FALSE
+hotnetR	R/r_utils.R	merge_by_ensg	as.pairlist(alist(df1 = , df2 = , keep_base = TRUE))	a423a7475f3d0aed28592725e438b0c7cb14fdd7772b9275ba264139f1b34721	TRUE
+hotnetR	R/r_utils.R	merge_rows	as.pairlist(alist(df = , group_cols = , merge_col = , sep = "";""))	a52f8088072e64ea65670794939a3fdc7531fc69ee4a33e349abda82049dd051	TRUE
+v2_helper	R/config.R	mhc_exclusion_region	pairlist(config = list())	0860d38e895af67ec078b6308299aaf1f843bb1a1d4a0f71030bdd1a2e54ff69	FALSE
+v3_helper	R/config.R	mhc_exclusion_region	pairlist(config = list())	0860d38e895af67ec078b6308299aaf1f843bb1a1d4a0f71030bdd1a2e54ff69	FALSE
+hotnetR	R/graph.R	min_score_per_component	as.pairlist(alist(ig = , attr = ""score""))	9307720af607e65b25b37eae980dad4e5cccdba9224706f8c80d20b999698f67	TRUE
+v2_helper	R/ldak_annotations.R	ncbi_feature_table_path	as.pairlist(alist(config = ))	03bb7efd35d83bef331a02aad628d0d0ece54f6b6e25f2924a48ceaaba61a916	FALSE
+v3_helper	R/ldak_annotations.R	ncbi_feature_table_path	as.pairlist(alist(config = ))	03bb7efd35d83bef331a02aad628d0d0ece54f6b6e25f2924a48ceaaba61a916	FALSE
+v2_helper	R/network_construction.R	network_data_file	as.pairlist(alist(config = , name = ))	090d1da387f03eeea94a23979ca9240f37cb9a41353f6e519367638079186053	FALSE
+v3_helper	R/network_construction.R	network_data_file	as.pairlist(alist(config = , name = ))	090d1da387f03eeea94a23979ca9240f37cb9a41353f6e519367638079186053	FALSE
+v2_helper	R/network_construction.R	network_dependencies	as.pairlist(alist(networks = ))	1f554357d9c77b14c24137ef587c5519f089cb1a6fb17f5dd90c6c29d51fa3fc	FALSE
+v3_helper	R/network_construction.R	network_dependencies	as.pairlist(alist(networks = ))	1f554357d9c77b14c24137ef587c5519f089cb1a6fb17f5dd90c6c29d51fa3fc	FALSE
+v2_helper	R/network_construction.R	network_edge_keys	as.pairlist(alist(file = ))	50f35d16626f06a6f023cba8316b2860c45cd6dbb9a7bf5753c50f6f3c495852	FALSE
+v3_helper	R/network_construction.R	network_edge_keys	as.pairlist(alist(file = ))	50f35d16626f06a6f023cba8316b2860c45cd6dbb9a7bf5753c50f6f3c495852	FALSE
+v2_helper	R/network_construction.R	network_summary_file	as.pairlist(alist(config = , name = ))	eb721fa663c0351e276db3179259edb73775de52a80a6f8cb341eccfdf27f125	FALSE
+v3_helper	R/network_construction.R	network_summary_file	as.pairlist(alist(config = , name = ))	eb721fa663c0351e276db3179259edb73775de52a80a6f8cb341eccfdf27f125	FALSE
+hotnetR	R/data.R	nlog10	as.pairlist(alist(x = , max_value = 1000))	458159610a9e4b1eae49f6de5ba11daca161d23fc27ad3ac049dff2068ca8708	TRUE
+hotnetR	R/data.R	nlog2	as.pairlist(alist(x = , ... = ))	d11089362a75b2343aef30d4e5dff3e4c9c636bd7ecec93f1c21a9ad674fa9a9	TRUE
+v2_helper	R/aracne_harmonization.R	normalise_aracne_identifier	as.pairlist(alist(x = ))	734d2edb1411953e4d7cdd3395647420861986b729173c30feeea72fb7a981ed	FALSE
+v3_helper	R/aracne_harmonization.R	normalise_aracne_identifier	as.pairlist(alist(x = ))	734d2edb1411953e4d7cdd3395647420861986b729173c30feeea72fb7a981ed	FALSE
+v2_helper	R/ldak_annotations.R	normalise_genome_build	as.pairlist(alist(x = ))	9e335dbfad7cd023949ef8c42b37cfd140ee6eb582d845da9288afceea80d2ef	FALSE
+v3_helper	R/ldak_annotations.R	normalise_genome_build	as.pairlist(alist(x = ))	9e335dbfad7cd023949ef8c42b37cfd140ee6eb582d845da9288afceea80d2ef	FALSE
+v2_helper	R/promoter_harmonization.R	normalise_jeme_ensg	as.pairlist(alist(x = ))	6bcab2cac493b9958b7ba75aee1e0f51f2851977e8791e66755dcefaa2eebf2e	FALSE
+v3_helper	R/promoter_harmonization.R	normalise_jeme_ensg	as.pairlist(alist(x = ))	6bcab2cac493b9958b7ba75aee1e0f51f2851977e8791e66755dcefaa2eebf2e	FALSE
+v2_helper	R/ldak_annotations.R	normalise_ldak_chr	as.pairlist(alist(x = ))	fc59aafe4fd53150bd1e6ffa5fe7ac2ff967659e4701ef7496aa77ba45903e0d	FALSE
+v3_helper	R/ldak_annotations.R	normalise_ldak_chr	as.pairlist(alist(x = ))	fc59aafe4fd53150bd1e6ffa5fe7ac2ff967659e4701ef7496aa77ba45903e0d	FALSE
+v2_helper	R/ldak_annotations.R	normalise_ldak_coordinate	as.pairlist(alist(x = , field = ))	c1bfbf9d0abc7c8ab8273cb351714f1fc8564a4c291f9677407cfe2b773c2838	FALSE
+v3_helper	R/ldak_annotations.R	normalise_ldak_coordinate	as.pairlist(alist(x = , field = ))	c1bfbf9d0abc7c8ab8273cb351714f1fc8564a4c291f9677407cfe2b773c2838	FALSE
+v2_helper	R/config.R	normalise_network_names	as.pairlist(alist(networks = , field = ))	6d075c2e2e8e4071056418ff4d60c7afb419ee2cdbfc21d44425e4535780ff11	FALSE
+v3_helper	R/config.R	normalise_network_names	as.pairlist(alist(networks = , field = ))	6d075c2e2e8e4071056418ff4d60c7afb419ee2cdbfc21d44425e4535780ff11	FALSE
+v2_helper	R/network_construction.R	normalise_network_node_id	as.pairlist(alist(x = ))	294cf384a69bedc9a24c29d80d129cc209665a788e71c4ef26b4b1e910f743ec	FALSE
+v3_helper	R/network_construction.R	normalise_network_node_id	as.pairlist(alist(x = ))	294cf384a69bedc9a24c29d80d129cc209665a788e71c4ef26b4b1e910f743ec	FALSE
+v2_helper	R/hhotnet_results.R	parse_hhotnet_cluster_headers	as.pairlist(alist(lines = , network = ))	e7306e485576ed630f1ce7aa6f79ad3824323e5b278d73aaa830619d7c89f25c	FALSE
+v3_helper	R/hhotnet_results.R	parse_hhotnet_cluster_headers	as.pairlist(alist(lines = , network = ))	e7306e485576ed630f1ce7aa6f79ad3824323e5b278d73aaa830619d7c89f25c	FALSE
+hotnetR	R/graph.R	plot_subgraphs_to_pdf	as.pairlist(alist(ig = , score_attr = ""score"", pdf_file = ""subgraphs.pdf""))	f1997b679109baa2431605a5ed8ff3baf7073e3ce836b377d709e8c604d55eb0	TRUE
+hotnetR	R/summary.R	plot_subgraphs_to_pdf2	as.pairlist(alist(ig = , score_attr = ""score"", pdf_file = ""subgraphs.pdf"", node_names = FALSE))	6507a861395844cb6b7e35595935248ded8b7c3f3e3e29cfad851997d4fa7971	TRUE
+v2_helper	R/ldak_annotations.R	prepare_ldak_annotations	as.pairlist(alist(config = , dry_run = TRUE))	d7985d974d954b57d8ba87e786a0c0293b84053996013f0fb8ff038aefadfe76	TRUE
+v3_helper	R/ldak_annotations.R	prepare_ldak_annotations	as.pairlist(alist(config = , dry_run = TRUE))	4069810bf254731a065017caad2aa6b3328123811def678bd790bb7288fce9ae	TRUE
+hotnetR	R/graph.R	print_network_info	as.pairlist(alist(ig = , score_attr = ""score"", top_n = 6))	c2b6dd110f4f752c37d4c2b4570488c4a9a5913e12234888d58946a1ef13accf	TRUE
+v2_helper	R/ldak_jobs.R	project_relative_value	as.pairlist(alist(config = , path = ))	8d0683fb1aa4e5aeaf877236f1aba6f5d5eaabdf833a57ae5d5f6a0fa47db11e	FALSE
+v3_helper	R/ldak_jobs.R	project_relative_value	as.pairlist(alist(config = , path = ))	8d0683fb1aa4e5aeaf877236f1aba6f5d5eaabdf833a57ae5d5f6a0fa47db11e	FALSE
+v2_helper	R/ldak_annotations.R	promoter_alias_map_path	as.pairlist(alist(config = ))	7be4b780d9457a01c113b81724a45a949c2336b014219afdb828bc9781e0e7d0	FALSE
+v3_helper	R/ldak_annotations.R	promoter_alias_map_path	as.pairlist(alist(config = ))	7be4b780d9457a01c113b81724a45a949c2336b014219afdb828bc9781e0e7d0	FALSE
+hotnetR	R/data.R	promoter_loc	as.pairlist(alist(jeme = , hic = , promoter_loc_file = , verbose = TRUE))	1b55bc90092fb7675cacb92bc8854f3a3a0b53b878dafcd5be8261dbefaaf578	TRUE
+hotnetR	R/JEME_access.R	promoter_range	as.pairlist(alist(x = , source = c(""NCBI"", ""jeme"")))	9c08ad72330841645b33a81dfa97ab9380e8e37fb778f1d4cd5b131551489369	TRUE
+hotnetR	R/data.R	read_ARACNe	as.pairlist(alist(infile = , MI_threshold = 0, pvalue_threshold = 1e-06, keep_genes = NULL))	e8a256b556e0993e009a37432ffc921c8502e081eb9a7ea048f50394ff65e401	TRUE
+v2_helper	R/config.R	read_analysis_config	pairlist(file = ""analysis.yaml"")	fbee595f1bddf4d3f1082b7092723111150db199503e671ecc409c12198e4f96	TRUE
+v3_helper	R/config.R	read_analysis_config	pairlist(file = ""analysis.yaml"")	fbee595f1bddf4d3f1082b7092723111150db199503e671ecc409c12198e4f96	TRUE
+hotnetR	R/download_GTEx.R	read_gtex_gencode_gtf	pairlist(cache_dir = NULL)	fc70c6143ceb9980d947e9bf3944c58f50c309829f8ddbea8925dcb111fbc334	FALSE
+v2_helper	R/hhotnet_results.R	read_hhotnet_cluster_result	as.pairlist(alist(file = , network = ))	974e365e7686dd4f33101a275a0e600346a98f79266305479fb15d0920ddf004	TRUE
+v3_helper	R/hhotnet_results.R	read_hhotnet_cluster_result	as.pairlist(alist(file = , network = ))	974e365e7686dd4f33101a275a0e600346a98f79266305479fb15d0920ddf004	TRUE
+hotnetR	R/JEME_access.R	read_jeme_csv	as.pairlist(alist(infile = , out_rds = NULL, simplify_col = FALSE))	4a7ff7b427b3bef00899a74f49a9059036ecdd2ae1419e9160168bf38d4b1e59	TRUE
+hotnetR	R/data.R	read_ldak_gene_score	as.pairlist(alist(flk = , cohort = NULL, file = ))	b420d68d8593814132c199ca651e4751d780d65114a60aafa5afbbfb8441aa9f	TRUE
+v2_helper	R/ldak_summary.R	read_ldak_space_table	as.pairlist(alist(file = , skip = 0L))	a5e070c14b618c4005b1c7a4a1d1177c8e5f6bd04cfc97242c1bf27ee44b892e	FALSE
+v3_helper	R/ldak_summary.R	read_ldak_space_table	as.pairlist(alist(file = , skip = 0L))	a5e070c14b618c4005b1c7a4a1d1177c8e5f6bd04cfc97242c1bf27ee44b892e	FALSE
+v2_helper	R/network_construction.R	read_network_index	as.pairlist(alist(file = ))	cb1426d041ff9b3f8250199ae2e0fa4de24cdf3903f2df0068389e2c6bde33f8	FALSE
+v3_helper	R/network_construction.R	read_network_index	as.pairlist(alist(file = ))	cb1426d041ff9b3f8250199ae2e0fa4de24cdf3903f2df0068389e2c6bde33f8	FALSE
+v2_helper	R/network_construction.R	refresh_network_nodes	as.pairlist(alist(data = ))	0a40a0f11ecd485006ed8122e30d9c3fa06568f98f58ece61739760767687d35	FALSE
+v3_helper	R/network_construction.R	refresh_network_nodes	as.pairlist(alist(data = ))	0a40a0f11ecd485006ed8122e30d9c3fa06568f98f58ece61739760767687d35	FALSE
+v2_helper	R/ldak_annotations.R	require_annotation_packages	NULL	6f21e88969bcededf5148bdc34fdaef8152fc77a5ebb4184b7cfd5b2d6b0a39d	FALSE
+v3_helper	R/ldak_annotations.R	require_annotation_packages	NULL	6f21e88969bcededf5148bdc34fdaef8152fc77a5ebb4184b7cfd5b2d6b0a39d	FALSE
+v2_helper	R/hhotnet_results.R	require_hhotnet_result_packages	pairlist(include_json = FALSE)	4983ad8ac1cf56a95d95933ebb6b3bd3fc8c886bc3d813b937cb145613be1c9c	FALSE
+v3_helper	R/hhotnet_results.R	require_hhotnet_result_packages	pairlist(include_json = FALSE)	4983ad8ac1cf56a95d95933ebb6b3bd3fc8c886bc3d813b937cb145613be1c9c	FALSE
+v2_helper	R/network_construction.R	require_network_packages	NULL	92ea7caf725f791b8f1ac2659464f872494ef8dfc0a8d15ab1bd59208b0d8df8	FALSE
+v3_helper	R/network_construction.R	require_network_packages	NULL	92ea7caf725f791b8f1ac2659464f872494ef8dfc0a8d15ab1bd59208b0d8df8	FALSE
+v2_helper	R/config.R	resolve_config_path	as.pairlist(alist(path = , base_dir = ))	992348bfd2b154d3b4b6ebc173261fec1171b8c9b9b4cf15027f41957bdfb79e	FALSE
+v3_helper	R/config.R	resolve_config_path	as.pairlist(alist(path = , base_dir = ))	992348bfd2b154d3b4b6ebc173261fec1171b8c9b9b4cf15027f41957bdfb79e	FALSE
+v2_helper	R/config.R	resolve_networks	as.pairlist(alist(config = , networks = NULL))	35cc41e3660e98020fd885cb08cb4a0be6fc08de6d6a31e6700fe1fac0eabd6f	TRUE
+v3_helper	R/config.R	resolve_networks	as.pairlist(alist(config = , networks = NULL))	35cc41e3660e98020fd885cb08cb4a0be6fc08de6d6a31e6700fe1fac0eabd6f	TRUE
+v2_helper	R/hhotnet_results.R	row_as_json_list	as.pairlist(alist(data = , index = ))	6cb991065f34cb6b7124070ab8094d9e6ed8eb935326fecbb803c0799522c81e	FALSE
+v3_helper	R/hhotnet_results.R	row_as_json_list	as.pairlist(alist(data = , index = ))	6cb991065f34cb6b7124070ab8094d9e6ed8eb935326fecbb803c0799522c81e	FALSE
+v2_helper	R/hhotnet_results.R	safe_hhotnet_max	as.pairlist(alist(x = ))	8658776e75d92e96391398909653815a230319e560916fdc41815a02afa06247	FALSE
+v3_helper	R/hhotnet_results.R	safe_hhotnet_max	as.pairlist(alist(x = ))	8658776e75d92e96391398909653815a230319e560916fdc41815a02afa06247	FALSE
+v2_helper	R/hhotnet_results.R	safe_hhotnet_min	as.pairlist(alist(x = ))	3d3845bb0513323131e18e3e60318e26009c85a381fd8a4ec74ad7fe53e6ee99	FALSE
+v3_helper	R/hhotnet_results.R	safe_hhotnet_min	as.pairlist(alist(x = ))	3d3845bb0513323131e18e3e60318e26009c85a381fd8a4ec74ad7fe53e6ee99	FALSE
+hotnetR	R/graph.R	save_hotnet_network_files	as.pairlist(alist(obj = , network_name = , out_dir = ""./data""))	7c2360418bb7fcca3932dc50307b2d9f00f47a6e3b43a50394d4e85e8322df13	TRUE
+v2_helper	R/hhotnet_results.R	scale_hhotnet_node_size	as.pairlist(alist(score = , size_range = c(20, 60)))	523394ed349e39c8c5a63d8bc55b063e2c98886331bc793090a8d2e04c90d226	FALSE
+v3_helper	R/hhotnet_results.R	scale_hhotnet_node_size	as.pairlist(alist(score = , size_range = c(20, 60)))	523394ed349e39c8c5a63d8bc55b063e2c98886331bc793090a8d2e04c90d226	FALSE
+v2_helper	R/network_construction.R	score_from_pvalue	as.pairlist(alist(p = , cap = NULL))	0c5cce816a4346cff9015d7772a3817963490627b1da2c4dba0be7cfff4d3506	FALSE
+v3_helper	R/network_construction.R	score_from_pvalue	as.pairlist(alist(p = , cap = NULL))	0c5cce816a4346cff9015d7772a3817963490627b1da2c4dba0be7cfff4d3506	FALSE
+hotnetR	R/graph.R	select_components_by_nodes	as.pairlist(alist(ig = , nodes = ))	461b56ecaa2a30dfb9422959376843b5021a4db04e6f07d77ff4f92a1f784ac6	TRUE
+hotnetR	R/r_utils.R	select_rows_with_semicolon	as.pairlist(alist(df = , col = , invert = FALSE))	e6d86efc393dc3205e0775c4f87d464e53a9ae3d516eeb6aa5b0bbb673014602	TRUE
+v2_helper	R/setup.R	setup_analysis	as.pairlist(alist(config = , dry_run = TRUE, checksum = FALSE))	9bf9dc13ac8eb1d00a05dda3fc30dc76410862d5bf3b50103b4c1e466c8d31d6	TRUE
+v3_helper	R/setup.R	setup_analysis	as.pairlist(alist(config = , dry_run = TRUE, checksum = FALSE))	9bf9dc13ac8eb1d00a05dda3fc30dc76410862d5bf3b50103b4c1e466c8d31d6	TRUE
+hotnetR	R/setup.R	setup_data	as.pairlist(alist(cache_dir = NULL, overwrite = FALSE, create_harmonization = FALSE, ... = ))	9e1dbc56bb7cb5429dbbefed0c76f53c316ccd974894346497c23c68f9a54d04	TRUE
+hotnetR	R/setup.R	setup_hotnet_data	as.pairlist(alist(cache_dir = NULL, overwrite = FALSE, create_harmonization = FALSE, ... = ))	8eef60084812ddfcdd0c66cc69552ae268dd06f82853c9c7c6a02715ce0895a6	TRUE
+v2_helper	R/ldak_jobs.R	shell_quote	as.pairlist(alist(x = ))	d98c788449bf75d8454aaef116be80ce7541133a207115dd964cb4a47ed20ce7	FALSE
+v3_helper	R/ldak_jobs.R	shell_quote	as.pairlist(alist(x = ))	d98c788449bf75d8454aaef116be80ce7541133a207115dd964cb4a47ed20ce7	FALSE
+hotnetR	R/r_utils.R	split_columns	as.pairlist(alist(df = , ... = ))	7edfc3ef4d987e8a9ca977e3216fa85938d1a42d909cecbe667ea5742534ef09	TRUE
+v2_helper	R/network_construction.R	split_network_multi_promoters	as.pairlist(alist(data = , enabled = FALSE))	ada696f601728af84c5ff440be40e33723fc4049dec63af1bd65a49852eb061a	FALSE
+v3_helper	R/network_construction.R	split_network_multi_promoters	as.pairlist(alist(data = , enabled = FALSE))	ada696f601728af84c5ff440be40e33723fc4049dec63af1bd65a49852eb061a	FALSE
+v2_helper	R/hhotnet_results.R	style_hhotnet_edges	as.pairlist(alist(edges = ))	1ea176ac7f3f1fc6a2883c43db3d90d7a15124e5b44b1b872cd49bc9eea197e3	FALSE
+v3_helper	R/hhotnet_results.R	style_hhotnet_edges	as.pairlist(alist(edges = ))	1ea176ac7f3f1fc6a2883c43db3d90d7a15124e5b44b1b872cd49bc9eea197e3	FALSE
+v2_helper	R/hhotnet_results.R	style_hhotnet_nodes	as.pairlist(alist(nodes = , size_range = c(20, 60)))	2f6ca05cc893e5804bfddb356ad09d72e92e5d6fa171098e4617413e1fde6149	FALSE
+v3_helper	R/hhotnet_results.R	style_hhotnet_nodes	as.pairlist(alist(nodes = , size_range = c(20, 60)))	2f6ca05cc893e5804bfddb356ad09d72e92e5d6fa171098e4617413e1fde6149	FALSE
+hotnetR	R/graph.R	subgraph_info	as.pairlist(alist(ig = , score_attr = ""score""))	a048ddee48c4d78ab9efefcf5c7cfde1c801f1079fa8d7239e0b3a80cbb02714	TRUE
+hotnetR	R/graph.R	subgraph_info_FDR	as.pairlist(alist(ig = , score_attr = ""score""))	e9a0f1de88fad432002a85c31d4794ed99c67fa4f3ad90633fe72a9ca3371207	TRUE
+hotnetR	R/graph.R	subset_graph_by_score	as.pairlist(alist(ig = , score_attr = ""score"", max_score_threshold = 4))	6968676ccf984eca6a5c2fa865c5447bfc7baf8400f71323e42a3d3d80044cc5	TRUE
+v2_helper	R/network_construction.R	subset_network_components	as.pairlist(alist(graph = , threshold = ))	155c79600408d790d49365fd0bfd50c10dcc921126490ac8ff7fd0e34fa21082	FALSE
+v3_helper	R/network_construction.R	subset_network_components	as.pairlist(alist(graph = , threshold = ))	155c79600408d790d49365fd0bfd50c10dcc921126490ac8ff7fd0e34fa21082	FALSE
+v2_helper	R/hhotnet_results.R	summarize_hhotnet_permutation_outputs	as.pairlist(alist(config = , network = ))	6b0b3ec042120bc2a81f0024298da79a6f4f3c64332d955d080441caa2645f36	FALSE
+v3_helper	R/hhotnet_results.R	summarize_hhotnet_permutation_outputs	as.pairlist(alist(config = , network = ))	6b0b3ec042120bc2a81f0024298da79a6f4f3c64332d955d080441caa2645f36	FALSE
+v2_helper	R/hhotnet_results.R	summarize_hhotnet_results	as.pairlist(alist(config = , networks = NULL))	85768ba17a6855a8e86cd4b11fcc16cf1c993307aff68e18ae2ab6d79603a2de	TRUE
+v3_helper	R/hhotnet_results.R	summarize_hhotnet_results	as.pairlist(alist(config = , networks = NULL))	85768ba17a6855a8e86cd4b11fcc16cf1c993307aff68e18ae2ab6d79603a2de	TRUE
+hotnetR	R/ldak_utils.R	summarize_ldak	as.pairlist(alist(result_dir = , output_file = NULL))	423f4bffa7277365fd034de52de942b198efbb47b945cc45ce12b9ce7eaecb03	TRUE
+hotnetR	R/ldak_utils.R	summarize_ldak_results	pairlist(config_file = ""ldak_parameter.yaml"", fdr_cutoff = 0.05, out_top_gene = ""top_gene.txt"", out_top_gene2 = ""top_gene2.txt"")	1a93afd46e54c5ac4cd5e277f81144c67b5559ffa111862a4aa335e049a53f50	TRUE
+v2_helper	R/ldak_summary.R	summarize_ldak_results	as.pairlist(alist(config = , dry_run = TRUE))	adf5be73e9ed96109cf314c24f3e3bf527fa4655de1028aea4009da5c14ce108	TRUE
+v3_helper	R/ldak_summary.R	summarize_ldak_results	as.pairlist(alist(config = , dry_run = TRUE))	adf5be73e9ed96109cf314c24f3e3bf527fa4655de1028aea4009da5c14ce108	TRUE
+v2_helper	R/ldak_summary.R	summarize_one_ldak_result	as.pairlist(alist(config = , node_type = , spec = ))	eea42e8d6b95e63a00b2252df6d3cd5c5db3f46c36513967f878342d60031a32	FALSE
+v3_helper	R/ldak_summary.R	summarize_one_ldak_result	as.pairlist(alist(config = , node_type = , spec = ))	eea42e8d6b95e63a00b2252df6d3cd5c5db3f46c36513967f878342d60031a32	FALSE
+hotnetR	R/JEME_access.R	summary_harmonized_jeme	as.pairlist(alist(jeme_harmonized = , max_print = 10, verbose = TRUE))	f8760369f167683813c7eb3cd0f8b00992c30f2d3c3a9e4436fec5d070e25db8	FALSE
+v2_helper	R/config.R	validate_analysis_config	as.pairlist(alist(config = ))	cf057aacd66ef2243381f2866f97d0fd1d6407e3b6842a8537e962d46a1d0e52	FALSE
+v3_helper	R/config.R	validate_analysis_config	as.pairlist(alist(config = ))	3e6afce92062c8033f37ede73a0b0f85841d5c7e26a013af319de65090887f58	FALSE
+v2_helper	R/hhotnet_completion.R	validate_hhotnet_completion	as.pairlist(alist(config = , networks = NULL))	9067372b9d1541b8530fe82fd4e1ea71e82d532034a1d5be6f9c76413d655c79	TRUE
+v3_helper	R/hhotnet_completion.R	validate_hhotnet_completion	as.pairlist(alist(config = , networks = NULL))	9067372b9d1541b8530fe82fd4e1ea71e82d532034a1d5be6f9c76413d655c79	TRUE
+v2_helper	R/hhotnet_results.R	validate_hhotnet_exports	as.pairlist(alist(config = , networks = NULL, filter_components = TRUE))	e17889d1967ddba90ef37f61a3dbf18463a14edd889fb14403ec81a9b660685e	TRUE
+v3_helper	R/hhotnet_results.R	validate_hhotnet_exports	as.pairlist(alist(config = , networks = NULL, filter_components = TRUE))	e17889d1967ddba90ef37f61a3dbf18463a14edd889fb14403ec81a9b660685e	TRUE
+v2_helper	R/hhotnet_validation.R	validate_hhotnet_inputs	as.pairlist(alist(config = , networks = NULL))	d5130bc33b351fecd6032b2d3119ec3357381c0e4d723fd3d8c85294103d77c2	TRUE
+v3_helper	R/hhotnet_validation.R	validate_hhotnet_inputs	as.pairlist(alist(config = , networks = NULL))	d5130bc33b351fecd6032b2d3119ec3357381c0e4d723fd3d8c85294103d77c2	TRUE
+v2_helper	R/ldak_annotations.R	validate_ldak_annotations	as.pairlist(alist(config = ))	4cdb5212a0acadabd74e51b8f9b8f59777d7cc15aa657a985b7d493cbe876ec8	TRUE
+v3_helper	R/ldak_annotations.R	validate_ldak_annotations	as.pairlist(alist(config = ))	4cdb5212a0acadabd74e51b8f9b8f59777d7cc15aa657a985b7d493cbe876ec8	TRUE
+v2_helper	R/ldak_annotations.R	validate_ldak_intervals	as.pairlist(alist(intervals = , annotation_type = , reference_bounds = ))	a574599441e932713f2a561d16000cff813d1ab470b9efe569a1ad6cbdb991f0	FALSE
+v3_helper	R/ldak_annotations.R	validate_ldak_intervals	as.pairlist(alist(intervals = , annotation_type = , reference_bounds = ))	a574599441e932713f2a561d16000cff813d1ab470b9efe569a1ad6cbdb991f0	FALSE
+v2_helper	R/ldak_summary.R	validate_ldak_results	as.pairlist(alist(config = ))	62afd3296552dcda58a8cf1f4c12434eb84fabe4cd3a11b7ee35ef5d9e826656	TRUE
+v3_helper	R/ldak_summary.R	validate_ldak_results	as.pairlist(alist(config = ))	62afd3296552dcda58a8cf1f4c12434eb84fabe4cd3a11b7ee35ef5d9e826656	TRUE
+v2_helper	R/provenance.R	write_analysis_provenance	as.pairlist(alist(config = , checksum = FALSE))	061485fac02e2810295e76e51a0045e852e5f2f85c9c57efc6c30316864ebdc8	TRUE
+v3_helper	R/provenance.R	write_analysis_provenance	as.pairlist(alist(config = , checksum = FALSE))	061485fac02e2810295e76e51a0045e852e5f2f85c9c57efc6c30316864ebdc8	TRUE
+v2_helper	R/config.R	write_effective_config	as.pairlist(alist(config = , file = NULL))	6b3fe3864bef25f01951ca7bad8f1ab9d8c489019c4202851261c0f22f758408	TRUE
+v3_helper	R/config.R	write_effective_config	as.pairlist(alist(config = , file = NULL))	6b3fe3864bef25f01951ca7bad8f1ab9d8c489019c4202851261c0f22f758408	TRUE
+v2_helper	R/hhotnet_results.R	write_hhotnet_cluster_tables	as.pairlist(alist(result = , config = , network = ))	15dd9a7f20aa54b23265925b682368915e5b786035c1baf7f1a1c5c25fd5d995	FALSE
+v3_helper	R/hhotnet_results.R	write_hhotnet_cluster_tables	as.pairlist(alist(result = , config = , network = ))	15dd9a7f20aa54b23265925b682368915e5b786035c1baf7f1a1c5c25fd5d995	FALSE
+v2_helper	R/hhotnet_results.R	write_hhotnet_cx2	as.pairlist(alist(nodes = , edges = , file = , analysis = , network = , component_filter = ))	b51b47a3e12ecd5952e564a76d4e32edd5f43b444222bdf30b9704ebe2c11b9a	FALSE
+v3_helper	R/hhotnet_results.R	write_hhotnet_cx2	as.pairlist(alist(nodes = , edges = , file = , analysis = , network = , component_filter = ))	b51b47a3e12ecd5952e564a76d4e32edd5f43b444222bdf30b9704ebe2c11b9a	FALSE
+v2_helper	R/hhotnet_results.R	write_hhotnet_cytoscape_json	as.pairlist(alist(nodes = , edges = , file = , analysis = , network = ))	b453946fac7c017d4680e83c18a566a61cbb51ea0c36f2e0570d46ffc5355c29	FALSE
+v3_helper	R/hhotnet_results.R	write_hhotnet_cytoscape_json	as.pairlist(alist(nodes = , edges = , file = , analysis = , network = ))	b453946fac7c017d4680e83c18a566a61cbb51ea0c36f2e0570d46ffc5355c29	FALSE
+v2_helper	R/network_construction.R	write_network_graph	as.pairlist(alist(config = , graph = , network = ))	7ca559755178d22141ce6a9e642c45737afac58d891b38f787cd8c4a55b50323	FALSE
+v3_helper	R/network_construction.R	write_network_graph	as.pairlist(alist(config = , graph = , network = ))	7ca559755178d22141ce6a9e642c45737afac58d891b38f787cd8c4a55b50323	FALSE
+v2_helper	R/setup.R	write_tsv_base	as.pairlist(alist(data = , file = ))	63c78ecd53526ed954afb8d9b38d53bcf2c49ad5d42c1f783d5ff580f5e73dd4	FALSE
+v3_helper	R/setup.R	write_tsv_base	as.pairlist(alist(data = , file = ))	63c78ecd53526ed954afb8d9b38d53bcf2c49ad5d42c1f783d5ff580f5e73dd4	FALSE

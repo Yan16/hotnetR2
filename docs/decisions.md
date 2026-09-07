@@ -42,6 +42,13 @@ arguments. Preserve the hotnetR interface and use
 summarize_analysis_ldak_results() for config-driven analysis. Duplicate
 exclude_MHC() definitions in hotnetR/R/data.R and R/r_utils.R need one owner.
 
+The automated inventory also found filter_network_ldak(): the public hotnetR
+function takes (net_regulators, nodes_all, verbose), while the helper's internal
+function takes (data, config). Rename the internal orchestration operation;
+preserve the public signature and keep the shared filtering decision in one
+implementation. The two exclude_MHC() bodies have different hashes despite
+matching formals, so source load order currently matters.
+
 ## ADR 005 — Explicit resources and immutable identity
 
 Current get_cache_dir() uses here()/working-directory inference. Several
@@ -65,7 +72,17 @@ failures; internal pure transforms should not contain redundant defensive code.
 - hotnetR has an existing staged README modification and untracked documents.
   Preserve them; Git HEAD alone does not identify the full working snapshot.
 - Record source-tree checksums and installed-package provenance in Phase 0;
-  neither has yet been certified by this planning revision.
+  installed-package provenance remains pending. The inventory below records
+  the inspected source files and function signatures.
+
+## Repeatable source inventory
+
+tools/capture_source_inventory.R parsed 50 source/metadata files and 323
+top-level function definitions without loading either package. Reports are in
+docs/inventory/: source_files.tsv, function_signatures.tsv,
+duplicate_definitions.tsv and signature_conflicts.tsv. Source file hashes
+are raw SHA-256; function-body hashes use digest's R serialization and are
+diagnostic within the recorded R environment, not cross-R-version identities.
 
 ## Git policy
 
@@ -73,4 +90,3 @@ This new project has its own Git history. Commit planning first, then focused
 implementation increments with task IDs, tests, and evidence. Stage explicit
 paths. Do not amend original hotnetR history or include existing workspace
 changes. Release tags follow completed package and reproduction gates only.
-

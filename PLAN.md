@@ -124,4 +124,3 @@ tibble::, stringr:: etc.; base and stats calls may remain unqualified.
 Each phase is a focused Git commit with tests/evidence and updated task status.
 Never commit input cohorts, installed libraries, caches, or generated large
 analyses. Separate compatibility refactors from scientific corrections.
-

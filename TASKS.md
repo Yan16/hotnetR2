@@ -11,6 +11,9 @@ A passing later gate does not waive unfinished earlier tasks.
 - [x] P0.04 Define coding, Roxygen and clean-machine acceptance contracts.
 - [x] P0.05 Initialize package Git history and commit design documents.
 - [ ] P0.06 Record function signatures/exports and migration disposition for every API.
+- [x] P0.06a Capture 323 function definitions/exports across 50 source/metadata files;
+  report duplicate definitions and conflicting signatures automatically.
+- [ ] P0.06b Assign and review a migration disposition for every captured public API.
 - [ ] P0.07 Capture working source SHA-256, installed package versions and session info.
 - [ ] P0.08 Hash frozen inputs and reference outputs; classify exact comparison exceptions.
 - [ ] P0.09 Audit source NCBI coordinates/assembly records and quantify boundary differences.
@@ -23,7 +26,8 @@ Gate: reviewed baseline manifest, complete API map, explicit coordinate policies
 - [ ] P1.01 Create DESCRIPTION, MIT attribution, NEWS, .Rbuildignore and namespace.
 - [ ] P1.02 Port required hotnetR importers, mappings, graph and score functions.
 - [ ] P1.03 Port reconciled helper config, annotation, LDAK and network implementations.
-- [ ] P1.04 Resolve duplicate exclude_MHC and summarizer interfaces explicitly.
+- [ ] P1.04 Resolve duplicate exclude_MHC, summarize_ldak_results and public/internal
+  filter_network_ldak interfaces explicitly.
 - [ ] P1.05 Replace hotnetR::/::: and hardcoded package lookup with internal calls.
 - [ ] P1.06 Remove analysis-local source() bootstraps from installed CLI entry points.
 - [ ] P1.07 Apply explicit tidyverse namespaces; keep internal contracts concise.

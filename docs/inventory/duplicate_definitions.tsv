@@ -1,0 +1,3 @@
+source	file	name	formals	body_sha256	exported	definitions_in_source
+hotnetR	R/data.R	exclude_MHC	as.pairlist(alist(df = , chr = 6, start = 28477797, end = 33448354))	bff1a4817d129ade5d72b52464932f7e19c33fff36e3179b4614918613d3b6eb	TRUE	2
+hotnetR	R/r_utils.R	exclude_MHC	as.pairlist(alist(df = , chr = 6, start = 28477797, end = 33448354))	9b6c4b48ff64c1ff6820693c4c1cbaffc6883f38061f1f671bbf94622b6d98e2	TRUE	2

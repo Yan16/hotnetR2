@@ -17,6 +17,7 @@
 | build_hhotnet_networks(), resolve_networks() | Same | Profiles retain selected network behavior. |
 | summarize_hhotnet_results(), export_hhotnet_graphs() | Same | Preserve export and cluster contracts. |
 | exclude_MHC() duplicate definitions | One function | Record existing signatures/body differences before choosing. |
+| filter_network_ldak() in hotnetR versus helper | Preserve public hotnetR API; rename helper internal function | The public table interface and internal data/config interface must not shadow each other. |
 | classifier shell script | classify_enhancers(config, ...) | New installed API, bedtools backend. |
 | command-line step sequence | run_analysis(config, stages, ...) | New orchestration, invalidation and progress reporting. |
 | clean project setup | initialize_analysis(path, profile, ...) | New API for v2/v3 portable templates. |
@@ -58,4 +59,3 @@ provenance; artifact_comparison; compatibility.
 
 The dependency graph should point from orchestration to pure domain functions
 and external adapters, never from core data operations to CLI scripts.
-

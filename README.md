@@ -14,6 +14,7 @@ Read in order:
 4. [API and coding contract](docs/api.md)
 5. [Reproduction contract](docs/reproducibility.md)
 6. [Architecture decisions and source findings](docs/decisions.md)
+7. [Captured source inventory](docs/inventory/README.md)
 
 The references are `../v2_analysis2` and `../v3_analysis2` in the containing
 project. Original hotnetR source is at `../../hotnetR`. These are development
@@ -31,4 +32,3 @@ the frozen inputs or verified source downloads, as well as the R package.
 
 This repository will track reviewable implementation increments. Completed
 work and pending acceptance gates are recorded in TASKS.md.
-

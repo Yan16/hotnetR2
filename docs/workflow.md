@@ -80,4 +80,3 @@ verify`.
 The finished installed package provides the sequence through documented public
 functions and installed command-line entry points. Pure transformations return
 tables; orchestration handles files, tools, stage fingerprints, and provenance.
-
