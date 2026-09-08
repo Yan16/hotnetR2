@@ -92,6 +92,13 @@ promoter permutation statistics differ: all observed statistics match, while
 The first per-gene permutation difference is RYR2. This remains an unresolved
 external-run reproduction failure, not an accepted tolerance.
 
+A second fresh v2 promoter run with the same seed, binary and eight-thread
+setting differs from the first in 17,570 permutation-adjusted p-values
+(maximum absolute difference 0.002010), despite identical observed statistics.
+This establishes repeat-run variability in the external calculation; its
+mechanism remains unresolved. Threading and RNG diagnostics are the next gate,
+not substitution of an arbitrary numerical tolerance.
+
 Relocating the 155-resource bundle into a project path containing spaces and
 running annotation/classification from an unrelated working directory reproduced
 all five selected v3 annotation files. The existing R library was used; a
