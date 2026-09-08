@@ -52,7 +52,9 @@ Gate: coherent installed package, no API collisions or hidden runtime source dep
 - [ ] P2.08 Record LDAK executable build/hash and bedtools version.
 - [ ] P2.09 Pin HotNet checkout, Python dependencies and compatibility shim hashes.
 - [ ] P2.10 Supply reproduction-project R lockfile; test clean restore.
-- [ ] P2.11 Verify paths with spaces and no implicit home/cache dependencies.
+- [x] P2.11 Verify paths with spaces and no implicit home/cache dependencies
+  for v3 annotation/classification using a restored 155-file bundle; software
+  library restoration remains a separate pending gate.
 Gate: minimal project restoration using only installed package and manifest resources.
 
 ## P3 — Harmonization, intervals and enhancer classes
@@ -81,6 +83,8 @@ Gate: matching .loc/details/classes and explicit audit of any policy differences
 - [ ] P4.06 Centralize finite/infinite score transformation and FDR handling.
 - [x] P4.07 Compare summaries from existing frozen LDAK raw products.
 - [ ] P4.08 Rerun both LDAK profiles independently and compare full outputs.
+  Both ran: v3 checked raw results/scores match, while v2 promoter permutation
+  p-values differ despite identical observed statistics. See test_hotnetR2 reports.
 Gate: structural integrity and exact package-output identity, separate external-run report.
 
 ## P5 — Networks and HotNet execution

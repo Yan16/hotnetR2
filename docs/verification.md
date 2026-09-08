@@ -3,7 +3,7 @@
 Reference policy: v2_analysis2 and v3_analysis2 override earlier analysis2.
 Original analyses are read-only. Candidate outputs are generated separately.
 
-Run `tools/verify_reference_profiles.R PROJECT_ROOT OUTPUT_ROOT` with an installed
+Run `../test_hotnetR2/scripts/verify_reference_profiles.R PROJECT_ROOT OUTPUT_ROOT` with an installed
 hotnetR2 package. The script regenerates annotations and networks; it links raw
 reference LDAK result directories as fixed inputs. Never run `run_ldak()` against
 those links (the runner rejects them).
@@ -50,7 +50,7 @@ network. All four networks produced 101 hierarchy edge/index pairs. Export
 validation passed for unique node names, edge endpoints, GraphML readability,
 and Cytoscape.js/CX2 counts and attributes.
 
-`tools/verify_hotnet_artifacts.R` compares the union of reference and candidate
+`../test_hotnetR2/scripts/verify_hotnet_artifacts.R` compares the union of reference and candidate
 TSV/GraphML/JSON/CX2 inventories under results, cytoscape, and summary/clusters.
 It found 25 files for v2 and 59 for v3: respectively 20 and 54 byte-identical.
 The five differences per profile are three path manifests and two Cytoscape.js
@@ -81,3 +81,21 @@ An archival bundle of 155 files (about 1.5 GB) was copied and checksum-verified
 with tools/export_reference_bundle.R. Its resource manifest is retained here.
 It includes native executables/extensions and is not a cross-platform lock or
 permission to redistribute the input data. Dependency restore remains pending.
+
+## Independent LDAK and relocation results
+
+Fresh v3 LDAK `remls.all` and `genes.details` match for enhancer and promoter
+calculations, and both standardized score tables match after decompression.
+Fresh v2 enhancer results and promoter `genes.details` match. However, v2
+promoter permutation statistics differ: all observed statistics match, while
+17,565 `LRT_P_Perm` values differ (maximum absolute difference 0.000970).
+The first per-gene permutation difference is RYR2. This remains an unresolved
+external-run reproduction failure, not an accepted tolerance.
+
+Relocating the 155-resource bundle into a project path containing spaces and
+running annotation/classification from an unrelated working directory reproduced
+all five selected v3 annotation files. The existing R library was used; a
+clean-machine software restore has not been demonstrated.
+
+The reusable test scripts, actual commands and extended reports now live in
+the sibling `../test_hotnetR2/` folder, as requested by the user.

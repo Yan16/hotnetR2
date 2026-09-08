@@ -22,12 +22,17 @@ Both retain legacy coordinate arithmetic, classify enhancers with flanks,
 keep only class1 regulatory edges, and run Networks 1–2 without ARACNe.
 See `vignette("reproduction", package = "hotnetR2")` after installation.
 
+Reusable full-data testing scripts and the actual run commands are retained in
+the sibling [`../test_hotnetR2/`](../test_hotnetR2/README.md), including
+[`COMMANDS.md`](../test_hotnetR2/COMMANDS.md). Unit tests stay in this package.
+
 Full-data verification has reproduced five selected annotation/harmonization
 artifacts and all 12 current network-input TSVs for each profile. Gzip tables
 were compared after decompression; uncompressed network TSVs were byte-matched.
 These checks reuse frozen raw LDAK outputs. Fresh HotNet runs also reproduced
 the checked cluster/export files, allowing only declared path and producer-label
-differences; fresh LDAK runs remain pending. Two historical source-edge audit files are explicitly outside
+differences. Fresh v3 LDAK results match; v2 promoter permutation-adjusted
+p-values differ and remain under investigation. Two historical source-edge audit files are explicitly outside
 the current network comparison. See [verification evidence](docs/verification.md).
 
 Read in order:
