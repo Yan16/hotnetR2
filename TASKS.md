@@ -3,6 +3,10 @@
 Status legend: checked means completed with evidence; unchecked means pending.
 A passing later gate does not waive unfinished earlier tasks.
 
+Implementation update (2026-09-08): v2/v3 take precedence over analysis2.
+See docs/verification.md for the exact scope of full-data comparisons; unchecked
+full-folder/clean-machine gates remain required even where selected files match.
+
 ## P0 — Design and frozen baseline
 
 - [x] P0.01 Inspect hotnetR metadata, public functions, v2/v3 configuration and scripts.
@@ -23,13 +27,13 @@ Gate: reviewed baseline manifest, complete API map, explicit coordinate policies
 
 ## P1 — Package foundation and API migration
 
-- [ ] P1.01 Create DESCRIPTION, MIT attribution, NEWS, .Rbuildignore and namespace.
-- [ ] P1.02 Port required hotnetR importers, mappings, graph and score functions.
-- [ ] P1.03 Port reconciled helper config, annotation, LDAK and network implementations.
-- [ ] P1.04 Resolve duplicate exclude_MHC, summarize_ldak_results and public/internal
+- [x] P1.01 Create DESCRIPTION, MIT attribution, NEWS, .Rbuildignore and namespace.
+- [x] P1.02 Port required hotnetR importers, mappings, graph and score functions.
+- [x] P1.03 Port reconciled helper config, annotation, LDAK and network implementations.
+- [x] P1.04 Resolve duplicate exclude_MHC, summarize_ldak_results and public/internal
   filter_network_ldak interfaces explicitly.
-- [ ] P1.05 Replace hotnetR::/::: and hardcoded package lookup with internal calls.
-- [ ] P1.06 Remove analysis-local source() bootstraps from installed CLI entry points.
+- [x] P1.05 Replace hotnetR::/::: and hardcoded package lookup with internal calls.
+- [x] P1.06 Remove analysis-local source() bootstraps from installed CLI entry points.
 - [ ] P1.07 Apply explicit tidyverse namespaces; keep internal contracts concise.
 - [ ] P1.08 Add Roxygen params, return schemas, coordinate rules, examples and side effects.
 - [ ] P1.09 Generate NAMESPACE/man; compare compatible public formals automatically.
@@ -39,8 +43,8 @@ Gate: coherent installed package, no API collisions or hidden runtime source dep
 ## P2 — Resource provisioning and portable projects
 
 - [ ] P2.01 Define resource manifest schema and checksummed resource IDs.
-- [ ] P2.02 Add initialize_analysis() templates for v2/v3 with relative paths.
-- [ ] P2.03 Add explicit cache/resource context to readers without breaking leading args.
+- [x] P2.02 Add initialize_analysis() templates for v2/v3 with relative paths.
+- [x] P2.03 Add explicit cache/resource context to readers without breaking leading args.
 - [ ] P2.04 Freeze tissue keys, NCBI, GENCODE and aliases with provenance.
 - [ ] P2.05 Implement verified URL downloads and user-supplied input registration.
 - [ ] P2.06 Support exporting/importing archival resource bundles outside the tarball.
@@ -56,11 +60,11 @@ Gate: minimal project restoration using only installed package and manifest reso
 - [ ] P3.01 Implement one ENSG normalizer and all-tissue mapping engine.
 - [ ] P3.02 Preserve ambiguous/unmapped fallbacks and Hi-C mapping semantics.
 - [ ] P3.03 Preserve multi-promoter splitting, tissue membership and stable ordering.
-- [ ] P3.04 Implement explicit legacy gene-body and TSS interval adapters.
+- [x] P3.04 Implement explicit legacy gene-body and TSS interval adapters.
 - [ ] P3.05 Implement canonical BED conversion separately with source-verified tests.
-- [ ] P3.06 Move overlap/class precedence into one classify_enhancers() operation.
-- [ ] P3.07 Package bedtools invocation with portable sort/hash tools and quoting.
-- [ ] P3.08 Generate source enhancer universe without reading analysis2 outputs.
+- [x] P3.06 Move overlap/class precedence into one classify_enhancers() operation.
+- [x] P3.07 Package bedtools invocation with portable sort/hash tools and quoting.
+- [x] P3.08 Generate source enhancer universe without reading analysis2 outputs.
 - [ ] P3.09 Separate legacy source-edge audits from runtime classification outputs.
 - [ ] P3.10 Test no overlap, endpoint touch, full containment, partial overlap, multiple
   windows, both strands, chromosome mismatch and chromosome-start clipping.
@@ -69,13 +73,13 @@ Gate: matching .loc/details/classes and explicit audit of any policy differences
 
 ## P4 — LDAK execution and summaries
 
-- [ ] P4.01 Generate cut/calc/join commands from canonical config.
+- [x] P4.01 Generate cut/calc/join commands from canonical config.
 - [ ] P4.02 Centralize buffers, selected SNP inputs and executable resolution.
 - [ ] P4.03 Validate tool outputs as well as exit status; preserve error logs.
 - [ ] P4.04 Preserve legacy summarize_ldak_results() formals and behavior.
-- [ ] P4.05 Implement summarize_analysis_ldak_results() and update callers.
+- [x] P4.05 Implement summarize_analysis_ldak_results() and update callers.
 - [ ] P4.06 Centralize finite/infinite score transformation and FDR handling.
-- [ ] P4.07 Compare summaries from existing frozen LDAK raw products.
+- [x] P4.07 Compare summaries from existing frozen LDAK raw products.
 - [ ] P4.08 Rerun both LDAK profiles independently and compare full outputs.
 Gate: structural integrity and exact package-output identity, separate external-run report.
 
@@ -83,22 +87,23 @@ Gate: structural integrity and exact package-output identity, separate external-
 
 - [ ] P5.01 Use saved canonical mapping and enhancer classes in network construction.
 - [ ] P5.02 Preserve node order, row multiplicity, self-loops and component filters.
-- [ ] P5.03 Keep disabled ARACNe explicit and restrict current profiles to Networks 1–2.
-- [ ] P5.04 Compare full nodes/scores/index/edge/metadata tables against both references.
+- [x] P5.03 Keep disabled ARACNe explicit and restrict current profiles to Networks 1–2.
+- [x] P5.04 Compare full nodes/scores/index/edge/metadata tables against both references.
 - [ ] P5.05 Implement stage fingerprints and dependency-aware invalidation.
 - [ ] P5.06 Package local Python execution and portable progress/status reporting.
-- [ ] P5.07 Run observed + 100 permutations with recorded environment.
+- [x] P5.07 Run observed + 100 permutations with recorded environment.
 - [ ] P5.08 Verify clean resume and invalidation after a real fixture input change.
 Gate: network artifact identity and complete validated HotNet runs.
 
 ## P6 — Cluster outputs and artifact verification
 
-- [ ] P6.01 Port corrected cluster parsing and per-cluster splitting.
-- [ ] P6.02 Port deterministic TSV/GraphML/Cytoscape.js/CX2 serializers.
+- [x] P6.01 Port corrected cluster parsing and per-cluster splitting.
+- [x] P6.02 Port deterministic TSV/GraphML/Cytoscape.js/CX2 serializers.
 - [ ] P6.03 Implement missing/unexpected/schema/order/byte comparison reports.
 - [ ] P6.04 Apply only predeclared path/compression/runtime metadata exceptions.
-- [ ] P6.05 Verify cluster IDs and all exported edge endpoints.
-- [ ] P6.06 Regenerate summaries and exports twice and confirm deterministic identity.
+- [x] P6.05 Verify cluster IDs and all exported edge endpoints.
+- [x] P6.06 Regenerate summaries and exports twice and confirm deterministic identity
+  for the declared HotNet comparison inventory (25 v2 / 59 v3 files).
 - [ ] P6.07 Keep raw p=0 reporting with permutation-count interpretation.
 Gate: complete artifact inventory and zero unexplained differences.
 
@@ -106,7 +111,8 @@ Gate: complete artifact inventory and zero unexplained differences.
 
 - [ ] P7.01 Provide installed-package quickstart and full v2/v3 run guides.
 - [ ] P7.02 Build workflow, migration, resource and reproduction vignettes.
-- [ ] P7.03 Run focused tests, full suite and macOS metadata-free R CMD check.
+- [x] P7.03 Run focused tests, full suite and macOS metadata-free R CMD check
+  (development 0.0.1, Status: OK; see docs/verification.md).
 - [ ] P7.04 Install checked tarball into a clean library and run installed tests.
 - [ ] P7.05 Restore compact fixtures on a clean VM/container or separate machine.
 - [ ] P7.06 Execute both full analyses without original paths/caches/source trees.

@@ -2,6 +2,10 @@
 
 ## Objective and scope
 
+Implementation precedence: use v2_analysis2/v3_analysis2 decisions whenever
+they conflict with earlier analysis2. Development progress and explicitly
+limited full-data identity evidence are recorded in docs/verification.md.
+
 Create an independently installable hotnetR2 package from hotnetR 0.4.6.2 and
 the v2/v3 analysis helper implementations. Reproduce both complete reference
 analyses from a portable input bundle on a machine without this workspace.

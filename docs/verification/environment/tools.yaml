@@ -1,0 +1,6 @@
+ldak_sha256: b765ebb786f6ce9774736704e641fad93a2deb3ac16cae03d60426343d07ee1b
+hotnet_commit: 448e0d20bb7c8414ab10a4f40cce3cb32944c3a5
+hotnet_worktree: |
+  ?? src/fortran_module.cpython-312-darwin.so
+bedtools_version: bedtools v2.31.1
+platform: aarch64-apple-darwin23

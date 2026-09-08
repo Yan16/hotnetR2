@@ -1,0 +1,161 @@
+# v3_analysis2: v2_analysis2 using strand-aware TSS promoter windows.
+# Paths below are relative to `project.root` (the directory above analysis2),
+# unless explicitly absolute. Outputs remain confined to v3_analysis2/.
+schema_version: 1
+
+analysis:
+  name: v3_analysis2
+  label: BEEA Gastric regulatory h-HotNet with TSS-window class1 enhancers
+  random_seed: 12345
+
+project:
+  root: ".."
+
+gwas:
+  dataset: BEEA_Schroder
+  summary_file: GWAS/BEEA_Schroder/ldak_BEEA_META.tsv
+  pvalue_file: GWAS/BEEA_Schroder/ldak_BEEA_META_pvalue.tsv
+  extract_file: GWAS/BEEA_Schroder/ldak_BEEA_META_g1k_common.txt
+  sample_size: 49266
+
+reference:
+  # Read-only local LDAK executable; no LDAK calculation is rerun because its
+  # inputs and parameters are identical to the completed analysis1 run.
+  ldak_exe: analysis1/ldak6.2.mac
+  bfile_prefix: LD_ref/g1k_EUR404_LDAK
+  # The regulatory annotations, NCBI coordinates, and LDAK reference panel
+  # must describe this same assembly. hg19 is treated as the GRCh37 alias.
+  genome_build: GRCh37
+  annotation_genome_build: GRCh37
+  # Optional two-column TSV for aliases absent from the NCBI feature table.
+  # With null, symbols are retained unchanged and recorded as identity values.
+  promoter_alias_file: null
+  promoter_alias_columns: {alias: alias, gene_symbol: gene_symbol}
+  ncbi_feature_table: .cache/LDAK/GCF_000001405.25_GRCh37.p13_feature_table.txt.gz
+
+regulatory:
+  jeme:
+    key_column: tiss
+    value: E094
+    method: lasso
+    simplified: true
+    label: Gastric
+  hic:
+    tissue_type: Gastric
+  promoter_harmonization:
+    enabled: true
+    jeme: true
+    hic: true
+    # Build one mapping from the target ENSG IDs observed across every JEME
+    # tissue, then apply it to both the all-tissue annotation universe and E094.
+    jeme_strategy: all_tissues_ensg_map
+    # HiC does not supply the same stable target IDs, so retain symbol/alias
+    # harmonization for both promoter-other and promoter-promoter contacts.
+    hic_strategy: gene_symbol_alias
+    # Read-only mappings retained from the validated GEjunc reference workflow.
+    gtf_file: .cache/gencode.v39.GRCh38.genes_nodup.rds
+    hic_alias_file: .cache/alias_link_nodup.rds
+  mhc_exclusion:
+    # This preserves the effective GEjunc_GTEx3type_MHC YAML setting. Its name
+    # is historical: MHC exclusion is disabled in that reference configuration.
+    # If enabled, every node type overlapping the fixed conservative hg19
+    # interval is removed, together with all incident regulatory edges.
+    enabled: false
+    genome_build: hg19
+    chr: 6
+    start: 25000000
+    end: 34000000
+
+# Enhancers are classified against strand-aware one-base TSS intervals generated
+# from the harmonized all-tissue target genes. Coordinates are GRCh37, 1-based,
+# and inclusive. Classification expands enhancer intervals by 1 kb and TSS
+# intervals by 2 kb. Class 2 requires the complete expanded enhancer to be inside
+# at least one TSS window; class 3 is any remaining partial overlap.
+enhancer_classification:
+  enabled: true
+  source_analysis: analysis2
+  enhancer_flank_bp: 1000
+  promoter_window: strand_aware_tss
+  promoter_flank_bp: 2000
+  class1_label: enh_class1
+  class2_label: enh_class2
+  class3_label: enh_class3
+  drop_non_class1_edge_sources: [JEME, HiC_PO]
+  retain_non_enhancer_edges: true
+
+aracne:
+  # Disabled: v2_analysis2 now ends at regulatory Networks 1 and 2.
+  enabled: false
+
+ldak:
+  # Match the effective GEjunc reference: legacy enhancer scores used 1 kb,
+  # while the corrected NCBI promoter scores used 2 kb.
+  enhancer_flank_bp: 1000
+  promoter_flank_bp: 2000
+  promoter_interval_mode: strand_aware_tss
+  # The harmonized promoter universe and class1 enhancer set both require new
+  # LDAK calculations. The 2-kb promoter flank is supplied to LDAK separately
+  # from the unexpanded coordinates stored in promoters.loc.
+  result_dirs:
+    enhancer: enhancer_class1_tss
+    promoter: promoter_tss_2k
+  annotation_tissues:
+    # The initial LDAK annotation implementation supports the all-tissue BEEA
+    # reference mode. Tissue-restricted annotations are a planned extension.
+    jeme: ALL
+    hic: ALL
+    jeme_method: lasso
+  power: -0.25
+  pruning: 0.95
+  permutations: 10
+  threads: 8
+  ignore_weights: true
+  allow_ambiguous: true
+
+validation:
+  # Read-only all-tissue 1-kb reference used to validate the local LDAK run.
+  reference_ldak_dir: LDAK_all_1k_BEEA
+  # Closest read-only historical analysis for Networks 1 and 2: Gastric
+  # regulatory inputs, no MHC exclusion, and broad threshold 3.
+  reference_hhotnet_dir: v2_analysis2/hHotnet
+
+scores:
+  pvalue_column: LRT_P_Perm
+  transform: neg_log10
+  infinite_score_cap: null
+
+networks:
+  # Every named network this analysis can build. Future analyses may add
+  # additional safe identifiers here; selected controls the default run set.
+  available: [network_1, network_2]
+  selected: [network_1, network_2]
+  regulatory_edge_filter: legacy_filter_network_ldak
+  node_order: legacy_input
+  # Match archived buas_r01_r03 behavior by retaining regulatory self-loops.
+  preserve_self_loops: true
+  deduplicate_jeme_edges_before_harmonization: true
+  split_multi_promoter_edges: true
+  thresholds:
+    small_regulatory_score: 4
+    broad_regulatory_score: 3
+
+hhotnet:
+  # The installed source is run directly with the analysis-local compatibility
+  # shim; Apptainer remains available as an alternative execution mode.
+  execution_mode: local_python
+  local_dir: /Users/li26191/software/hhotnet/hierarchical-hotnet
+  python_executable: python3
+  compat_dir: v3_analysis2/hHotnet/compat
+  apptainer_image: /projects/rpci/liyan/software/apptainer/hhotnet.sif
+  score_name: nodes_all
+  num_permutations: 100
+  # A base of 0 preserves the established seeds 1..num_permutations.
+  permutation_seed: 0
+  lower_size_bound: 10
+  cpus: 16
+
+slurm:
+  time: "12:00:00"
+  memory: "16G"
+  partition: general-compute
+  qos: general-compute

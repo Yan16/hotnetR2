@@ -1,10 +1,34 @@
 # hotnetR2
 
-A planned standalone successor to hotnetR combining dataset preparation with
+A standalone development successor to hotnetR combining dataset preparation with
 the v2_analysis2 and v3_analysis2 LDAK / hierarchical HotNet workflows.
 
-**Status: design and planning revision; implementation and clean-machine
-reproduction are not yet certified.** No existing analysis is modified.
+**Status: implementation in progress (0.0.1); clean-machine reproduction is
+not yet certified.** No existing analysis is modified. When implementations
+conflict, v2/v3 behavior takes precedence over earlier analysis2 behavior.
+
+## Installed-package workflow
+
+```r
+config_file <- hotnetR2::initialize_analysis("my-analysis", profile = "v3")
+# Supply the frozen inputs and tools at the paths in analysis.yaml.
+# Verify a transferred resource bundle before running:
+# hotnetR2::provision_resources(manifest, "my-analysis", source_root = bundle)
+hotnetR2::run_analysis(config_file)
+```
+
+The v2 profile uses extended gene bodies; v3 uses strand-aware TSS windows.
+Both retain legacy coordinate arithmetic, classify enhancers with flanks,
+keep only class1 regulatory edges, and run Networks 1–2 without ARACNe.
+See `vignette("reproduction", package = "hotnetR2")` after installation.
+
+Full-data verification has reproduced five selected annotation/harmonization
+artifacts and all 12 current network-input TSVs for each profile. Gzip tables
+were compared after decompression; uncompressed network TSVs were byte-matched.
+These checks reuse frozen raw LDAK outputs. Fresh HotNet runs also reproduced
+the checked cluster/export files, allowing only declared path and producer-label
+differences; fresh LDAK runs remain pending. Two historical source-edge audit files are explicitly outside
+the current network comparison. See [verification evidence](docs/verification.md).
 
 Read in order:
 

@@ -1,0 +1,11 @@
+test_that("LDAK scripts preserve absolute external input paths", {
+  config <- write_network_test_config()
+  external <- file.path(withr::local_tempdir(), "external inputs")
+  dir.create(external)
+  config$gwas$summary_file <- file.path(external, "summary.tsv")
+  config$reference$bfile_prefix <- file.path(external, "panel")
+  paths <- generate_ldak_jobs(config, dry_run = FALSE)
+  script <- readr::read_lines(paths[["enhancer"]])
+  expect_true(paste0("SUMMARY_STATS=", shell_quote(config$gwas$summary_file)) %in% script)
+  expect_true(paste0("BFILE_REF=", shell_quote(config$reference$bfile_prefix)) %in% script)
+})

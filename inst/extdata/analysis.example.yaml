@@ -1,0 +1,133 @@
+# hotnethelper schema version 1 example.
+# Copy this file to a new analysis directory as analysis.yaml. Generated
+# outputs will be placed beside that copied YAML. Paths to shared inputs are
+# resolved from project.root and are never written by hotnethelper.
+schema_version: 1
+
+analysis:
+  name: example_analysis
+  label: Example LDAK and h-HotNet workflow
+  random_seed: 12345
+
+project:
+  # If analysis.yaml is one directory below the project, use "..".
+  root: ".."
+
+gwas:
+  dataset: EXAMPLE_COHORT
+  summary_file: GWAS/example/ldak_summary.tsv
+  pvalue_file: GWAS/example/ldak_pvalues.tsv
+  extract_file: GWAS/example/variants.txt
+  sample_size: 10000
+
+reference:
+  # Relative paths are resolved from project.root.
+  ldak_exe: software/ldak
+  bfile_prefix: reference/genotypes
+  genome_build: GRCh37
+  annotation_genome_build: hg19
+  ncbi_feature_table: reference/GRCh37_feature_table.txt.gz
+  promoter_alias_file: null
+  promoter_alias_columns:
+    alias: alias
+    gene_symbol: gene_symbol
+
+regulatory:
+  jeme:
+    key_column: tiss
+    value: E094
+    method: lasso
+    # true uses the simplified JEME object distributed with hotnetR.
+    simplified: true
+    label: Gastric
+  hic:
+    tissue_type: Gastric
+  promoter_harmonization:
+    enabled: true
+    jeme: true
+    hic: true
+    gtf_file: reference/promoter_gene_map.rds
+    hic_alias_file: reference/hic_promoter_aliases.rds
+  mhc_exclusion:
+    # If enabled, all node types with any overlap are removed. This conservative
+    # hg19 region is fixed and cannot be narrowed.
+    enabled: false
+    genome_build: hg19
+    chr: 6
+    start: 25000000
+    end: 34000000
+
+aracne:
+  file: networks/aracne_network.txt
+  MI_threshold: 0
+  pvalue_threshold: 1.0e-6
+
+ldak:
+  # Configure node-type-specific flanks. ldak.flank_bp is only a legacy common
+  # fallback when these fields are absent.
+  enhancer_flank_bp: 1000
+  promoter_flank_bp: 2000
+  result_dirs:
+    enhancer: enhancer
+    promoter: promoter
+  annotation_tissues:
+    # Version 0.1.0 annotation preparation supports all-tissue inputs.
+    jeme: ALL
+    hic: ALL
+    jeme_method: lasso
+  power: -0.25
+  pruning: 0.95
+  permutations: 10
+  threads: 4
+  ignore_weights: true
+  allow_ambiguous: true
+
+validation:
+  # Optional read-only comparison analyses. Remove these fields if unavailable.
+  reference_ldak_dir: reference/previous_ldak_analysis
+  reference_hhotnet_dir: reference/previous_hhotnet_analysis
+
+scores:
+  pvalue_column: LRT_P_Perm
+  transform: neg_log10
+  infinite_score_cap: null
+
+networks:
+  available: [network_1, network_2, network_3, network_4]
+  # Functions without an explicit network argument use this subset.
+  selected: [network_1, network_2, network_3]
+  # Use current for cleaned regulatory edges; legacy settings reproduce the
+  # historical GEjunc processing choices described in LEGACY_COMPATIBILITY.md.
+  regulatory_edge_filter: current
+  node_order: score_descending
+  # Retain loops as in the archived workflow; set false to remove them from
+  # regulatory and ARACNe inputs before graph construction.
+  preserve_self_loops: true
+  preserve_duplicate_edges_during_aracne: false
+  deduplicate_jeme_edges_before_harmonization: false
+  split_multi_promoter_edges: true
+  thresholds:
+    small_regulatory_score: 4
+    broad_regulatory_score: 1.3010299956639813
+    small_plus_aracne_mi: 0.3
+    broad_plus_aracne_mi: 0.65
+
+hhotnet:
+  # For Apptainer, change execution_mode and configure the image below.
+  execution_mode: local_python
+  local_dir: software/hhotnet/hierarchical-hotnet
+  python_executable: python3
+  # null uses hHotnet/compat beside this analysis.yaml.
+  compat_dir: null
+  apptainer_image: software/hhotnet.sif
+  score_name: nodes_all
+  num_permutations: 100
+  permutation_seed: 0
+  lower_size_bound: 10
+  cpus: 4
+
+slurm:
+  time: "12:00:00"
+  memory: "16G"
+  partition: general-compute
+  qos: general-compute

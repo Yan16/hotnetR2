@@ -1,0 +1,43 @@
+Package: hotnetR2
+Title: Reproducible Regulatory Network Analyses with LDAK and HotNet
+Version: 0.0.1
+Authors@R: person("Yan", "Li", email = "yan.li@roswellpark.org", role = c("aut", "cre"))
+Description: Data preparation, identifier harmonization, enhancer classification,
+    regional association scores, and hierarchical HotNet workflows. Integrates
+    the hotnetR data interfaces with explicit gene-body and transcription-start
+    site compatibility profiles and portable resource manifests.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports:
+    dplyr (>= 1.1.0),
+    tidyr,
+    readr,
+    purrr,
+    tibble,
+    stringr,
+    rlang,
+    tidyselect,
+    igraph,
+    yaml,
+    jsonlite,
+    digest,
+    processx,
+    withr,
+    here,
+    STRINGdb,
+    gtexr,
+    readxl,
+    utils,
+    tools,
+    stats,
+    grDevices
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    rtracklayer
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.0

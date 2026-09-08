@@ -1,0 +1,54 @@
+---
+title: "Portable v2 and v3 reproduction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Portable v2 and v3 reproduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+hotnetR2 combines the hotnetR data interfaces with the v2/v3 regulatory
+workflow. Both profiles use all-tissue ENSG harmonization, gastric JEME/HiC,
+class-1 enhancers, and Networks 1–2. The v2 target is a gene interval; v3 uses
+the historical strand-aware TSS conversion. Compatibility arithmetic is
+preserved explicitly rather than silently correcting historical results.
+
+```{r}
+project <- tempfile("portable-example-")
+config_file <- hotnetR2::initialize_analysis(project, "v3")
+config <- hotnetR2::read_analysis_config(config_file)
+hotnetR2::resolve_networks(config)
+```
+
+Provision large resources separately using `capture_resources()` and
+`provision_resources()`. The manifest verifies every file using SHA-256.
+Public URLs may be supplied in a manifest, or the user may restore a local
+archival bundle. GWAS and LD resources are not included in the R package.
+
+```{r eval=FALSE}
+hotnetR2::provision_resources("resources.tsv", project,
+                            source_root = "/path/to/archival-bundle")
+hotnetR2::prepare_ldak_annotations(config, dry_run = FALSE)
+hotnetR2::classify_enhancers(config)
+hotnetR2::generate_ldak_jobs(config, dry_run = FALSE)
+hotnetR2::generate_ldak_local_runner(config, dry_run = FALSE)
+# Execute the generated LDAK runner before summarizing results.
+hotnetR2::summarize_analysis_ldak_results(config, dry_run = FALSE)
+hotnetR2::build_hhotnet_networks(config, dry_run = FALSE)
+hotnetR2::generate_hhotnet_job(config, dry_run = FALSE)
+# Execute the generated HotNet runner before summarizing clusters.
+hotnetR2::summarize_hhotnet_results(config)
+hotnetR2::export_hhotnet_graphs(config)
+hotnetR2::validate_hhotnet_exports(config)
+```
+
+Use `compare_artifacts()` with a declared file inventory. Byte identity of
+deterministic outputs is stronger evidence than matching counts. Gzip content
+comparison is available explicitly; absolute-path and runtime metadata
+differences require separately declared comparisons. Native external-tool
+reproducibility across architectures remains distinct from reproduction of
+package-owned outputs using frozen raw LDAK/HotNet results.
+
+```{r include=FALSE}
+unlink(project, recursive = TRUE)
+```

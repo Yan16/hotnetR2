@@ -1,0 +1,8 @@
+^\.git$
+^\.gitignore$
+^PLAN\.md$
+^TASKS\.md$
+^docs$
+^tools$
+^artifacts$
+^reproduction-runs$
