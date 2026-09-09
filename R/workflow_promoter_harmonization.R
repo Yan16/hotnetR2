@@ -107,6 +107,10 @@ apply_all_tissue_jeme_ensg_map <- function(jeme, mapping) {
 }
 
 harmonize_hic_gene_symbols <- function(hic, alias_file) {
+  if (nrow(hic$PO) == 0L && nrow(hic$PP) == 0L) {
+    return(list(data = hic, summary = data.frame(
+      hic_po_rows = 0L, hic_po_changed = 0L, hic_pp_rows = 0L, hic_pp_changed = 0L)))
+  }
   input <- list(
     PO = hic$PO |> dplyr::rename(Regulator = "Interacting_fragment", Target = "Promoter"),
     PP = hic$PP

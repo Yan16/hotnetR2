@@ -1,5 +1,4 @@
-# LDAK annotation preparation. This is an analysis1-local reimplementation of
-# the established all-JEME/all-Hi-C BEEA annotation workflow.
+# LDAK annotation preparation using all tissues from each enabled source.
 
 collapse_annotation_values <- function(x) {
   paste(sort(unique(x[!is.na(x) & nzchar(x)])), collapse = ";")
@@ -110,10 +109,10 @@ ldak_annotation_config <- function(config) {
   jeme_tissues <- settings$jeme %||% "ALL"
   hic_tissues <- settings$hic %||% "ALL"
   if (!identical(toupper(as.character(jeme_tissues)), "ALL") ||
-      !identical(toupper(as.character(hic_tissues)), "ALL")) {
+      (analysis_hic_enabled(config) && !identical(toupper(as.character(hic_tissues)), "ALL"))) {
     stop(
       "The initial prepare_ldak_annotations() implementation supports only ",
-      "ldak.annotation_tissues.jeme: ALL and hic: ALL", call. = FALSE
+      "ldak.annotation_tissues.jeme: ALL and hic: ALL when HiC is enabled", call. = FALSE
     )
   }
   list(jeme_method = settings$jeme_method %||% "lasso")
@@ -341,18 +340,18 @@ prepare_ldak_annotations <- function(config, dry_run = TRUE) {
   gtf_path <- resolve_config_path(
     promoter_harmonization$gtf_file, config$project_root
   )
-  hic_alias_path <- resolve_config_path(
+  hic_alias_path <- if (analysis_hic_enabled(config)) resolve_config_path(
     promoter_harmonization$hic_alias_file, config$project_root
-  )
+  ) else NULL
   if (!file.exists(gtf_path)) stop("Missing JEME GENCODE mapping: ", gtf_path, call. = FALSE)
-  if (!file.exists(hic_alias_path)) stop("Missing HiC alias mapping: ", hic_alias_path, call. = FALSE)
+  if (!is.null(hic_alias_path) && !file.exists(hic_alias_path)) stop("Missing HiC alias mapping: ", hic_alias_path, call. = FALSE)
 
   jeme <- get_jeme(method = settings$jeme_method, simplified = TRUE, cache_dir = config$cache_dir)
   jeme_mapping <- build_all_tissue_jeme_ensg_map(jeme, readRDS(gtf_path))
   jeme <- apply_all_tissue_jeme_ensg_map(jeme, jeme_mapping)
   jeme_changed <- sum(jeme$promoter != jeme$promoter_original, na.rm = TRUE)
   jeme_nodes <- extract_jeme_nodes(jeme)
-  hic <- get_hic(tissue_type = NULL, cache_dir = config$cache_dir)
+  hic <- load_analysis_hic(config, all_tissues = TRUE)
   hic_harmonized <- harmonize_hic_gene_symbols(hic, hic_alias_path)
   hic <- hic_harmonized$data
   hic_nodes <- extract_hic_nodes(hic)

@@ -25,6 +25,12 @@ Provision large resources separately using `capture_resources()` and
 Public URLs may be supplied in a manifest, or the user may restore a local
 archival bundle. GWAS and LD resources are not included in the R package.
 
+For JEME-only analyses, set `regulatory.hic.tissue_type: []` (or `null`) in the
+YAML. HiC is then excluded from both annotations and networks, without requiring
+HiC cached files or alias mappings. Start a fresh output directory and regenerate
+all stages when changing source selection. Nonempty HiC settings retain the
+v2/v3 all-tissue annotation policy; `get_hic(NULL)` remains an all-tissue reader.
+
 ```{r eval=FALSE}
 hotnetR2::provision_resources("resources.tsv", project,
                             source_root = "/path/to/archival-bundle")

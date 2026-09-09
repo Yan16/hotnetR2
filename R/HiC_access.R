@@ -93,8 +93,9 @@ extract_hic_nodes <- function(hic_data) {
       dplyr::select(Promoter, Tissue_type) |>
       dplyr::distinct()
   } else {
-    enhancers <- data.frame()
-    promoters_po <- data.frame()
+    enhancers <- tibble::tibble(Interacting_fragment = character(), CHR = character(),
+                                START = integer(), END = integer(), tissues = character())
+    promoters_po <- tibble::tibble(Promoter = character(), Tissue_type = character())
   }
 
   # 2. Process PP for Promoters
@@ -113,7 +114,7 @@ extract_hic_nodes <- function(hic_data) {
     promoters_pp <- dplyr::bind_rows(promoters_pp1, promoters_pp2) |>
       dplyr::distinct()
   } else {
-    promoters_pp <- data.frame()
+    promoters_pp <- tibble::tibble(Promoter = character(), Tissue_type = character())
   }
 
   # 3. Combine and aggregate Promoters
@@ -127,7 +128,7 @@ extract_hic_nodes <- function(hic_data) {
         .groups = "drop"
       )
   } else {
-    promoters <- data.frame()
+    promoters <- tibble::tibble(Promoter = character(), tissues = character())
   }
 
   # 4. Final NA filtering

@@ -1,3 +1,10 @@
+# hotnetR2 0.0.2
+
+- Empty or omitted regulatory HiC tissue selections now disable HiC in both
+  annotations and networks. JEME-only runs do not require HiC caches or aliases.
+- Preserve typed empty HiC nodes/edges throughout classification and scoring.
+- Existing nonempty v2/v3 HiC settings and get_hic(NULL) behavior are unchanged.
+
 # hotnetR2 0.0.1
 
 - Development migration based on hotnetR 0.4.6.2 and the v2/v3 workflow.

@@ -68,16 +68,15 @@ refresh_network_nodes <- function(data) {
 
 load_network_sources <- function(config) {
   jeme <- config$regulatory$jeme
-  hic <- config$regulatory$hic
-  if (is.null(jeme$key_column) || is.null(jeme$value) || is.null(hic$tissue_type)) {
-    stop("regulatory.jeme.key_column/value and regulatory.hic.tissue_type are required", call. = FALSE)
+  if (is.null(jeme$key_column) || is.null(jeme$value)) {
+    stop("regulatory.jeme.key_column/value are required", call. = FALSE)
   }
   jeme_data <- get_jeme(
     key_column = jeme$key_column, value = jeme$value,
     method = jeme$method %||% "lasso", simplified = jeme$simplified %||% TRUE,
     cache_dir = config$cache_dir
   )
-  hic_data <- get_hic(tissue_type = hic$tissue_type, cache_dir = config$cache_dir)
+  hic_data <- load_analysis_hic(config)
   if (isTRUE(config$aracne$enabled %||% TRUE)) {
     aracne_file <- resolve_config_path(config$aracne$file, config$project_root)
     if (!file.exists(aracne_file)) stop("Missing ARACNe network: ", aracne_file, call. = FALSE)
@@ -182,7 +181,7 @@ harmonize_network_promoters <- function(data, settings, analysis_config) {
     changed_jeme <- sum(output$promoter != output$promoter_original, na.rm = TRUE)
     data$jeme <- list(output)
   }
-  if (isTRUE(settings$hic %||% TRUE)) {
+  if (analysis_hic_enabled(analysis_config) && isTRUE(settings$hic %||% TRUE)) {
     alias_file <- settings$hic_alias_file %||% NULL
     if (is.null(alias_file)) stop("regulatory.promoter_harmonization.hic_alias_file is required when Hi-C harmonization is enabled", call. = FALSE)
     alias_file <- resolve_config_path(alias_file, analysis_config$project_root)
@@ -249,12 +248,12 @@ classify_network_enhancer_edges <- function(data, config) {
     dplyr::transmute(
       jeme, Regulator = .data$enhancer, Target = .data$promoter,
       source = "JEME", enhancer_class = .data$enhancer_class,
-      edge_action = ifelse(.data$enhancer_class == class1, "KEEP", "DROP")
+      edge_action = dplyr::if_else(.data$enhancer_class == class1, "KEEP", "DROP")
     ),
     dplyr::transmute(
       hic_po, Regulator = .data$Interacting_fragment, Target = .data$Promoter,
       source = "HiC_PO", enhancer_class = .data$enhancer_class,
-      edge_action = ifelse(.data$enhancer_class == class1, "KEEP", "DROP")
+      edge_action = dplyr::if_else(.data$enhancer_class == class1, "KEEP", "DROP")
     )
   )
   data$jeme <- list(dplyr::filter(jeme, .data$enhancer_class == class1) |>
@@ -289,11 +288,11 @@ filter_analysis_network_ldak <- function(data, config) {
   enhancers <- readr::read_tsv(enhancer_file, show_col_types = FALSE, progress = FALSE) |>
     dplyr::mutate(node_key = normalise_network_node_id(.data$gene)) |>
     dplyr::inner_join(enhancer_nodes, by = "node_key") |>
-    dplyr::select(-.data$node_key)
+    dplyr::select(-"node_key")
   promoters <- readr::read_tsv(promoter_file, show_col_types = FALSE, progress = FALSE) |>
     dplyr::mutate(node_key = normalise_network_node_id(.data$gene)) |>
     dplyr::inner_join(promoter_nodes, by = "node_key") |>
-    dplyr::select(-.data$node_key)
+    dplyr::select(-"node_key")
   list(
     enhancers = enhancers, promoters = promoters,
     unmatched_enhancers = dplyr::anti_join(enhancer_nodes, dplyr::mutate(enhancers, node_key = normalise_network_node_id(.data$gene)), by = "node_key"),
@@ -519,7 +518,7 @@ build_hhotnet_networks <- function(config, networks = NULL, dry_run = TRUE) {
     dplyr::slice_max(.data$score, n = 1L, with_ties = FALSE) |>
     dplyr::ungroup()
   if (identical(config$networks$node_order, "legacy_input")) nodes <- dplyr::arrange(nodes, .data$.input_order) else nodes <- dplyr::arrange(nodes, dplyr::desc(.data$score), .data$gene)
-  nodes <- dplyr::select(nodes, -.data$.input_order)
+  nodes <- dplyr::select(nodes, -".input_order")
   if (anyDuplicated(nodes$gene) || any(!is.finite(nodes$score)) || any(nodes$score < 0)) stop("Invalid unique node-score table", call. = FALSE)
   jeme <- dplyr::bind_rows(classified$data$jeme)
   jeme_weight <- if ("score" %in% names(jeme)) suppressWarnings(as.numeric(jeme$score)) else rep(NA_real_, nrow(jeme))
@@ -556,7 +555,7 @@ build_hhotnet_networks <- function(config, networks = NULL, dry_run = TRUE) {
       aracne_all$Target %in% excluded_ids
   )
   readr::write_tsv(nodes, network_data_file(config, "nodes_all_info.tsv"))
-  readr::write_tsv(dplyr::select(nodes, .data$gene, .data$score), network_data_file(config, paste0(config$hhotnet$score_name, ".tsv")), col_names = FALSE)
+  readr::write_tsv(dplyr::select(nodes, "gene", "score"), network_data_file(config, paste0(config$hhotnet$score_name, ".tsv")), col_names = FALSE)
   readr::write_tsv(filtered$kept, network_data_file(config, "regulatory_edges.tsv"))
   readr::write_tsv(aracne, network_data_file(config, "aracne_edges.tsv"))
   readr::write_tsv(ldak$unmatched_enhancers, network_summary_file(config, "unmatched_enhancers.tsv"))

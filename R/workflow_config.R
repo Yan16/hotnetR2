@@ -161,7 +161,8 @@ validate_analysis_config <- function(config) {
         paste0("regulatory.promoter_harmonization.", field)
       )
     }
-    for (field in c("gtf_file", "hic_alias_file")) {
+    mapping_fields <- c("gtf_file", if (analysis_hic_enabled(config)) "hic_alias_file")
+    for (field in mapping_fields) {
       assert_scalar(
         promoter_harmonization[[field]],
         paste0("regulatory.promoter_harmonization.", field), "character"

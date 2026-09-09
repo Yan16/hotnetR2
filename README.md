@@ -3,11 +3,42 @@
 A standalone development successor to hotnetR combining dataset preparation with
 the v2_analysis2 and v3_analysis2 LDAK / hierarchical HotNet workflows.
 
-**Status: implementation in progress (0.0.1); clean-machine reproduction is
+**Status: implementation in progress (0.0.2); clean-machine reproduction is
 not yet certified.** No existing analysis is modified. When implementations
 conflict, v2/v3 behavior takes precedence over earlier analysis2 behavior.
 
 ## Installed-package workflow
+
+### JEME-only analyses (0.0.2)
+
+Leave the HiC tissue selection empty to disable HiC:
+
+```yaml
+regulatory:
+  jeme:
+    key_column: tiss
+    value: E094
+    method: lasso
+  hic:
+    tissue_type: []
+```
+
+`null`, an empty string, or an omitted `hic` section also disable HiC;
+`hic.enabled: false` explicitly disables it even with a tissue configured.
+No HiC caches or HiC alias mapping are required in this mode. Disabled HiC
+contributes no enhancers, promoters, overlap windows, PO edges or PP edges.
+All-tissue annotation collection continues for JEME according to the existing
+annotation policy; the selected JEME tissue controls network edges.
+Regenerate annotations, classification, LDAK scores and networks in a **fresh
+output directory** when switching an existing run to JEME-only: previous mixed
+annotations and overlap classes are not JEME-only results.
+
+Nonempty HiC settings preserve the previous mixed-source behavior (including
+all-HiC annotation collection). The data-reader call `get_hic(NULL)` still
+means all tissues; the disabling rule applies to analysis YAML settings.
+Custom scripts pinned to package 0.0.1 must be updated to use 0.0.2.
+
+### Run the workflow
 
 ```r
 config_file <- hotnetR2::initialize_analysis("my-analysis", profile = "v3")
