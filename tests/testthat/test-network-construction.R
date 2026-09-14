@@ -248,6 +248,16 @@ test_that("class2 and class3 JEME and HiC-PO edges are removed before network co
   expect_equal(nrow(result$data$hic$PO), 1L)
   expect_equal(nrow(result$data$hic$PP), 1L)
   expect_equal(sum(result$audit$edge_action == "DROP"), 4L)
+  config$enhancer_classification$promoter_window <- "strand_aware_tss"
+  tss <- classify_network_enhancer_edges(data, config)
+  expect_equal(nrow(tss$data$jeme[[1]]), 3L)
+  expect_equal(nrow(tss$data$hic$PO), 1L)
+  expect_equal(nrow(tss$data$hic$PP), 1L)
+  expect_true(all(tss$audit$edge_action[tss$audit$source == "JEME"] == "KEEP"))
+  config$enhancer_classification$drop_non_class1_edge_sources <- c("JEME", "HiC_PO")
+  expect_identical(classify_network_enhancer_edges(data, config), result)
+  config$enhancer_classification$drop_non_class1_edge_sources <- list()
+  expect_true(all(classify_network_enhancer_edges(data, config)$audit$edge_action == "KEEP"))
   expect_setequal(
     unique(result$audit$enhancer_class[result$audit$edge_action == "DROP"]),
     c("enh_class2", "enh_class3")

@@ -5,7 +5,7 @@ schema_version: 1
 
 analysis:
   name: v3_analysis2
-  label: BEEA Gastric regulatory h-HotNet with TSS-window class1 enhancers
+  label: BEEA Gastric regulatory h-HotNet with all JEME TSS-window enhancer classes
   random_seed: 12345
 
 project:
@@ -80,7 +80,8 @@ enhancer_classification:
   class1_label: enh_class1
   class2_label: enh_class2
   class3_label: enh_class3
-  drop_non_class1_edge_sources: [JEME, HiC_PO]
+  # hotnetR2 >= 0.0.3: retain all JEME classes; HiC-PO remains class1-only.
+  drop_non_class1_edge_sources: [HiC_PO]
   retain_non_enhancer_edges: true
 
 aracne:
@@ -93,11 +94,11 @@ ldak:
   enhancer_flank_bp: 1000
   promoter_flank_bp: 2000
   promoter_interval_mode: strand_aware_tss
-  # The harmonized promoter universe and class1 enhancer set both require new
+  # The harmonized promoter universe and retained enhancer set both require new
   # LDAK calculations. The 2-kb promoter flank is supplied to LDAK separately
   # from the unexpanded coordinates stored in promoters.loc.
   result_dirs:
-    enhancer: enhancer_class1_tss
+    enhancer: enhancer_retained_tss
     promoter: promoter_tss_2k
   annotation_tissues:
     # The initial LDAK annotation implementation supports the all-tissue BEEA

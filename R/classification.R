@@ -9,7 +9,9 @@
 #' @param config Configuration returned by [read_analysis_config()].
 #' @param bedtools Path or command name of the bedtools executable.
 #' @return Invisibly, the complete classification tibble. Writes the class
-#'   audit, class-specific annotation files, and class-1 LDAK input files.
+#'   audit, class-specific annotation files, and retained-enhancer LDAK inputs.
+#'   TSS profiles retain all JEME classes by default; gene-body profiles retain
+#'   class 1 only. `drop_non_class1_edge_sources` overrides the source policy.
 #' @export
 classify_enhancers <- function(config, bedtools = "bedtools") {
   paths <- analysis_paths(config)
@@ -84,10 +86,14 @@ classify_enhancers <- function(config, bedtools = "bedtools") {
   for (i in 1:3) {
     class_name <- settings[[paste0("class", i, "_label")]]
     selected <- dplyr::filter(classes, .data$enhancer_class == class_name)
-    prefix <- if (i == 1L) "enhancers" else paste0("enhancers_class", i)
+    prefix <- paste0("enhancers_class", i)
     readr::write_tsv(selected, file.path(annotations, paste0(prefix, ".details.tsv.gz")))
     readr::write_tsv(dplyr::select(selected, "name", "CHR", "START", "END"),
                      file.path(annotations, paste0(prefix, ".loc")), col_names = FALSE)
   }
+  selected <- retained_enhancer_annotations(classes, config)
+  readr::write_tsv(selected, file.path(annotations, "enhancers.details.tsv.gz"))
+  readr::write_tsv(dplyr::select(selected, "name", "CHR", "START", "END"),
+                   file.path(annotations, "enhancers.loc"), col_names = FALSE)
   invisible(classes)
 }

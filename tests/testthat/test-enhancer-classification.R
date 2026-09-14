@@ -23,6 +23,12 @@ test_that("classification preserves containment precedence and chromosome separa
   expect_identical(classes$fully_containing_promoter_count, c(1L, 0L, 0L, 0L))
   expect_identical(classes$overlapping_promoters[[1]], "A;B")
   expect_equal(nrow(readr::read_tsv(file.path(annotations, "enhancers.loc"),
+                                  col_names = FALSE, show_col_types = FALSE)), 4)
+  expect_equal(nrow(readr::read_tsv(file.path(annotations, "enhancers_class1.loc"),
                                   col_names = FALSE, show_col_types = FALSE)), 2)
   expect_identical(classify_enhancers(config), classes)
+  config$enhancer_classification$drop_non_class1_edge_sources <- c("JEME", "HiC_PO")
+  expect_identical(classify_enhancers(config), classes)
+  expect_equal(nrow(readr::read_tsv(file.path(annotations, "enhancers.loc"),
+                                  col_names = FALSE, show_col_types = FALSE)), 2)
 })

@@ -13,7 +13,9 @@ classify_enhancers(config, bedtools = "bedtools")
 }
 \value{
 Invisibly, the complete classification tibble. Writes the class
-audit, class-specific annotation files, and class-1 LDAK input files.
+audit, class-specific annotation files, and retained-enhancer LDAK inputs.
+TSS profiles retain all JEME classes by default; gene-body profiles retain
+class 1 only. \code{drop_non_class1_edge_sources} overrides the source policy.
 }
 \description{
 Reproduces the v2/v3 same-chromosome overlap policy using bedtools. Class 2

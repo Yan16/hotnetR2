@@ -206,6 +206,9 @@ validate_analysis_config <- function(config) {
     "enhancer_classification.enabled"
   )
   if (isTRUE(enhancer_classification$enabled)) {
+    if (any(!enhancer_drop_sources(config) %in% c("JEME", "HiC_PO"))) {
+      stop("drop_non_class1_edge_sources must contain only JEME or HiC_PO", call. = FALSE)
+    }
     assert_scalar(
       enhancer_classification$source_analysis,
       "enhancer_classification.source_analysis", "character"

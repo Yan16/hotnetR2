@@ -219,6 +219,7 @@ classify_network_enhancer_edges <- function(data, config) {
   class1 <- as.character(settings$class1_label %||% "enh_class1")
   class2 <- as.character(settings$class2_label %||% "enh_class2")
   class3 <- as.character(settings$class3_label %||% "enh_class3")
+  drop_sources <- enhancer_drop_sources(config)
   classification_file <- annotation_output_file(config, "enhancer_classification.tsv.gz")
   if (!file.exists(classification_file)) {
     stop("Missing enhancer classification table: ", classification_file, call. = FALSE)
@@ -248,17 +249,17 @@ classify_network_enhancer_edges <- function(data, config) {
     dplyr::transmute(
       jeme, Regulator = .data$enhancer, Target = .data$promoter,
       source = "JEME", enhancer_class = .data$enhancer_class,
-      edge_action = dplyr::if_else(.data$enhancer_class == class1, "KEEP", "DROP")
+      edge_action = dplyr::if_else(.data$enhancer_class == class1 | !"JEME" %in% drop_sources, "KEEP", "DROP")
     ),
     dplyr::transmute(
       hic_po, Regulator = .data$Interacting_fragment, Target = .data$Promoter,
       source = "HiC_PO", enhancer_class = .data$enhancer_class,
-      edge_action = dplyr::if_else(.data$enhancer_class == class1, "KEEP", "DROP")
+      edge_action = dplyr::if_else(.data$enhancer_class == class1 | !"HiC_PO" %in% drop_sources, "KEEP", "DROP")
     )
   )
-  data$jeme <- list(dplyr::filter(jeme, .data$enhancer_class == class1) |>
+  data$jeme <- list(dplyr::filter(jeme, .data$enhancer_class == class1 | !"JEME" %in% drop_sources) |>
                       dplyr::select(-dplyr::all_of("enhancer_class")))
-  data$hic$PO <- dplyr::filter(hic_po, .data$enhancer_class == class1) |>
+  data$hic$PO <- dplyr::filter(hic_po, .data$enhancer_class == class1 | !"HiC_PO" %in% drop_sources) |>
     dplyr::select(-dplyr::all_of("enhancer_class"))
   data <- refresh_network_nodes(data)
   summary <- dplyr::summarise(

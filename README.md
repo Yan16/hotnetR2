@@ -3,11 +3,30 @@
 A standalone development successor to hotnetR combining dataset preparation with
 the v2_analysis2 and v3_analysis2 LDAK / hierarchical HotNet workflows.
 
-**Status: implementation in progress (0.0.2); clean-machine reproduction is
+**Status: implementation in progress (0.0.3); clean-machine reproduction is
 not yet certified.** No existing analysis is modified. When implementations
 conflict, v2/v3 behavior takes precedence over earlier analysis2 behavior.
 
 ## Installed-package workflow
+
+### TSS enhancer retention (0.0.3)
+
+TSS profiles retain class1, class2 and class3 JEME enhancers. Classifications
+still describe the same flanked overlaps; only retention changes. HiC-PO remains
+class1-only. Gene-body profiles retain their class1-only defaults.
+
+Set `enhancer_classification.drop_non_class1_edge_sources: [HiC_PO]` for this
+policy. An explicit `[JEME, HiC_PO]` preserves the previous behavior; `[]`
+retains all classes from both sources. If omitted, the default follows the
+promoter-window profile. Class-specific `.loc`/detail files remain audits;
+`enhancers.loc` and `enhancers.details.tsv.gz` contain the union retained by
+either source. Shared JEME/HiC coordinates are scored once, but network edges
+are filtered independently by source. Retention does not bypass score thresholds.
+
+When migrating existing runs, regenerate classification and enhancer LDAK scores
+before networks/HotNet; class1-only scores cannot represent the newly retained
+classes. Use a new enhancer result directory (the v3 template now uses
+`enhancer_retained_tss`) and retain old results for provenance.
 
 ### JEME-only analyses (0.0.2)
 
