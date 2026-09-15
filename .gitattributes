@@ -1,0 +1,2 @@
+# Preserve the supplied historical programs exactly, including CRLF endings.
+inst/extdata/harmonization_2026_0909/original/* -text
