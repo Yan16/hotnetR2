@@ -1,3 +1,17 @@
+# hotnetR2 0.0.4
+
+- Refresh alias/alias_nodup from the September 2026 curated JEME, HiC-PO and
+  HiC-PP workbooks, retaining uncovered legacy keys. Resolve C11orf48 to LBHD1
+  and MEGT1 to LY6G6D across every source.
+- Ship source workbooks, original Stata/R/Rmd programs, an external portable R
+  builder, and provenance/conflict audits. The builder is not run on installation.
+- Add create_alias_references() for alias-only cache generation; full reference
+  setup now uses the same packaged aliases by default. Existing caches are not
+  overwritten unless explicitly requested.
+- HiC and ARACNe helpers honor the new explicit raw-to-approved mapping marker;
+  unmarked historical caches retain their previous direction. JEME ENSG-first
+  harmonization is unchanged.
+
 # hotnetR2 0.0.3
 
 - TSS profiles now retain all three JEME enhancer classes in both LDAK inputs

@@ -4,19 +4,25 @@
 \name{alias}
 \alias{alias}
 \alias{alias_nodup}
-\title{Frozen gene alias mappings}
+\alias{alias_link}
+\alias{alias_link_nodup}
+\title{Curated gene alias mappings}
 \format{
 Data frames with 13 columns: merge status \verb{_mrg}, source identifiers
 \code{gsm}, \code{hh}, \code{ensg}, \code{gene}, HGNC-related fields \code{Hsym}, \code{Hhgnc_id},
 \code{hgnc_id}, \code{Hentrez_id}, \code{Hname}, \code{Hlocation}, and type fields \code{ty}, \code{Hty}.
-\code{alias} contains 59034 rows; \code{alias_nodup} contains 57853 rows.
+\code{alias} contains 60422 rows; \code{alias_nodup} contains 59241 unique gene keys.
+Unavailable metadata for newly added keys is NA. Source and conflict audits
+and the external R builder are distributed with the installed package.
 }
 \usage{
 data(alias_link)
 data(alias_link_nodup)
 }
 \description{
-Legacy mapping tables carried forward from hotnetR for compatibility.
-These are frozen assets, not live HGNC lookups; provenance and distribution
-review are tracked in the development task list.
+September 2026 JEME and HiC workbook mappings override covered legacy
+identifiers; uncovered legacy identifiers are retained. C11orf48 maps to
+LBHD1 and MEGT1 to LY6G6D by explicit project curation. These are frozen
+assets, not live HGNC lookups. The mapping_direction attribute is
+raw_to_approved: gene is the original label and Hsym is the final symbol.
 }

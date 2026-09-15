@@ -147,7 +147,9 @@ extract_hic_nodes <- function(hic_data) {
 #' Harmonize HiC networks using preprocessed alias link
 #'
 #' @param hic A list containing PO and PP networks
-#' @param alias_link_file Path to alias link RDS
+#' @param alias_link_file Path to alias link RDS. Curated 2026 references map
+#'   raw labels to approved symbols; unmarked legacy files keep their original
+#'   HGNC-to-GENCODE mapping direction.
 #' @param verbose Logical.
 #' @param rm_na Logical.
 #' @return Harmonized HiC networks
@@ -156,13 +158,13 @@ harmonize_hic_gtf <- function(hic, alias_link_file, verbose = TRUE, rm_na = FALS
   # Load alias link
   if (verbose) message("Load alias link file: ", alias_link_file)
   alias_link <- readr::read_rds(alias_link_file) |>
-    dplyr::select(gene, Hsym) |>
-    dplyr::filter(!is.na(Hsym)) |>
-    dplyr::ungroup()
+    alias_symbol_pairs() |>
+    dplyr::filter(!is.na(.data$identifier), !is.na(.data$canonical)) |>
+    dplyr::distinct()
 
   # Harmonize PO
   this_PO <- hic$PO |>
-    dplyr::left_join(alias_link |> dplyr::rename(Target_harmonized = gene, Target = Hsym), by = "Target") |>
+    dplyr::left_join(alias_link |> dplyr::rename(Target_harmonized = "canonical", Target = "identifier"), by = "Target") |>
     dplyr::mutate(Target_harmonized = dplyr::if_else(is.na(Target_harmonized), Target, Target_harmonized))
 
   if (nrow(find_na(this_PO)) > 0 && rm_na) {
@@ -171,9 +173,9 @@ harmonize_hic_gtf <- function(hic, alias_link_file, verbose = TRUE, rm_na = FALS
 
   # Harmonize PP
   this_PP <- hic$PP |>
-    dplyr::left_join(alias_link |> dplyr::rename(Promoter1_harm = gene, Promoter1 = Hsym), by = "Promoter1") |>
+    dplyr::left_join(alias_link |> dplyr::rename(Promoter1_harm = "canonical", Promoter1 = "identifier"), by = "Promoter1") |>
     dplyr::mutate(Promoter1_harm = dplyr::if_else(is.na(Promoter1_harm), Promoter1, Promoter1_harm)) |>
-    dplyr::left_join(alias_link |> dplyr::rename(Promoter2_harm = gene, Promoter2 = Hsym), by = "Promoter2") |>
+    dplyr::left_join(alias_link |> dplyr::rename(Promoter2_harm = "canonical", Promoter2 = "identifier"), by = "Promoter2") |>
     dplyr::mutate(Promoter2_harm = dplyr::if_else(is.na(Promoter2_harm), Promoter2, Promoter2_harm))
 
   if (nrow(find_na(this_PP)) > 0 && rm_na) {

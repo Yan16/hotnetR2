@@ -9,7 +9,9 @@ harmonize_hic_gtf(hic, alias_link_file, verbose = TRUE, rm_na = FALSE)
 \arguments{
 \item{hic}{A list containing PO and PP networks}
 
-\item{alias_link_file}{Path to alias link RDS}
+\item{alias_link_file}{Path to alias link RDS. Curated 2026 references map
+raw labels to approved symbols; unmarked legacy files keep their original
+HGNC-to-GENCODE mapping direction.}
 
 \item{verbose}{Logical.}
 

@@ -3,11 +3,34 @@
 A standalone development successor to hotnetR combining dataset preparation with
 the v2_analysis2 and v3_analysis2 LDAK / hierarchical HotNet workflows.
 
-**Status: implementation in progress (0.0.3); clean-machine reproduction is
+**Status: implementation in progress (0.0.4); clean-machine reproduction is
 not yet certified.** No existing analysis is modified. When implementations
 conflict, v2/v3 behavior takes precedence over earlier analysis2 behavior.
 
 ## Installed-package workflow
+
+### Curated alias update (0.0.4)
+
+The September 2026 JEME/HiC workbooks now update `alias` and `alias_nodup`
+(loaded with `data(alias_link)` and `data(alias_link_nodup)`). Explicit curation
+maps C11orf48 to LBHD1 and MEGT1 to LY6G6D. Legacy keys absent from the new
+workbooks remain available. Original scripts and spreadsheets are preserved
+under `system.file("extdata", "harmonization_2026_0909", package="hotnetR2")`;
+the portable external builder and its instructions are under
+`system.file("scripts", "harmonization", package="hotnetR2")`.
+
+Generate a separate cache without touching existing analyses:
+
+```r
+hotnetR2::create_alias_references(cache_dir = "new_alias_cache")
+```
+
+Installing the package alone does not replace `.cache/alias_link*.rds`.
+Use the new files explicitly in analysis settings when ready to regenerate
+affected annotations, LDAK scores and networks. The new references mark their
+raw-to-approved mapping direction; older unmarked RDS files keep their original
+HGNC-to-GENCODE interpretation. JEME's ENSG-first workflow is unchanged by this
+alias-data update; it does not automatically switch to symbol-only matching.
 
 ### TSS enhancer retention (0.0.3)
 

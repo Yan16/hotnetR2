@@ -69,6 +69,12 @@ aracne_mapping_candidates <- function(settings, project_root) {
       canonical = aliases$gene,
       source = "canonical_symbol"
     )
+    if (identical(attr(aliases, "mapping_direction"), "raw_to_approved")) {
+      rows$alias_ensg$canonical <- dplyr::coalesce(aliases$Hsym, aliases$gene)
+      rows$hgnc_alias <- dplyr::mutate(alias_symbol_pairs(aliases), source = "hgnc_alias")
+      rows$canonical_symbol$identifier <- rows$alias_ensg$canonical
+      rows$canonical_symbol$canonical <- rows$alias_ensg$canonical
+    }
   }
   candidates <- dplyr::bind_rows(rows) |>
     dplyr::mutate(

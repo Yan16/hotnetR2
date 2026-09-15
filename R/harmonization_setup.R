@@ -2,14 +2,14 @@
 #'
 #' Creates the cleaned GENCODE gene annotation and curated alias files consumed
 #' by promoter and HiC harmonization helpers. The alias source bundled with
-#' hotnetR is curated by the project and is treated as the authoritative default.
+#' hotnetR2 is curated by the project and is treated as the authoritative default.
 #'
 #' @param cache_dir Directory containing the `GTEx/` cache. If NULL, uses the
 #'   standard project-local cache.
 #' @param overwrite Logical; regenerate existing outputs when TRUE.
 #' @param alias_file Optional path to a compatible curated alias workbook. When
-#'   NULL, uses `gtex_hugo_merged_by_ens_SORTens_FINALv1.xlsx` bundled with the
-#'   installed package.
+#'   NULL, uses the packaged September 2026 alias datasets. An explicit workbook
+#'   retains the historical workbook interpretation for compatibility.
 #' @return Invisibly, a data frame containing each output path and its status.
 #' @export
 create_harmonization_references <- function(cache_dir = NULL,
@@ -38,17 +38,11 @@ create_harmonization_references <- function(cache_dir = NULL,
     )
   }
 
-  if (is.null(alias_file)) {
-    alias_file <- system.file(
-      "extdata", "gtex_hugo_merged_by_ens_SORTens_FINALv1.xlsx",
-      package = "hotnetR2"
-    )
-  }
-  if (!nzchar(alias_file) || !file.exists(alias_file) ||
-      file.info(alias_file)$size == 0) {
+  if (!is.null(alias_file) && (!nzchar(alias_file) || !file.exists(alias_file) ||
+      file.info(alias_file)$size == 0)) {
     stop(
       "Curated alias workbook not found. Supply alias_file or reinstall ",
-      "hotnetR with its extdata workbook.",
+      "hotnetR2 with its extdata workbook.",
       call. = FALSE
     )
   }
@@ -104,6 +98,12 @@ create_harmonization_references <- function(cache_dir = NULL,
   }
 
   if (any(needs_write[c("alias", "alias_nodup")])) {
+    if (is.null(alias_file)) {
+      tables <- packaged_alias_tables()
+      for (name in c("alias", "alias_nodup")) {
+        if (needs_write[[name]]) atomic_save_rds(tables[[name]], outputs[[name]])
+      }
+    } else {
     message("Processing curated alias workbook from: ", alias_file)
     alias_link <- as.data.frame(readxl::read_xlsx(alias_file))
     required_alias <- c("gene", "Hsym")
@@ -130,6 +130,7 @@ create_harmonization_references <- function(cache_dir = NULL,
     }
     if (needs_write[["alias_nodup"]]) {
       atomic_save_rds(alias_link_nodup, outputs[["alias_nodup"]])
+    }
     }
   }
 

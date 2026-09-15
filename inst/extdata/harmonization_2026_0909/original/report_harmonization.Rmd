@@ -1,0 +1,224 @@
+---
+title: "Promoter Gene-Symbol Harmonization Report"
+author: "Buas analysis"
+date: "`r format(Sys.Date())`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+suppressPackageStartupMessages({
+  library(readxl)
+  library(dplyr)
+  library(tidyr)
+  library(knitr)
+})
+
+data_dir <- dirname(knitr::current_input(dir = TRUE))
+jeme <- read_excel(file.path(data_dir, "final_harmonize_jemeF.xlsx"))
+hic_po <- read_excel(file.path(data_dir, "final_harmonize_hiC_PO.xlsx"))
+hic_pp <- read_excel(file.path(data_dir, "final_harmonize_hiC_PP_pairs.xlsx"))
+
+mapping_jeme <- jeme |>
+  transmute(dataset = "JEME", promoter_side = "promoter", original = id,
+            final = symbol, priority)
+mapping_po <- hic_po |>
+  transmute(dataset = "HiC-PO", promoter_side = "promoter", original = id,
+            final = symbol, priority)
+mapping_pp <- bind_rows(
+  hic_pp |> transmute(dataset = "HiC-PP", promoter_side = "promoter1 (Pro)",
+                      original = Pro, final = Pro_sym),
+  hic_pp |> transmute(dataset = "HiC-PP", promoter_side = "promoter2 (B)",
+                      original = B, final = B_sym)
+) |>
+  mutate(priority = NA_integer_)
+
+mapping_all <- bind_rows(mapping_jeme, mapping_po, mapping_pp) |>
+  mutate(across(c(original, final), as.character)) |>
+  filter(!is.na(original), original != "")
+
+mapping_summary <- function(data) {
+  data |>
+    group_by(dataset, promoter_side) |>
+    summarise(
+      rows = n(),
+      unique_original = n_distinct(original),
+      unique_final = n_distinct(final, na.rm = TRUE),
+      discordant_rows = sum(!is.na(final) & original != final),
+      missing_final = sum(is.na(final) | final == ""),
+      .groups = "drop"
+    )
+}
+
+conflict_table <- function(data) {
+  data |>
+    distinct(dataset, promoter_side, original, final) |>
+    group_by(dataset, promoter_side, original) |>
+    summarise(
+      n_final = n_distinct(final, na.rm = TRUE),
+      final_symbols = paste(sort(unique(final[!is.na(final)])), collapse = "; "),
+      .groups = "drop"
+    ) |>
+    filter(n_final > 1)
+}
+
+reverse_conflict_table <- function(data) {
+  data |>
+    distinct(dataset, promoter_side, original, final) |>
+    filter(!is.na(final), final != "") |>
+    group_by(dataset, promoter_side, final) |>
+    summarise(
+      n_original = n_distinct(original),
+      original_symbols = paste(sort(unique(original)), collapse = "; "),
+      .groups = "drop"
+    ) |>
+    filter(n_original > 1)
+}
+```
+
+# Scope and input files
+
+The supplied files represent three different objects:
+
+* `final_harmonize_jemeF.xlsx` is a JEME lookup key. `id` is the raw label and
+  `symbol` is the final label.
+* `final_harmonize_hiC_PO.xlsx` is a HiC promoter-only lookup key with the same
+  `id` and `symbol` convention.
+* `final_harmonize_hiC_PP_pairs.xlsx` retains HiC promoter-promoter pair data.
+  `Pro` is promoter1 and `B` is promoter2; `Pro_sym` and `B_sym` are their
+  final labels.
+
+The report treats repeated tissue or pair observations as observations, not as
+mapping conflicts. Conflict checks first reduce each table to distinct
+`original`/`final` mappings.
+
+# Basic statistics
+
+```{r basic-statistics}
+mapping_summary(mapping_all) |>
+  kable(caption = "Rows and discordances by dataset and promoter side")
+```
+
+```{r file-statistics}
+tibble(
+  dataset = c("JEME", "HiC-PO", "HiC-PP"),
+  file_rows = c(nrow(jeme), nrow(hic_po), nrow(hic_pp)),
+  file_columns = c(ncol(jeme), ncol(hic_po), ncol(hic_pp)),
+  distinct_raw_labels = c(n_distinct(jeme$id), n_distinct(hic_po$id),
+                         n_distinct(c(hic_pp$Pro, hic_pp$B))),
+  distinct_final_labels = c(n_distinct(jeme$symbol), n_distinct(hic_po$symbol),
+                            n_distinct(c(hic_pp$Pro_sym, hic_pp$B_sym)))
+) |>
+  kable(caption = "Workbook-level dimensions")
+```
+
+For HiC-PP, the following table makes the promoter-side origin explicit.
+
+```{r hic-pp-sides}
+mapping_pp |>
+  group_by(promoter_side) |>
+  summarise(
+    pair_rows = n(),
+    unique_raw_labels = n_distinct(original),
+    unique_final_labels = n_distinct(final),
+    discordant_rows = sum(original != final, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  kable(caption = "HiC-PP promoter1 versus promoter2")
+```
+
+# Duplicate and inconsistent mappings
+
+## Exact repeated mappings
+
+These counts describe repeated instances after the source tables are combined.
+They are expected for HiC-PP because the same pair can occur in many tissues.
+
+```{r repeated-mappings}
+mapping_all |>
+  count(dataset, promoter_side, original, final, name = "n_observations") |>
+  summarise(
+    .by = c(dataset, promoter_side),
+    distinct_mappings = n(),
+    repeated_mapping_keys = sum(n_observations > 1),
+    repeated_observations = sum(pmax(n_observations - 1, 0))
+  ) |>
+  kable(caption = "Repeated mapping observations")
+```
+
+## One original label mapped to multiple final labels
+
+```{r forward-conflicts}
+forward_conflicts <- conflict_table(mapping_all)
+forward_conflicts |>
+  count(dataset, promoter_side, name = "conflicting_original_labels") |>
+  kable(caption = "Original labels with more than one final label")
+```
+
+```{r forward-conflict-examples}
+head(forward_conflicts, 25) |>
+  kable(caption = "First 25 forward mapping conflicts")
+```
+
+## Multiple original labels mapped to one final label
+
+This is a different kind of many-to-one harmonization and is not necessarily an
+error. It is reported because it can change network node counts after labels
+are standardized.
+
+```{r reverse-conflicts}
+reverse_conflicts <- reverse_conflict_table(mapping_all)
+reverse_conflicts |>
+  count(dataset, promoter_side, name = "final_labels_with_multiple_originals") |>
+  kable(caption = "Final labels receiving multiple original labels")
+```
+
+```{r reverse-conflict-examples}
+head(reverse_conflicts, 25) |>
+  kable(caption = "First 25 reverse mapping collisions")
+```
+
+## Cross-dataset consistency
+
+The next table checks whether the same original label appears in multiple
+datasets with different final labels. `dataset` and promoter side are retained
+so a HiC-PP `Pro`/`B` role is not silently merged with another role.
+
+```{r cross-dataset}
+cross_dataset_conflicts <- mapping_all |>
+  distinct(dataset, promoter_side, original, final) |>
+  group_by(original) |>
+  summarise(
+    n_dataset_side_mappings = n_distinct(paste(dataset, promoter_side)),
+    n_final = n_distinct(final, na.rm = TRUE),
+    final_symbols = paste(sort(unique(final[!is.na(final)])), collapse = "; "),
+    dataset_sides = paste(sort(unique(paste(dataset, promoter_side))), collapse = "; "),
+    .groups = "drop"
+  ) |>
+  filter(n_final > 1)
+
+tibble(
+  conflicting_original_labels = nrow(cross_dataset_conflicts),
+  examples = if (nrow(cross_dataset_conflicts) == 0) "None" else
+    paste(head(cross_dataset_conflicts$original, 10), collapse = "; ")
+) |>
+  kable(caption = "Cross-dataset inconsistent original-to-final mappings")
+```
+
+# Interpretation
+
+The report distinguishes three quantities that are easy to conflate:
+
+1. A **discordance** is an observation where the raw and final labels differ.
+2. A **repeated mapping** is the same raw-to-final pair observed more than once.
+3. A **mapping conflict** is one raw label associated with more than one final
+   label after exact duplicate mappings are removed.
+
+The JEME and HiC-PO workbooks are keys and should normally have one selected
+final symbol per `id`. HiC-PP is pair-level data, so its row count reflects
+tissue-specific observations; use the promoter-side mapping tables above when
+checking gene-level consistency.

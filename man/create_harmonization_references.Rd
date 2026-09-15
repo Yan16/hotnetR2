@@ -17,8 +17,8 @@ standard project-local cache.}
 \item{overwrite}{Logical; regenerate existing outputs when TRUE.}
 
 \item{alias_file}{Optional path to a compatible curated alias workbook. When
-NULL, uses \code{gtex_hugo_merged_by_ens_SORTens_FINALv1.xlsx} bundled with the
-installed package.}
+NULL, uses the packaged September 2026 alias datasets. An explicit workbook
+retains the historical workbook interpretation for compatibility.}
 }
 \value{
 Invisibly, a data frame containing each output path and its status.
@@ -26,5 +26,5 @@ Invisibly, a data frame containing each output path and its status.
 \description{
 Creates the cleaned GENCODE gene annotation and curated alias files consumed
 by promoter and HiC harmonization helpers. The alias source bundled with
-hotnetR is curated by the project and is treated as the authoritative default.
+hotnetR2 is curated by the project and is treated as the authoritative default.
 }

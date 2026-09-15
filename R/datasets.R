@@ -44,17 +44,21 @@
 #' }
 "tf_25"
 
-#' Frozen gene alias mappings
+#' Curated gene alias mappings
 #'
-#' Legacy mapping tables carried forward from hotnetR for compatibility.
-#' These are frozen assets, not live HGNC lookups; provenance and distribution
-#' review are tracked in the development task list.
+#' September 2026 JEME and HiC workbook mappings override covered legacy
+#' identifiers; uncovered legacy identifiers are retained. C11orf48 maps to
+#' LBHD1 and MEGT1 to LY6G6D by explicit project curation. These are frozen
+#' assets, not live HGNC lookups. The mapping_direction attribute is
+#' raw_to_approved: gene is the original label and Hsym is the final symbol.
 #' @format Data frames with 13 columns: merge status `_mrg`, source identifiers
 #' `gsm`, `hh`, `ensg`, `gene`, HGNC-related fields `Hsym`, `Hhgnc_id`,
 #' `hgnc_id`, `Hentrez_id`, `Hname`, `Hlocation`, and type fields `ty`, `Hty`.
-#' `alias` contains 59034 rows; `alias_nodup` contains 57853 rows.
+#' `alias` contains 60422 rows; `alias_nodup` contains 59241 unique gene keys.
+#' Unavailable metadata for newly added keys is NA. Source and conflict audits
+#' and the external R builder are distributed with the installed package.
 #' @name alias
-#' @aliases alias_nodup
+#' @aliases alias_nodup alias_link alias_link_nodup
 #' @usage data(alias_link)
 #' data(alias_link_nodup)
 #' @docType data
