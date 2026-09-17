@@ -3,11 +3,35 @@
 A standalone development successor to hotnetR combining dataset preparation with
 the v2_analysis2 and v3_analysis2 LDAK / hierarchical HotNet workflows.
 
-**Status: implementation in progress (0.0.4); clean-machine reproduction is
+**Status: implementation in progress (0.0.5); clean-machine reproduction is
 not yet certified.** No existing analysis is modified. When implementations
 conflict, v2/v3 behavior takes precedence over earlier analysis2 behavior.
 
 ## Installed-package workflow
+
+### HiC promoter-promoter-only selection (0.0.5)
+
+```yaml
+regulatory:
+  jeme:
+    key_column: tiss
+    value: E094
+  hic:
+    tissue_type: Gastric
+    edge_types: [PP]
+```
+
+This retains Gastric JEME enhancer-promoter and HiC promoter-promoter edges.
+HiC PO is excluded before harmonization, annotation, classification and network
+construction; its cache is not required. A shared JEME enhancer remains a JEME
+node. HiC-only PO enhancers and PO-only targets do not enter the annotations.
+The existing all-tissue annotation policy still applies to JEME and the enabled
+HiC PP source; the selected tissues restrict network edges. Promoter intervals
+and enhancer-class retention remain controlled by the usual TSS settings.
+An omitted edge_types retains both sources; [PO] and [PO, PP] are also valid.
+Empty tissue selection still disables HiC. Start a fresh analysis and calculate
+its scores/networks when changing source selection; do not reuse mixed-source
+annotations or scores as if they were PP-only results.
 
 ### Curated alias update (0.0.4)
 

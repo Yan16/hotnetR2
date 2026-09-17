@@ -19,6 +19,25 @@ empty_analysis_hic <- function() {
 
 load_analysis_hic <- function(config, all_tissues = FALSE) {
   if (!analysis_hic_enabled(config)) return(empty_analysis_hic())
-  get_hic(tissue_type = if (all_tissues) NULL else analysis_hic_tissues(config),
-          cache_dir = config$cache_dir)
+  edge_types <- analysis_hic_edge_types(config)
+  tissues <- if (all_tissues) NULL else analysis_hic_tissues(config)
+  if (setequal(edge_types, c("PO", "PP"))) {
+    return(get_hic(tissue_type = tissues, cache_dir = config$cache_dir))
+  }
+  result <- empty_analysis_hic()
+  for (type in edge_types) {
+    result[[type]] <- get_hic_by_tissue(tissue_type = tissues, edge_type = type,
+                                       cache_dir = config$cache_dir)
+  }
+  result
+}
+
+analysis_hic_edge_types <- function(config) {
+  types <- config$regulatory$hic$edge_types
+  if (is.null(types)) return(c("PO", "PP"))
+  types <- as.character(unlist(types, use.names = FALSE))
+  if (!length(types) || anyNA(types) || any(!types %in% c("PO", "PP")) || anyDuplicated(types)) {
+    stop("regulatory.hic.edge_types must select PO, PP, or both without duplicates", call. = FALSE)
+  }
+  types
 }

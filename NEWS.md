@@ -1,3 +1,11 @@
+# hotnetR2 0.0.5
+
+- Add regulatory.hic.edge_types (PO/PP; both by default). Selecting [PP]
+  excludes HiC enhancer contacts from annotations and networks, while retaining
+  JEME enhancer contacts. Unselected HiC caches are not read.
+- Preserve tissue selection for networks and the all-tissue annotation policy
+  for enabled edge types. The public get_hic() interface is unchanged.
+
 # hotnetR2 0.0.4
 
 - Refresh alias/alias_nodup from the September 2026 curated JEME, HiC-PO and
