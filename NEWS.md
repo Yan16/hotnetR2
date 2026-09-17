@@ -1,3 +1,12 @@
+# hotnetR2 0.0.6
+
+- Add opt-in regulatory.hic.jeme_overlap filtering before LDAK annotations and
+  network construction. Only currently selected JEME tissues define the overlap
+  reference; both enhancer sets default to 1000 bp flanks. Exclude overlapping
+  HiC PO contacts, retain nonoverlapping PO contacts, and leave PP unchanged.
+- Save separate annotation/network classification, overlap-pair and selected
+  JEME reference audits. Existing enhancer-versus-promoter filtering still applies.
+
 # hotnetR2 0.0.5
 
 - Add regulatory.hic.edge_types (PO/PP; both by default). Selecting [PP]

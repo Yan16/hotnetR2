@@ -132,6 +132,39 @@ differences. Fresh v3 LDAK results match; v2 promoter permutation-adjusted
 p-values differ and remain under investigation. Two historical source-edge audit files are explicitly outside
 the current network comparison. See [verification evidence](docs/verification.md).
 
+## Optional HiC–JEME enhancer overlap filter (0.0.6)
+
+```yaml
+regulatory:
+  jeme:
+    key_column: tiss
+    value: E094
+  hic:
+    tissue_type: Gastric
+    edge_types: [PO, PP]
+    jeme_overlap:
+      enabled: true
+      hic_flank_bp: 1000
+      jeme_flank_bp: 1000
+```
+
+The reference is the union of enhancers in the **selected JEME tissues**, not
+all JEME tissues. Expand each enhancer at both ends, clip starts to 1, and
+intersect on the same chromosome (1-based inclusive source coordinates).
+`hic_jeme_class1` has no overlap and retains its PO edges; `hic_jeme_class2`
+has any overlap and drops all its PO edges. PP contacts and JEME contacts are
+unchanged. The existing enhancer-versus-promoter class filter still applies
+afterward; the new class names describe a separate comparison.
+
+Filtering precedes both LDAK annotation construction and network construction.
+All-tissue annotation mode still uses only selected JEME tissues as the overlap
+reference. Without this setting, behavior is unchanged. bedtools is required.
+Under LDAK annotation outputs, `hic_jeme_{annotations,networks}_*.tsv.gz`
+records classification (including flank lengths, selection and counts), overlap
+pairs, and the expanded selected JEME reference. Coordinates in these audits
+are 1-based inclusive. Retained means passing this filter, not guaranteed
+survival of subsequent TSS, GWAS or network-score filters.
+
 Read in order:
 
 1. [Workflow schematic](docs/workflow.md)

@@ -116,6 +116,7 @@ mhc_exclusion_region <- function(config = list()) {
 
 validate_analysis_config <- function(config) {
   analysis_hic_edge_types(config)
+  validate_hic_jeme_overlap(config)
   required_sections <- c(
     "schema_version", "analysis", "project", "gwas", "reference",
     "regulatory", "aracne", "ldak", "scores", "networks", "hhotnet"

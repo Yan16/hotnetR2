@@ -22,12 +22,16 @@ load_analysis_hic <- function(config, all_tissues = FALSE) {
   edge_types <- analysis_hic_edge_types(config)
   tissues <- if (all_tissues) NULL else analysis_hic_tissues(config)
   if (setequal(edge_types, c("PO", "PP"))) {
-    return(get_hic(tissue_type = tissues, cache_dir = config$cache_dir))
+    result <- get_hic(tissue_type = tissues, cache_dir = config$cache_dir)
+  } else {
+    result <- empty_analysis_hic()
+    for (type in edge_types) {
+      result[[type]] <- get_hic_by_tissue(tissue_type = tissues, edge_type = type,
+                                         cache_dir = config$cache_dir)
+    }
   }
-  result <- empty_analysis_hic()
-  for (type in edge_types) {
-    result[[type]] <- get_hic_by_tissue(tissue_type = tissues, edge_type = type,
-                                       cache_dir = config$cache_dir)
+  if (isTRUE(config$regulatory$hic$jeme_overlap$enabled) && "PO" %in% edge_types) {
+    result <- filter_hic_jeme_overlap(result, config, all_tissues)
   }
   result
 }
