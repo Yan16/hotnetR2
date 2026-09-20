@@ -115,6 +115,13 @@ mhc_exclusion_region <- function(config = list()) {
 }
 
 validate_analysis_config <- function(config) {
+  mode <- config$hhotnet$analysis_mode %||% "permutation"
+  if (length(mode) != 1L || !mode %in% c("permutation", "manual_delta")) {
+    stop("hhotnet.analysis_mode must be permutation or manual_delta", call. = FALSE)
+  }
+  if (identical(mode, "manual_delta") && !identical(config$hhotnet$execution_mode, "local_python")) {
+    stop("manual_delta currently requires local_python execution", call. = FALSE)
+  }
   analysis_hic_edge_types(config)
   validate_hic_jeme_overlap(config)
   required_sections <- c(

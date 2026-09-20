@@ -103,10 +103,10 @@ hhotnet_header_field <- function(header) {
   paste0("header_", ifelse(nzchar(field), field, "unnamed"))
 }
 
-hhotnet_result_data <- function(config, network) {
+hhotnet_result_data <- function(config, network, cluster_file = hhotnet_cluster_result_file(config, network)) {
   require_hhotnet_result_packages()
   paths <- analysis_paths(config)
-  parsed <- read_hhotnet_cluster_result(hhotnet_cluster_result_file(config, network), network)
+  parsed <- read_hhotnet_cluster_result(cluster_file, network)
   edge_file <- network_data_file(config, paste0(network, "_edge_list_full.tsv"))
   node_file <- network_data_file(config, "nodes_all_info.tsv")
   if (!file.exists(edge_file) || !file.exists(node_file)) {
@@ -196,7 +196,7 @@ hhotnet_result_data <- function(config, network) {
   header_values <- stats::setNames(as.list(parsed$headers$value), header_fields)
   result_summary <- data.frame(
     network = network,
-    result_file = hhotnet_cluster_result_file(config, network),
+    result_file = cluster_file,
     input_nodes = nrow(node_table),
     input_edges = nrow(edges),
     reported_clusters = nrow(parsed$clusters),

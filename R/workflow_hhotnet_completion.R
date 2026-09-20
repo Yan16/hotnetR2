@@ -14,6 +14,15 @@
 validate_hhotnet_completion <- function(config, networks = NULL) {
   requested <- resolve_networks(config, networks)
   paths <- analysis_paths(config)
+  if (identical(config$hhotnet$analysis_mode, "manual_delta")) {
+    matrices <- file.path(paths[["hhotnet_intermediate"]], requested, "similarity_matrix.h5")
+    report <- tibble::tibble(network = requested, mode = "similarity_only",
+      similarity_matrix = matrices, complete = file.exists(matrices) & file.info(matrices)$size > 0)
+    output <- network_summary_file(config, "hhotnet_similarity_completion.tsv")
+    dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
+    readr::write_tsv(report, output)
+    return(report)
+  }
   score_name <- config$hhotnet$score_name %||% "nodes_all"
   expected <- as.integer(config$hhotnet$num_permutations) + 1L
   rows <- lapply(requested, function(network) {

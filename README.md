@@ -165,6 +165,25 @@ pairs, and the expanded selected JEME reference. Coordinates in these audits
 are 1-based inclusive. Retained means passing this filter, not guaranteed
 survival of subsequent TSS, GWAS or network-score filters.
 
+## Manual HHN delta cuts (0.0.7)
+
+Set `hhotnet.analysis_mode: manual_delta`, `execution_mode: local_python`,
+and optionally `delta_values: [0.05, 0.1, 0.2, 0.5]`. The `hotnet` stage stops
+after similarity matrices; `exports` builds the observed score-weighted
+hierarchy and calls `extract_hhotnet_delta_clusters()` for the grid. No HHN
+permutations are run (LDAK permutations are independent). Direct calls accept
+a numeric delta vector and optional network vector. Higher delta generally
+gives smaller clusters. These are exploratory cuts, not significance tests.
+
+Raw cluster TSVs retain singletons; CX2 and associated tables default to clusters
+of at least two nodes and retain only within-cluster edges, not surrounding
+connected components. Empty retained sets produce empty CX2s. Files include
+`_delta0.05` etc. and live in dedicated `manual_delta` directories. A manifest
+under `hHotnet/summary` records the latest grid's paths, counts and method.
+Matrix/hierarchy construction may remain costly; repeat cuts reuse the observed
+hierarchy via input fingerprints. The HHN source directory must provide
+`process_hierarchies.cut_hierarchy` and `construct_hierarchy.py`.
+
 Read in order:
 
 1. [Workflow schematic](docs/workflow.md)

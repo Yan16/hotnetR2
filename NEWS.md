@@ -1,3 +1,13 @@
+# hotnetR2 0.0.7
+
+- Add hhotnet.analysis_mode: manual_delta. The HotNet stage stops after the
+  similarity matrix; it never generates permutations or permutation hierarchies.
+- Add extract_hhotnet_delta_clusters() for observed-hierarchy cuts using upstream
+  HHN cut_hierarchy(), with fingerprinted hierarchy reuse, delta-specific raw
+  clusters, within-cluster node/edge TSVs, CX2 graphs and a grid summary manifest.
+  Default deltas are 0.05, 0.1, 0.2 and 0.5. Manual cuts are exploratory and have
+  no permutation significance. Currently supported for local_python execution.
+
 # hotnetR2 0.0.6
 
 - Add opt-in regulatory.hic.jeme_overlap filtering before LDAK annotations and

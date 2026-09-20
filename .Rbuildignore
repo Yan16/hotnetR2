@@ -7,3 +7,4 @@
 ^tools$
 ^artifacts$
 ^reproduction-runs$
+^inst/compat/__pycache__($|/)

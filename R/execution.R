@@ -50,6 +50,9 @@ assert_unlinked_result <- function(path) {
 #' @return Invisibly, the completion validation table.
 #' @export
 run_hhotnet <- function(config, networks = NULL) {
+  if (identical(config$hhotnet$analysis_mode, "manual_delta")) {
+    return(run_hhotnet_similarity(config, networks))
+  }
   networks <- resolve_networks(config, networks)
   ready <- validate_hhotnet_inputs(config, networks)
   if (!all(ready$ready)) stop("HotNet inputs are incomplete", call. = FALSE)
@@ -145,6 +148,11 @@ run_analysis <- function(config, stages = c("annotations", "classification", "ld
       networks = build_hhotnet_networks(config, dry_run = FALSE),
       hotnet = run_hhotnet(config),
       exports = {
+        if (identical(config$hhotnet$analysis_mode, "manual_delta")) {
+          extract_hhotnet_delta_clusters(config,
+            deltas = unlist(config$hhotnet$delta_values %||% c(0.05, 0.1, 0.2, 0.5)))
+          next
+        }
         summarize_hhotnet_results(config)
         export_hhotnet_graphs(config)
         valid <- validate_hhotnet_exports(config)
