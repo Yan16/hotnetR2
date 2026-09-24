@@ -18,9 +18,8 @@ TSS profiles retain all JEME classes by default; gene-body profiles retain
 class 1 only. \code{drop_non_class1_edge_sources} overrides the source policy.
 }
 \description{
-Reproduces the v2/v3 same-chromosome overlap policy using bedtools. Class 2
-takes precedence when at least one window fully contains the enhancer.
-The compatibility conversion deliberately treats stored coordinates as
-inclusive when constructing the bedtools intervals, matching the frozen
-classifier scripts. It does not reinterpret historical coordinates.
+Applies the same-chromosome overlap policy using bedtools. Stored enhancer
+and promoter intervals are 0-based and half-open; flanks are added without
+a second coordinate conversion. Class 2 takes precedence when at least one
+promoter window fully contains the enhancer.
 }

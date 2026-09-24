@@ -134,12 +134,12 @@ test_that("MHC exclusion removes every node type with any inclusive overlap", {
     result$excluded$gene,
     c(
       "inside_enhancer", "left_overlap", "right_overlap",
-      "left_boundary", "right_boundary", "duplicate"
+      "left_boundary", "duplicate"
     )
   )
   expect_setequal(
     result$data$gene,
-    c("outside_left", "outside_right", "other_chr")
+    c("right_boundary", "outside_left", "outside_right", "other_chr")
   )
   expect_equal(result$region$start, 25000000)
   expect_equal(result$region$end, 34000000)
@@ -156,6 +156,26 @@ test_that("MHC exclusion fails closed for invalid coordinates", {
   expect_error(
     exclude_network_mhc(nodes, list(enabled = TRUE)),
     "cannot guarantee complete removal"
+  )
+})
+
+test_that("public MHC exclusion respects inclusive and BED boundary contracts", {
+  inclusive <- data.frame(
+    gene = c("left", "right", "outside"), CHR = 6L,
+    START = c(90L, 200L, 201L), END = c(100L, 210L, 220L)
+  )
+  expect_setequal(
+    exclude_MHC(inclusive, start = 100L, end = 200L)$gene,
+    "outside"
+  )
+
+  bed <- data.frame(
+    gene = c("left", "right", "outside"), CHR = 6L,
+    START = c(89L, 200L, 201L), END = c(100L, 210L, 220L)
+  )
+  expect_setequal(
+    exclude_MHC(bed, start = 100L, end = 200L, coordinate_system = "bed")$gene,
+    c("right", "outside")
   )
 })
 

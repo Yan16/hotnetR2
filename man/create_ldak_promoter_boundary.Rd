@@ -22,10 +22,9 @@ Path to the created .loc file
 }
 \description{
 This function processes the NCBI feature table to create a gene boundary file
-compatible with LDAK. The promoter is defined as a 1bp reference region at
-the gene start position (specifically \verb{[start, start+1]}), as LDAK requires
-distinct start and end coordinates. The final promoter range (including flanks)
-will be defined by the LDAK program itself using this 1bp region as a anchor.
+compatible with LDAK. The promoter is the strand-aware TSS encoded as the
+one-base BED interval \verb{[TSS-1,TSS)}. The final promoter range (including
+flanks) is defined by LDAK using this one-base interval as an anchor.
 Note that boundaries are created for all features present in the source file,
 providing a comprehensive reference not limited to JEME or HiC specific regions.
 }

@@ -1,3 +1,27 @@
+# hotnetR2 0.1.1
+
+- Correct every active LDAK/bedtools annotation boundary to a 0-based,
+  half-open contract. NCBI `+` TSS now uses `START`, NCBI `-` TSS uses `END`,
+  one-base promoters are `[TSS-1,TSS)`, and NCBI gene bodies are
+  `[START-1,END)`.
+- Treat JEME enhancers and Jung HiC restriction fragments as already-BED
+  intervals. Enhancer classification and HiC-JEME overlap no longer subtract a
+  second base from interval starts; touching half-open boundaries are adjacent.
+- Correct `promoter_range()`, `jeme_promoter_to_loc()`, LDAK interval
+  validation, and BED-based MHC overlap handling. Add strand, zero-start,
+  gene-body, source conversion, and touching-boundary regression tests.
+
+# hotnetR2 0.1.0
+
+- Document the coordinate systems, assemblies, roles and preservation rules for
+  the datasets used by the current BEEA v6/v7 profiles and the inspected MVP
+  GWAS workflow in `docs/dataset_coordinate_reference.md`.
+- Verify from exact, allele-compatible GRCh37 BIM matches that BEEA `POS` and
+  MVP `pos_hg19` are 1-based variant positions. They must not be converted as
+  BED starts when constructing `chr:position` LDAK predictor identifiers.
+- Record the legacy v6/v7 TSS/classifier arithmetic and the canonical
+  NCBI-to-BED rule that was subsequently implemented in 0.1.1.
+
 # hotnetR2 0.0.7
 
 - Add hhotnet.analysis_mode: manual_delta. The HotNet stage stops after the

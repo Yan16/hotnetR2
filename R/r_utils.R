@@ -136,10 +136,20 @@ find_na <- function(df) {
 #' @param chr Chromosome to filter on (default = 6).
 #' @param start Start coordinate of the region to exclude (default = 28477797).
 #' @param end End coordinate of the region to exclude (default = 33448354).
+#' @param coordinate_system Coordinate convention used by `df`: either
+#'   `"one_based_inclusive"` (the default for legacy LDAK result tables) or
+#'   `"bed"` for 0-based, half-open annotation intervals. Region `start/end`
+#'   are always supplied as 1-based inclusive biological coordinates.
 #' @return A data frame excluding rows within the specified region.
 #' @export
-exclude_MHC <- function(df, chr = 6, start = 28477797, end = 33448354) {
-  idx <- df$CHR == chr & df$START >= start & df$END <= end
+exclude_MHC <- function(df, chr = 6, start = 28477797, end = 33448354,
+                        coordinate_system = c("one_based_inclusive", "bed")) {
+  coordinate_system <- match.arg(coordinate_system)
+  if (coordinate_system == "bed") {
+    idx <- df$CHR == chr & df$END > start - 1L & df$START < end
+  } else {
+    idx <- df$CHR == chr & df$END >= start & df$START <= end
+  }
   message(paste0("Exclude ", sum(idx), " genes from MHC region"))
   if (sum(idx) > 0) {
     message(paste(df$gene[idx], collapse = ", "))

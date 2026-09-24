@@ -247,8 +247,8 @@ extract_jeme_nodes <- function(jeme_data) {
 
 #' Define promoter range based on source type
 #'
-#' This utility ensures that promoter boundaries (TSS + 1bp) are calculated
-#' consistently across different data formats.
+#' This utility converts a 1-based biological TSS to its one-base, 0-based
+#' half-open BED interval `[TSS-1,TSS)`.
 #'
 #' @param x A data frame containing coordinate information. Either NCBI feature table format (with `start` column) or JEME format (with `location` column).
 #' @param source Character. Either "NCBI" (expects `start` column) or "jeme" (expects `location`).
@@ -259,23 +259,30 @@ promoter_range <- function(x, source = c("NCBI", "jeme")) {
   source <- match.arg(source)
 
   if (source == "NCBI") {
-    # NCBI logic: start is the TSS, END is TSS + 1
     if (!"start" %in% colnames(x)) stop("Source df must contain 'start' column for NCBI source.")
+    if ("strand" %in% colnames(x) && !"end" %in% colnames(x)) {
+      stop("NCBI source with 'strand' must also contain 'end'.")
+    }
+    tss <- if (all(c("strand", "end") %in% colnames(x))) {
+      if (any(!x$strand %in% c("+", "-"))) stop("NCBI source contains an unsupported strand.")
+      ifelse(x$strand == "+", as.integer(x$start), as.integer(x$end))
+    } else {
+      as.integer(x$start)
+    }
     res <- x |>
       dplyr::mutate(
-        START = as.integer(.data$start),
-        END = as.integer(.data$start) + 1
+        START = tss - 1L,
+        END = tss
       )
     if ("chromosome" %in% colnames(res)) {
       res <- dplyr::rename(res, CHR = "chromosome")
     }
   } else {
-    # JEME logic: location is the TSS, target columns are START and END
     if (!"location" %in% colnames(x)) stop("Source df must contain 'location' column for jeme source.")
     res <- x |>
       dplyr::mutate(
-        START = as.integer(.data$location),
-        END = as.integer(.data$location) + 1
+        START = as.integer(.data$location) - 1L,
+        END = as.integer(.data$location)
       )
     if ("CHR2" %in% colnames(res)) {
       res <- dplyr::rename(res, CHR = "CHR2")

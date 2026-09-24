@@ -1,8 +1,9 @@
 # hotnetR2 — current specification and decision ledger
 
 Audit date: 2026-09-23. Runtime baseline: **0.0.7, a722b47** (clean source at
-audit start). This document describes accepted/current behavior, not a proposal
-to change science. New documentation commits do not change that runtime baseline.
+audit start); current source version: **0.1.1**. This document describes
+accepted/current behavior, not a proposal to change science. Documentation and
+version commits do not change the frozen 0.0.7 runtime baseline.
 Read with `KNOWN_ISSUES.md`, `CHANGELOG.md`, and the sibling
 `../buas_paper_2026_v2/PROJECT_SPEC.md`. `NEWS.md` remains the version history.
 
@@ -18,6 +19,14 @@ Three layers are separate: package/reference preparation; external GWAS/ARACNe
 preprocessing; project-specific orchestration. Package functions use explicit
 configuration, not the current directory or original author's analysis folders
 as implicit scientific inputs. Some portability gaps remain (see issues).
+
+Dataset assemblies, coordinate systems and conversion-boundary decisions are
+recorded in `docs/dataset_coordinate_reference.md`. In particular, GWAS and
+PLINK single-base variant positions are 1-based identifiers, whereas LDAK
+`.loc` intervals follow its 0-start, half-open contract. Coordinate metadata is
+field-specific: JEME `location` is a 1-based hg19 TSS, JEME enhancer bounds are
+already BED, and active v6/v7 JEME/HiC promoter bounds are obtained by matching
+harmonized symbols to the 1-based-inclusive NCBI GRCh37 feature table.
 
 ## Current architecture
 
@@ -116,12 +125,12 @@ for how an undocumented dataset was originally made.
 
 | ID | Current rule | Evidence / critical qualification |
 | --- | --- | --- |
-| P09 | Preserve legacy boundary arithmetic for reproduction; do not replace it with a generic interval library without fixture tests. | `convert_promoter_details_to_tss`, classifier; coordinate inconsistency is K01. |
-| P10 | TSS conversion uses `TSS=START+1` for `+`, `TSS=END` for `-`; stores `[TSS-1,TSS]` as START/END. Retains original gene bounds/strand. | `workflow_ldak_annotations.R`; invalid strand fails. |
-| P11 | Classifier expands stored enhancer and promoter START/END; BED start is `max(1,START-flank)-1`, end `END+flank`. Same chromosome only. | `classification.R`; not equivalent to casually treating the stored TSS interval as a single inclusive base. |
+| P09 | All `.loc` and bedtools-facing intervals use 0-based, half-open BED coordinates. Convert each 1-based source exactly once and never decrement an already-BED enhancer start. | Coordinate regression fixtures cover both strands, gene bodies, zero starts and touching boundaries. Supersedes frozen legacy arithmetic in 0.1.1. |
+| P10 | NCBI TSS conversion uses `TSS=START` for `+` and `TSS=END` for `-`, then writes `[TSS-1,TSS)`. NCBI gene bodies write `[START-1,END)`. Original biological bounds and strand remain in detail tables. | `workflow_ldak_annotations.R`; invalid strand fails. |
+| P11 | Classifier expands stored BED intervals directly: start `max(0,START-flank)`, end `END+flank`. Same chromosome only; touching half-open boundaries do not overlap. | `classification.R`; no second start conversion. |
 | P12 | enh_class1: no overlap with any promoter window; class2: entire expanded enhancer contained in at least one window; class3: other overlap. | class tests; supersedes earlier two-class categorization. Not restricted to JEME target pairs. |
 | P13 | Default drop sources: TSS → HiC_PO only; gene body → JEME and HiC_PO. Explicit list overrides; empty retains all. A mixed-source annotation is retained if any source retains it, but edge filtering remains source-specific. | `enhancer_retention.R`; replaces universal class1-only TSS behavior. |
-| P14 | Optional `hic.jeme_overlap.enabled=TRUE`: compare HiC PO enhancers to **selected** JEME tissue union, default flank 1000 on each set; any overlap removes all PO contacts for that enhancer. PP and JEME are unchanged. | `hic_jeme_overlap.R`; works before annotations AND networks, even if annotation universe is all tissues. |
+| P14 | Optional `hic.jeme_overlap.enabled=TRUE`: compare HiC PO BED intervals to the **selected** JEME BED tissue union, default flank 1000 on each set; any positive-width overlap removes all PO contacts for that enhancer. Boundary-only contact is not overlap. PP and JEME are unchanged. | `hic_jeme_overlap.R`; works before annotations AND networks, even if annotation universe is all tissues. |
 | P15 | HiC–JEME class1/2 is separate from enhancer–promoter class1/2/3. Passing first filter does not bypass TSS or score filters. | source/classification integration; v6/v7 enable both. |
 
 `.loc` is headerless `name, CHR, START, END`, unexpanded. LDAK receives

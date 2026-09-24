@@ -18,17 +18,21 @@ test_that("LDAK interval validation enforces unique, valid panel-overlapping loc
   expect_equal(checked$data$CHR, c(1L, 23L))
   expect_equal(checked$report$value[checked$report$metric == "interval_rows"], 2)
 
+  zero_start <- intervals
+  zero_start$START[1] <- 0L
+  expect_no_error(hotnetR2:::validate_ldak_intervals(zero_start, "enhancer", bounds))
+
   duplicated_name <- intervals
   duplicated_name$name[2] <- "A"
   expect_error(hotnetR2:::validate_ldak_intervals(duplicated_name, "enhancer", bounds), "duplicate names")
 
   invalid_coordinates <- intervals
-  invalid_coordinates$END[1] <- 99
+  invalid_coordinates$END[1] <- 100
   expect_error(hotnetR2:::validate_ldak_intervals(invalid_coordinates, "enhancer", bounds), "invalid START/END")
 
   outside_panel <- intervals
-  outside_panel$START[1] <- 2001
-  outside_panel$END[1] <- 2100
+  outside_panel$START[1] <- 1000
+  outside_panel$END[1] <- 1100
   outside_checked <- hotnetR2:::validate_ldak_intervals(outside_panel, "enhancer", bounds)
   expect_equal(
     outside_checked$report$value[outside_checked$report$metric == "intervals_fully_outside_reference_panel"],

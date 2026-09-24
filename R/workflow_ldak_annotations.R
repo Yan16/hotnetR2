@@ -65,7 +65,7 @@ validate_ldak_intervals <- function(intervals, annotation_type, reference_bounds
   if (any(data$CHR < 1L | data$CHR > 24L)) {
     stop(annotation_type, " intervals must use autosomes or chromosomes X/Y", call. = FALSE)
   }
-  if (any(data$START < 1L | data$END < data$START)) {
+  if (any(data$START < 0L | data$END <= data$START)) {
     stop(annotation_type, " intervals have invalid START/END coordinates", call. = FALSE)
   }
   if (anyDuplicated(data$name)) {
@@ -75,7 +75,10 @@ validate_ldak_intervals <- function(intervals, annotation_type, reference_bounds
     stop(annotation_type, " intervals contain duplicate locations", call. = FALSE)
   }
   bounded <- dplyr::left_join(data, reference_bounds, by = "CHR")
-  outside <- is.na(bounded$min_bp) | bounded$END < bounded$min_bp | bounded$START > bounded$max_bp
+  # BIM positions are 1-based points; BED [START,END) covers biological bases
+  # START+1 through END. Therefore START == max_bp lies immediately to the
+  # right of the final reference position.
+  outside <- is.na(bounded$min_bp) | bounded$END < bounded$min_bp | bounded$START >= bounded$max_bp
   report <- data.frame(
     annotation_type = annotation_type,
     metric = c("interval_rows", "unique_names", "chromosomes", "reference_panel_chromosomes",
@@ -212,18 +215,37 @@ convert_promoter_details_to_tss <- function(promoter_details) {
     dplyr::mutate(
       gene_START = .data$START,
       gene_END = .data$END,
-      # Source intervals and LDAK .loc files use 0-start, half-open BED
-      # coordinates.  Store the biological TSS as a 1-based base position,
-      # and represent it for LDAK as the canonical one-base [TSS-1, TSS)
-      # interval.  This is accepted by --cut-genes and expands symmetrically
-      # to TSS +/- the configured promoter flank (inclusive).
-      TSS = dplyr::if_else(.data$strand == "+", .data$START + 1L, .data$END),
+      # NCBI source bounds are 1-based inclusive. Store the biological TSS as
+      # a 1-based base position and write its canonical one-base BED interval.
+      TSS = dplyr::if_else(.data$strand == "+", .data$START, .data$END),
       START = .data$TSS - 1L,
       END = .data$TSS,
       promoter_interval_mode = "strand_aware_tss"
     ) |>
     dplyr::relocate(
       "name", "CHR", "START", "END", "strand", "TSS",
+      "gene_START", "gene_END", "promoter_interval_mode"
+    ) |>
+    dplyr::arrange(.data$CHR, .data$START, .data$END, .data$name)
+}
+
+convert_promoter_details_to_gene_body <- function(promoter_details) {
+  required <- c("START", "END")
+  missing <- setdiff(required, names(promoter_details))
+  if (length(missing)) {
+    stop("Promoter details lack: ", paste(missing, collapse = ", "), call. = FALSE)
+  }
+  promoter_details |>
+    dplyr::mutate(
+      gene_START = .data$START,
+      gene_END = .data$END,
+      # Convert NCBI's 1-based inclusive gene bounds to BED exactly once.
+      START = .data$gene_START - 1L,
+      END = .data$gene_END,
+      promoter_interval_mode = "gene_body"
+    ) |>
+    dplyr::relocate(
+      "name", "CHR", "START", "END", "strand",
       "gene_START", "gene_END", "promoter_interval_mode"
     ) |>
     dplyr::arrange(.data$CHR, .data$START, .data$END, .data$name)
@@ -437,6 +459,8 @@ prepare_ldak_annotations <- function(config, dry_run = TRUE) {
   promoter_interval_mode <- config$ldak$promoter_interval_mode %||% "gene_body"
   if (identical(promoter_interval_mode, "strand_aware_tss")) {
     promoter_details <- convert_promoter_details_to_tss(promoter_details)
+  } else {
+    promoter_details <- convert_promoter_details_to_gene_body(promoter_details)
   }
 
   reference_bounds <- ldak_reference_bounds(config)

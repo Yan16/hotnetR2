@@ -48,9 +48,8 @@ download_NBCI_feature_table <- function(cache_dir = NULL, url = NULL, overwrite 
 #' - `gene_symbol` (character): gene symbol or name extracted from the source.
 #' - `CHR` (character): chromosome with any leading `chr` removed and `X`/`Y`
 #'    converted to `"23"`/`"24"`.
-#' - `START` (integer): start coordinate (TSS / gene start).
-#' - `END` (integer): end coordinate (defaults to `START + 1` when no explicit
-#'    end is present in the file).
+#' - `START` (integer): source gene start in 1-based coordinates.
+#' - `END` (integer): source gene end in 1-based coordinates.
 #'
 #' Other annotation columns present in the file are preserved when possible.
 #' The function deduplicates rows by `gene_symbol` (final tibble contains one

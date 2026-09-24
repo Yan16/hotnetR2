@@ -6,10 +6,9 @@
 #' Create LDAK promoter boundary .loc file
 #'
 #' This function processes the NCBI feature table to create a gene boundary file
-#' compatible with LDAK. The promoter is defined as a 1bp reference region at
-#' the gene start position (specifically `[start, start+1]`), as LDAK requires
-#' distinct start and end coordinates. The final promoter range (including flanks)
-#' will be defined by the LDAK program itself using this 1bp region as a anchor.
+#' compatible with LDAK. The promoter is the strand-aware TSS encoded as the
+#' one-base BED interval `[TSS-1,TSS)`. The final promoter range (including
+#' flanks) is defined by LDAK using this one-base interval as an anchor.
 #' Note that boundaries are created for all features present in the source file,
 #' providing a comprehensive reference not limited to JEME or HiC specific regions.
 #'
@@ -23,8 +22,6 @@
 create_ldak_promoter_boundary <- function(feature_file = NULL, cache_dir = NULL, output_file = NULL) {
   base_cache <- get_cache_dir(cache_dir = cache_dir)
   ldak_cache <- file.path(base_cache, "LDAK")
-  message("TODO: revise this using latest jeme_promoter_to_loc() logic and consider harmonization with jeme promoter definitions.")
-
   if (is.null(feature_file)) {
     feature_file <- list.files(ldak_cache, pattern = "feature_table.txt.gz$", full.names = TRUE)[1]
   }
@@ -198,17 +195,20 @@ jeme_promoter_to_loc <- function(promoters, output_file = NULL, annotation_src =
     promoter_df <- promoters |>
       dplyr::select(promoter, CHR) |>
       dplyr::inner_join(ncbi_tbl, by = c("promoter" = "gene_symbol", "CHR" = "CHR")) |>
+      dplyr::mutate(
+        TSS = dplyr::if_else(.data$strand == "+", .data$START, .data$END),
+        START = .data$TSS - 1L,
+        END = .data$TSS
+      ) |>
       dplyr::select(name = "promoter", dplyr::all_of(c("CHR", "START", "END", "strand", "GeneID")))
   } else {
     # Use JEME-provided coordinates directly
     message("Using JEME-provided coordinates for LDAK .loc file.")
-    # JEME logic: location is the TSS, target columns are START and END
-    # TODO: consider strand direction?
     if (!"location" %in% colnames(promoters)) stop("Source df must contain 'location' column for jeme source.")
     promoter_df <- promoters |>
       dplyr::mutate(
-        START = as.integer(.data$location),
-        END = as.integer(.data$location) + 1
+        START = as.integer(.data$location) - 1L,
+        END = as.integer(.data$location)
       ) |>
       dplyr::select(dplyr::all_of(c("promoter", "CHR", "START", "END", "strand")),
                     name = "promoterFull", dplyr::all_of(c("ENSG", "location"))) |>

@@ -4,7 +4,13 @@
 \alias{exclude_MHC}
 \title{Exclude genes located in the MHC region}
 \usage{
-exclude_MHC(df, chr = 6, start = 28477797, end = 33448354)
+exclude_MHC(
+  df,
+  chr = 6,
+  start = 28477797,
+  end = 33448354,
+  coordinate_system = c("one_based_inclusive", "bed")
+)
 }
 \arguments{
 \item{df}{A data frame containing genomic coordinates. Must include columns:
@@ -20,6 +26,11 @@ exclude_MHC(df, chr = 6, start = 28477797, end = 33448354)
 \item{start}{Start coordinate of the region to exclude (default = 28477797).}
 
 \item{end}{End coordinate of the region to exclude (default = 33448354).}
+
+\item{coordinate_system}{Coordinate convention used by \code{df}: either
+\code{"one_based_inclusive"} (the default for legacy LDAK result tables) or
+\code{"bed"} for 0-based, half-open annotation intervals. Region \code{start/end}
+are always supplied as 1-based inclusive biological coordinates.}
 }
 \value{
 A data frame excluding rows within the specified region.

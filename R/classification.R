@@ -1,10 +1,9 @@
 #' Classify enhancers against the configured promoter windows
 #'
-#' Reproduces the v2/v3 same-chromosome overlap policy using bedtools. Class 2
-#' takes precedence when at least one window fully contains the enhancer.
-#' The compatibility conversion deliberately treats stored coordinates as
-#' inclusive when constructing the bedtools intervals, matching the frozen
-#' classifier scripts. It does not reinterpret historical coordinates.
+#' Applies the same-chromosome overlap policy using bedtools. Stored enhancer
+#' and promoter intervals are 0-based and half-open; flanks are added without
+#' a second coordinate conversion. Class 2 takes precedence when at least one
+#' promoter window fully contains the enhancer.
 #'
 #' @param config Configuration returned by [read_analysis_config()].
 #' @param bedtools Path or command name of the bedtools executable.
@@ -29,7 +28,7 @@ classify_enhancers <- function(config, bedtools = "bedtools") {
   make_bed <- function(data, flank) {
     data |>
       dplyr::transmute(chr = paste0("chr", .data$CHR),
-                       start = pmax(1, .data$START - flank) - 1,
+                       start = pmax(0, .data$START - flank),
                        end = .data$END + flank, name = .data$name) |>
       dplyr::arrange(.data$chr, .data$start, .data$end, .data$name)
   }
@@ -70,7 +69,7 @@ classify_enhancers <- function(config, bedtools = "bedtools") {
         .data$overlapping_promoter_count > 0 ~ settings$class3_label,
         TRUE ~ settings$class1_label
       ),
-      classification_enhancer_start = pmax(1, .data$START - settings$enhancer_flank_bp),
+      classification_enhancer_start = pmax(0, .data$START - settings$enhancer_flank_bp),
       classification_enhancer_end = .data$END + settings$enhancer_flank_bp
     ) |>
     dplyr::relocate("enhancer_class", .after = "tissues")

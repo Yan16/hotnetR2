@@ -325,7 +325,7 @@ exclude_network_mhc <- function(nodes, config) {
   start <- suppressWarnings(as.numeric(nodes$START))
   end <- suppressWarnings(as.numeric(nodes$END))
   invalid <- is.na(chromosome) | !nzchar(chromosome) |
-    !is.finite(start) | !is.finite(end) | start > end
+    !is.finite(start) | !is.finite(end) | start < 0 | start >= end
   if (any(invalid)) {
     stop(
       "MHC exclusion cannot guarantee complete removal because ",
@@ -333,8 +333,10 @@ exclude_network_mhc <- function(nodes, config) {
       call. = FALSE
     )
   }
+  region_start <- region$start - 1L
+  region_end <- region$end
   overlaps <- chromosome == as.character(region$chr) &
-    end >= region$start & start <= region$end
+    end > region_start & start < region_end
   excluded_ids <- unique(as.character(nodes$gene[overlaps]))
   excluded <- as.character(nodes$gene) %in% excluded_ids
   list(

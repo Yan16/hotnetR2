@@ -6,7 +6,7 @@ it does not automatically authorize changing scientific outputs.
 
 | ID / priority | Status and evidence | Required next step / acceptance |
 | --- | --- | --- |
-| K01 / high | **Confirmed coordinate-description conflict.** TSS helper treats START as 0-based (`+` TSS=START+1; stored TSS-1,TSS). NCBI loader reads start without subtraction; classifier treats stored values as inclusive and subtracts 1 when making BED. Some READMEs call this simply a one-base TSS. | Characterize +/− strand and touching-boundary fixtures against current `.loc`, bedtools and LDAK. Preserve arithmetic for reproduction. Any biologically corrected convention needs explicit approval, new profile and regenerated results. |
+| K01 / resolved in 0.1.1 | **Resolved mixed-coordinate conflict.** NCBI and JEME TSS values are converted once to BED; NCBI gene bodies are converted once; JEME and Jung HiC enhancer/restriction-fragment intervals remain BED. Classifier and HiC-JEME overlap helpers no longer subtract an extra base. | Regression tests cover `+`/`-` TSS, NCBI gene body, JEME/NCBI public converters, zero starts, touching boundaries and BED-based MHC overlap. Results made with 0.1.1 are intentionally coordinate-corrected and are not byte-identical legacy v6/v7 reproductions. |
 | K02 / high | **Confirmed historical failure:** fresh v2 promoter LDAK permutation p-values differ even with same seed/binary/8 threads; observed statistics match. `docs/verification.md`: 17,565 reference differences, another 17,570 between repeat runs. | Diagnose external threading/RNG; no invented tolerance. This does not prove v6/v7 will fail, nor prove their fresh reproduction. |
 | K03 / high | **Confirmed baseline/cache divergence:** active v6/v7 alias cache is unmarked legacy data, whereas fresh package setup defaults to marked September-curated tables. | Restore frozen cache for exact target reproduction. Separately test curated refresh as a scientific change; never silently overwrite it during setup. |
 | K04 / high | **Not certified:** full dependency restoration and complete fresh v6/v7 reproduction on a new computer. Downloads may change, native tools differ, and permissions/licenses constrain redistribution. | Freeze source inputs, R/Python locks, native compilation and exact versions; execute isolated restoration before declaring portability. |
@@ -34,6 +34,6 @@ it does not automatically authorize changing scientific outputs.
 6. Add installation/resource-bundle and clean-machine tests. Only then simplify
    compatibility shims; retain public names or provide explicit deprecations.
 
-Do not “fix” K01, K02 or K03 by changing inputs/coordinates/tolerances inside an
+Do not “fix” K02 or K03 by changing inputs/tolerances inside an
 otherwise structural refactor. A clean R CMD check is necessary, not proof of
 scientific or whole-project reproducibility.

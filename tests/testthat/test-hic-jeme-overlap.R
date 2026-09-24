@@ -1,7 +1,7 @@
-test_that("HiC-JEME overlaps use both flanks, chromosomes and inclusive boundaries", {
+test_that("HiC-JEME overlaps use half-open BED boundaries", {
   po <- tibble::tibble(Interacting_fragment = c("hit", "adjacent", "other_chr", "sex", "hit"),
                        CHR = c("1", "1", "2", "chrX", "1"),
-                       START = c(3000, 3001, 3000, 3000, 3000),
+                       START = c(2999, 3000, 2999, 2999, 2999),
                        END = c(3010, 3010, 3010, 3010, 3010))
   jeme <- tibble::tibble(enhancer = c("j1", "jx"), CHR = c("chr1", "23"), START = 900, END = 1000)
   result <- hic_jeme_overlap_tables(po, jeme)
@@ -9,7 +9,7 @@ test_that("HiC-JEME overlaps use both flanks, chromosomes and inclusive boundari
   expect_equal(nrow(result$classification), 4L)
   expect_setequal(dplyr::filter(result$classification, .data$retained_by_jeme_filter)$hic_enhancer,
                   c("adjacent", "other_chr"))
-  expect_equal(result$overlaps$hic_start, c(2000, 2000))
+  expect_equal(result$overlaps$hic_start, c(1999, 1999))
   expect_equal(nrow(hic_jeme_overlap_tables(po, jeme, 0, 0)$overlaps), 0L)
   expect_true(all(hic_jeme_overlap_tables(po, jeme[0, ])$classification$retained_by_jeme_filter))
   expect_equal(nrow(hic_jeme_overlap_tables(po[0, ], jeme)$classification), 0L)
@@ -22,7 +22,7 @@ test_that("both source stages use selected tissues and preserve PP and unfiltere
     hic = list(tissue_type = "Gastric", jeme_overlap = list(enabled = TRUE,
       hic_flank_bp = 1000, jeme_flank_bp = 1000))))
   po <- tibble::tibble(Interacting_fragment = c("hit", "keep", "hit"),
-    Promoter = c("A", "B", "C"), CHR = "1", START = c(3000, 9000, 3000),
+    Promoter = c("A", "B", "C"), CHR = "1", START = c(2999, 9000, 2999),
     END = c(3010, 9010, 3010), Tissue_type = "Gastric")
   pp <- tibble::tibble(Promoter1 = "A", Promoter2 = "B", Tissue_type = "Gastric")
   local_mocked_bindings(

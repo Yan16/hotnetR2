@@ -15,6 +15,6 @@ promoter_range(x, source = c("NCBI", "jeme"))
 A data frame with normalized CHR, START, and END columns.
 }
 \description{
-This utility ensures that promoter boundaries (TSS + 1bp) are calculated
-consistently across different data formats.
+This utility converts a 1-based biological TSS to its one-base, 0-based
+half-open BED interval \verb{[TSS-1,TSS)}.
 }

@@ -28,9 +28,8 @@ The returned tibble includes at minimum the following standardized columns:
 \item \code{gene_symbol} (character): gene symbol or name extracted from the source.
 \item \code{CHR} (character): chromosome with any leading \code{chr} removed and \code{X}/\code{Y}
 converted to \code{"23"}/\code{"24"}.
-\item \code{START} (integer): start coordinate (TSS / gene start).
-\item \code{END} (integer): end coordinate (defaults to \code{START + 1} when no explicit
-end is present in the file).
+\item \code{START} (integer): source gene start in 1-based coordinates.
+\item \code{END} (integer): source gene end in 1-based coordinates.
 }
 
 Other annotation columns present in the file are preserved when possible.

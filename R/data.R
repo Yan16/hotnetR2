@@ -108,7 +108,7 @@ enhancer_loc <- function(jeme, hic, verbose = TRUE) {
   vcat("Excluding enhancers in MHC region...")
   enh <- enh |>
     dplyr::rename(gene = enhancer) |>
-    exclude_MHC() |>
+    exclude_MHC(coordinate_system = "bed") |>
     dplyr::rename(enhancer = gene)
 
   vcat("Final enhancer count after MHC exclusion: ", nrow(enh))
@@ -162,7 +162,7 @@ promoter_loc <- function(jeme, hic, promoter_loc_file, verbose = TRUE) {
 
   prom <- data.frame(gene = prom_genes) |>
     dplyr::inner_join(loc_promoter, by = "gene") |>
-    exclude_MHC()
+    exclude_MHC(coordinate_system = "bed")
 
   if (verbose) {
     message("After intersecting with JEME + HiC + excluding MHC:")

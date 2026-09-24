@@ -14,7 +14,17 @@ Compatibility migration preserves actual generated data, even where a legacy
 decision merits correction. Corrections are explicit policies or separately
 versioned profiles with their own validation, not invisible refactors.
 
-## ADR 003 — Interval inconsistency requires a regression fixture
+## ADR 003 — Canonical BED interval policy (implemented in 0.1.1)
+
+The source-coordinate audit is now recorded in
+`docs/dataset_coordinate_reference.md`. BEEA `POS`, MVP `pos_hg19`, and PLINK
+BIM base-pair positions are confirmed 1-based variant positions. NCBI feature
+coordinates are treated as 1-based inclusive at the input boundary. JEME uses
+mixed field-level conventions: its Ensembl-derived `location` is a 1-based TSS,
+but its enhancer bounds are already BED intervals. HiC promoters have no source
+coordinate in the interaction tables; the active workflow assigns their bounds
+by gene-symbol/alias matching to NCBI. Jung HiC other-end coordinates describe
+the BED-style fragment intervals built from midpoints of adjacent HindIII sites.
 
 Inspected sources:
 - hotnetR/R/download_JEME.R: NCBI_feature_table() renames start/end and converts
@@ -25,15 +35,13 @@ Inspected sources:
   one when writing BED for bedtools, documenting one-based inclusive input.
 - Generated LDAK jobs pass .loc directly to LDAK, whose help/output says BED.
 
-Thus the prior assertion that classifier and LDAK use identical boundary
-semantics is not established and the source arithmetic differs by one base.
-Audit the original NCBI assembly/sequence records and coordinate convention;
-a retained duplicate gene record may also affect the selected locus.
-Do not describe a plus-strand start as biologically corrected until verified.
-
-Implement one interval policy module with explicit legacy adapters preserving
-v2/v3 outputs, plus a canonical policy only after independent source validation.
-Measure affected regions, SNPs and classes; do not overwrite historical runs.
+Version 0.1.1 resolves the inconsistency: every `.loc` and bedtools-facing
+interval is 0-based half-open; NCBI and JEME TSS values and NCBI gene bodies are
+converted once; JEME and Jung HiC enhancer/fragment intervals are not converted
+again. Touching boundaries are adjacent. Regression fixtures cover both TSS
+strands, gene bodies, zero starts and boundary contact. Historical v6/v7 output
+directories remain evidence of the superseded arithmetic and must not be
+overwritten when corrected analyses are generated.
 
 ## ADR 004 — Explicit API collision resolution
 

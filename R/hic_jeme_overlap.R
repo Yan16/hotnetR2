@@ -17,14 +17,14 @@ validate_hic_jeme_overlap <- function(config) {
 
 #' Classify HiC enhancers against a selected JEME reference
 #'
-#' Both input coordinate sets follow the workflow's 1-based inclusive contract.
-#' BED conversion makes a shared boundary base an overlap; adjacent bases are not.
+#' Both input coordinate sets are 0-based, half-open intervals. Flanks are
+#' applied directly; intervals that only touch at a boundary do not overlap.
 #' @param po HiC promoter-other table from the source loader.
 #' @param jeme Selected JEME table or tissue-indexed list of tables.
 #' @param hic_flank,jeme_flank Nonnegative flank lengths in base pairs.
 #' @param bedtools Executable used for sorted interval intersection.
 #' @return A list containing classification, overlap pairs and reference intervals.
-#'   Audit coordinates are expanded, 1-based and inclusive.
+#'   Audit coordinates are expanded, 0-based and half-open.
 #' @noRd
 hic_jeme_overlap_tables <- function(po, jeme, hic_flank = 1000, jeme_flank = 1000,
                                     bedtools = "bedtools") {
@@ -33,7 +33,7 @@ hic_jeme_overlap_tables <- function(po, jeme, hic_flank = 1000, jeme_flank = 100
     data |>
       dplyr::transmute(
         chr = toupper(sub("^chr", "", as.character(.data$CHR), ignore.case = TRUE)),
-        start = pmax(1, .data$START - flank), end = .data$END + flank,
+        start = pmax(0, .data$START - flank), end = .data$END + flank,
         name = as.character(.data[[id]])
       ) |>
       dplyr::mutate(chr = dplyr::recode(.data$chr, X = "23", Y = "24", M = "MT")) |>
@@ -50,11 +50,10 @@ hic_jeme_overlap_tables <- function(po, jeme, hic_flank = 1000, jeme_flank = 100
     a <- file.path(temp, "hic.bed")
     b <- file.path(temp, "jeme.bed")
     out <- file.path(temp, "pairs.tsv")
-    readr::write_tsv(dplyr::mutate(hic, start = .data$start - 1), a, col_names = FALSE)
-    readr::write_tsv(dplyr::mutate(jeme, start = .data$start - 1), b, col_names = FALSE)
+    readr::write_tsv(hic, a, col_names = FALSE)
+    readr::write_tsv(jeme, b, col_names = FALSE)
     processx::run(bedtools, c("intersect", "-sorted", "-a", a, "-b", b, "-wa", "-wb"), stdout = out)
-    pairs <- readr::read_tsv(out, col_names = names(pairs), col_types = "cddccddc", progress = FALSE) |>
-      dplyr::mutate(hic_start = .data$hic_start + 1, jeme_start = .data$jeme_start + 1)
+    pairs <- readr::read_tsv(out, col_names = names(pairs), col_types = "cddccddc", progress = FALSE)
   }
   counts <- pairs |>
     dplyr::summarise(overlapping_jeme_count = dplyr::n_distinct(.data$jeme_enhancer), .by = "hic_enhancer")
