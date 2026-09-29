@@ -85,6 +85,46 @@ resolve_config_path <- function(path, base_dir) {
   normalizePath(file.path(base_dir, path), mustWork = FALSE)
 }
 
+interaction_network_type <- function(config) {
+  configured <- config$interaction_network$type %||% NULL
+  if (is.null(configured)) {
+    return(if (isTRUE(config$aracne$enabled %||% TRUE)) "aracne" else "none")
+  }
+  type <- tolower(trimws(as.character(configured)))
+  if (length(type) != 1L || is.na(type) ||
+      !type %in% c("aracne", "stringdb", "none")) {
+    stop(
+      "interaction_network.type must be ARACNe, STRINGdb, or none",
+      call. = FALSE
+    )
+  }
+  type
+}
+
+stringdb_settings <- function(config) {
+  settings <- config$interaction_network$stringdb %||% list()
+  list(
+    version = as.character(settings$version %||% "12.0"),
+    species = as.integer(settings$species %||% 9606L),
+    score_threshold = as.numeric(settings$score_threshold %||% 700),
+    cache_dir = settings$cache_dir %||% ".cache/STRINGdb",
+    mapping_policy = settings$mapping_policy %||%
+      "legacy_shortest_gene_per_string_id"
+  )
+}
+
+stringdb_cache_paths <- function(config) {
+  settings <- stringdb_settings(config)
+  cache <- resolve_config_path(settings$cache_dir, config$project_root)
+  prefix <- paste0(settings$species, ".protein.")
+  suffix <- paste0(".v", settings$version, ".txt.gz")
+  c(
+    stringdb_aliases = file.path(cache, paste0(prefix, "aliases", suffix)),
+    stringdb_info = file.path(cache, paste0(prefix, "info", suffix)),
+    stringdb_links = file.path(cache, paste0(prefix, "links", suffix))
+  )
+}
+
 mhc_exclusion_region <- function(config = list()) {
   region <- list(
     genome_build = "hg19",
@@ -250,6 +290,50 @@ validate_analysis_config <- function(config) {
   }
   aracne_enabled <- config$aracne$enabled %||% TRUE
   assert_flag(aracne_enabled, "aracne.enabled")
+  interaction_type <- interaction_network_type(config)
+  if (identical(interaction_type, "aracne") && !isTRUE(aracne_enabled)) {
+    stop(
+      "interaction_network.type ARACNe requires aracne.enabled: true",
+      call. = FALSE
+    )
+  }
+  if (!identical(interaction_type, "aracne") && isTRUE(aracne_enabled)) {
+    stop(
+      "Disable ARACNe when interaction_network.type is STRINGdb or none",
+      call. = FALSE
+    )
+  }
+  if (identical(interaction_type, "stringdb")) {
+    settings <- stringdb_settings(config)
+    assert_scalar(settings$version, "interaction_network.stringdb.version", "character")
+    assert_positive_integer(
+      settings$species, "interaction_network.stringdb.species"
+    )
+    assert_scalar(
+      settings$score_threshold,
+      "interaction_network.stringdb.score_threshold"
+    )
+    if (!is.numeric(settings$score_threshold) ||
+        !is.finite(settings$score_threshold) ||
+        settings$score_threshold < 0 || settings$score_threshold > 1000) {
+      stop(
+        "interaction_network.stringdb.score_threshold must be between 0 and 1000",
+        call. = FALSE
+      )
+    }
+    assert_scalar(
+      settings$cache_dir, "interaction_network.stringdb.cache_dir", "character"
+    )
+    if (!identical(
+      settings$mapping_policy, "legacy_shortest_gene_per_string_id"
+    )) {
+      stop(
+        "interaction_network.stringdb.mapping_policy currently supports only ",
+        "legacy_shortest_gene_per_string_id",
+        call. = FALSE
+      )
+    }
+  }
   if (isTRUE(aracne_enabled)) {
     assert_scalar(config$aracne$file, "aracne.file", "character")
     aracne_harmonization <- default_aracne_harmonization(
@@ -320,8 +404,22 @@ validate_analysis_config <- function(config) {
   available <- normalise_network_names(config$networks$available %||% config$networks$selected,
                                         "networks.available")
   selected <- normalise_network_names(config$networks$selected, "networks.selected")
+  supported <- paste0("network_", 1:4)
+  if (any(!available %in% supported)) {
+    stop(
+      "hotnetR2 supports network_1 through network_4; unsupported: ",
+      paste(setdiff(available, supported), collapse = ", "), call. = FALSE
+    )
+  }
   if (any(!selected %in% available)) {
     stop("Every networks.selected value must occur in networks.available", call. = FALSE)
+  }
+  if (identical(interaction_type, "none") &&
+      any(available %in% c("network_3", "network_4"))) {
+    stop(
+      "network_3/network_4 require interaction_network.type ARACNe or STRINGdb",
+      call. = FALSE
+    )
   }
   allowed_filter <- c("current", "legacy_filter_network_ldak")
   if (!config$networks$regulatory_edge_filter %in% allowed_filter) {
@@ -337,12 +435,12 @@ validate_analysis_config <- function(config) {
   for (field in c("deduplicate_jeme_edges_before_harmonization", "split_multi_promoter_edges")) {
     assert_flag(config$networks[[field]], paste0("networks.", field))
   }
-  if (isTRUE(aracne_enabled)) {
+  if (identical(interaction_type, "aracne")) {
     assert_flag(config$networks$preserve_duplicate_edges_during_aracne,
                 "networks.preserve_duplicate_edges_during_aracne")
   }
   threshold_fields <- c("small_regulatory_score", "broad_regulatory_score")
-  if (isTRUE(aracne_enabled)) {
+  if (identical(interaction_type, "aracne")) {
     threshold_fields <- c(threshold_fields, "small_plus_aracne_mi", "broad_plus_aracne_mi")
   }
   for (field in threshold_fields) {
@@ -501,6 +599,9 @@ input_paths <- function(config) {
   )
   if (isTRUE(config$aracne$enabled %||% TRUE)) {
     paths <- c(paths, aracne = resolve_config_path(config$aracne$file, root))
+  }
+  if (identical(interaction_network_type(config), "stringdb")) {
+    paths <- c(paths, stringdb_cache_paths(config))
   }
   paths
 }

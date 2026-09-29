@@ -1,0 +1,124 @@
+---
+title: "Hierarchical HotNet execution modes"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Hierarchical HotNet execution modes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Inputs to Hierarchical HotNet
+
+Hierarchical HotNet (HHN) combines graph topology with vertex scores to identify
+a hierarchy of altered subnetworks [@Reyna2018HHN]. For every selected network,
+hotnetR2 writes:
+
+- a contiguous 1-based node index;
+- a two-column integer edge list;
+- a named node-score table;
+- full node and edge audit tables.
+
+HHN may restrict hierarchy construction to a largest strongly connected
+component. Therefore, not every input graph node is guaranteed to appear in the
+reported hierarchy or clusters.
+
+## v6-style permutation mode
+
+Permutation mode is the standard inference workflow:
+
+```yaml
+hhotnet:
+  analysis_mode: permutation
+  execution_mode: local_python
+  score_name: nodes_all
+  num_permutations: 100
+  permutation_seed: 0
+  lower_size_bound: 10
+```
+
+The observed score vector has index 0. The local execution profile uses base
+seed plus the permutation index, so base 0 produces seeds 1 through 100.
+Observed and null hierarchies are used to select and assess cluster results.
+
+LDAK permutations and HHN permutations are different procedures. Setting HHN
+`num_permutations` to zero does not disable the LDAK permutations configured in
+the `ldak` section.
+
+## v7-style manual-delta mode
+
+Manual-delta mode is an exploratory observed-hierarchy workflow:
+
+```yaml
+hhotnet:
+  analysis_mode: manual_delta
+  delta_values: [0.05, 0.1, 0.2, 0.5]
+  execution_mode: local_python
+  score_name: nodes_all
+  num_permutations: 0
+  permutation_seed: 0
+  lower_size_bound: 10
+```
+
+It is currently supported only with `local_python`. The `hotnet` stage stops
+after similarity matrices are built. The `exports` stage constructs or reuses
+the observed hierarchy and cuts it at the requested delta values using HHN's
+native semantics.
+
+```{r manual-cuts}
+config <- hotnetR2::read_analysis_config("analysis.yaml")
+hotnetR2::extract_hhotnet_delta_clusters(
+  config,
+  deltas = c(0.05, 0.1, 0.2, 0.5),
+  networks = NULL,
+  min_cluster_size = 2L
+)
+```
+
+Manual cuts have `significance: not_evaluated`. They are not permutation
+p-values, do not select an optimal delta, and should not be presented as
+statistically significant subnetworks.
+
+## Output differences
+
+| Property | Permutation mode | Manual-delta mode |
+|---|---|---|
+| Null hierarchies | Yes | No |
+| Significance inference | Standard configured HHN workflow | Not evaluated |
+| Cluster files | Selected standard result | One set per delta |
+| Singleton handling | Standard exporter rules | Raw tables retain singletons |
+| CX2 membership | May include surrounding connected component | Qualifying cluster members and within-cluster edges only |
+| Output location | Standard result/cytoscape paths | `manual_delta` subdirectories |
+
+Do not refactor these exporters into one membership rule. Their scopes are
+intentionally different.
+
+## Completion checks
+
+```{r completion}
+config <- hotnetR2::read_analysis_config("analysis.yaml")
+hotnetR2::validate_hhotnet_inputs(config)
+hotnetR2::validate_hhotnet_completion(config)
+```
+
+In manual mode, `validate_hhotnet_completion()` establishes similarity-matrix
+presence, not successful extraction of every delta. Verify the manual manifest
+and each referenced cluster, node, edge and CX2 file separately.
+
+The manual manifest describes the latest invocation. Older delta files may
+remain, so the directory alone is not a run inventory. Cluster numbers are
+output-local; compare exact membership, not cluster number, across analyses.
+
+## Reuse and reproducibility
+
+hotnetR2 fingerprints content used by package-owned stages. Changed or unstamped
+result directories can be moved to `superseded-*` rather than overwritten.
+Runtime identity still matters: record the HHN commit, Python packages, compiled
+extension, platform and seeds. Existing similarity matrices are not, by
+themselves, proof that they match a changed network.
+
+## References

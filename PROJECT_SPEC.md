@@ -1,7 +1,7 @@
 # hotnetR2 — current specification and decision ledger
 
-Audit date: 2026-09-23. Runtime baseline: **0.0.7, a722b47** (clean source at
-audit start); current source version: **0.1.1**. This document describes
+Audit date: 2026-09-28. Runtime baseline: **0.0.7, a722b47** (clean source at
+audit start); current source version: **0.2.1**. This document describes
 accepted/current behavior, not a proposal to change science. Documentation and
 version commits do not change the frozen 0.0.7 runtime baseline.
 Read with `KNOWN_ISSUES.md`, `CHANGELOG.md`, and the sibling
@@ -34,7 +34,7 @@ harmonized symbols to the 1-based-inclusive NCBI GRCh37 feature table.
 setup_data / curated reference builder / provision_resources
                       ↓ frozen input cache
 read_analysis_config → setup_analysis → annotations → classification
-     → LDAK → score summaries → regulatory/ARACNe networks
+     → LDAK → score summaries → regulatory + interaction networks
      → HHN similarity
         ├─ permutation mode: observed + null hierarchies → selected cut → exports
         └─ manual_delta: stop; exports builds observed hierarchy → supplied cuts
@@ -53,6 +53,7 @@ Source map (paths relative to package):
 | Enhancer classes and retention | `R/classification.R`, `enhancer_retention.R` |
 | LDAK jobs and summaries | `R/workflow_ldak_jobs.R`, `workflow_ldak_summary.R` |
 | Scored graphs | `R/workflow_network_construction.R` |
+| STRINGdb cache/setup and augmentation | `R/stringdb_workflow.R` |
 | Execution/reuse | `R/execution.R`, `workflow_hhotnet_jobs.R` |
 | Cluster parsing/export | `R/workflow_hhotnet_results.R`, `workflow_hhotnet_completion.R` |
 | Manual cuts | `R/hhotnet_delta.R`, `inst/scripts/cut_hhotnet_delta.py` |
@@ -153,6 +154,8 @@ duplicates and reference bounds. Changing duplicate selection changes coordinate
 | P22 | Delta default vector c(.05,.1,.2,.5), positive finite; duplicate values collapse; filename collisions at 15-digit representation fail. Cut includes heights >= delta. | native HHN function; larger delta generally yields smaller clusters, not guaranteed biological significance. |
 | P23 | Raw manual TSV includes all clusters/singletons; CX2 min_cluster_size defaults 2, only within-cluster original edges. Empty graph is valid. Standard permutation export instead includes connected components containing multi-node clusters. | result exporter versus delta exporter; do NOT unify these selection rules accidentally. |
 | P24 | HHN hierarchy construction restricts to a largest SCC when needed. Not every input-network node must be in reported clusters. | local HHN `construct_hierarchy.py`; v6 network4: 2391 graph nodes, 1732 hierarchy members. |
+| P25 | Interaction backends are explicit. Omitted `interaction_network.type` preserves legacy ARACNe selection. With `type: stringdb`, Network3/4 augment Network1/2 using cached human STRING v12 interactions with `combined_score >= 700` for the current profile. Only already-present `promoter_gene` nodes may map; no enhancers or new endpoints are introduced. Multiple genes for one STRING ID resolve by shortest name then lexical order and are audited. STRING loops, duplicate gene pairs and pairs already present in the base graph are not added, so existing regulatory edges and sources remain intact. | `stringdb_workflow.R`, `test-stringdb-workflow.R`; cache download is an explicit setup action, never an analysis side effect. |
+| P26 | Documentation and new analysis templates use the corrected E092/Gastric TSS profile: NCBI GRCh37 strand-aware TSS anchors, 0-based half-open intervals, no enhancer-class exclusion, all-tissue JEME ENSG mapping, selected-tissue JEME/HiC edges and current curated aliases. v6/v7 remain references for four-network orchestration and permutation/manual-delta modes, not exact corrected-coordinate or refreshed-alias baselines. | `vignettes/`, `inst/extdata/vignette_examples/`, example tests. Gene-body/gene-window plus enhancer-class exclusion is a separately named historical alternative; original analysis2 and early intermediates are obsolete templates. |
 
 Key API contract:
 
@@ -179,12 +182,14 @@ snapshots for new target profiles rather than assuming initializer equivalence.
 | promoter_interval_mode | gene_body; strand_aware_tss supported | strand_aware_tss |
 | HiC tissue / edge types | empty disables; absent types means PO+PP | Gastric; PO+PP |
 | HiC–JEME exclusion | opt-in; flanks default 1000 | enabled, 1000/1000 |
-| ARACNe enabled | TRUE if omitted | TRUE |
+| Interaction backend | omitted means legacy ARACNe selection | ARACNe for v6/v7; STRINGdb is an explicit new profile |
+| STRINGdb release / species / score | 12.0 / 9606 / 700 when STRINGdb is selected | not used by v6/v7 |
 | MHC exclusion | FALSE if omitted | FALSE |
 | HHN analysis mode | permutation | v6 permutation, v7 manual_delta |
 | HHN execution mode | apptainer | local_python |
 | HHN seed / python | 0 / python3 | 0 / python3 |
 | Annotation tissue universe | implemented target mode ALL | ALL, selected tissues for network/filter reference |
+| Canonical documentation profile | corrected strand-aware TSS; enhancer classification disabled | frozen v6/v7 are orchestration references only |
 
 Other required numerical settings are explicit in target YAML. Do not invent
 universal defaults for values merely present in an example template.
@@ -199,6 +204,10 @@ universal defaults for values merely present in an example template.
   include raw LDAK statistics, gene/region name, node_type, cohort, flank and
   annotations. Network data: headerless contiguous 1-based index and two-column
   integer edge list; named score TSV; full node/edge tables retain attributes.
+- STRINGdb profiles additionally write `stringdb_mapping.tsv`,
+  `stringdb_mapping_conflicts.tsv`, `stringdb_summary.tsv` and
+  `stringdb_edges.tsv`. The three pinned STRING cache files are validated as
+  inputs and included in analysis signatures outside the LDAK-only signature.
 - Cluster TSV: comments start `#`; each nonblank noncomment line is a cluster,
   tab-separated node IDs. Reject duplicate membership. Cluster numbers are
   output-local, not stable biological identifiers across runs/deltas.

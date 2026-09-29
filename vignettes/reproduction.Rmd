@@ -1,60 +1,92 @@
 ---
-title: "Portable v2 and v3 reproduction"
+title: "Reproduction and migration boundaries"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Portable v2 and v3 reproduction}
+  %\VignetteIndexEntry{Reproduction and migration boundaries}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-hotnetR2 combines the hotnetR data interfaces with the v2/v3 regulatory
-workflow. Both profiles use all-tissue ENSG harmonization, gastric JEME/HiC,
-class-1 enhancers, and Networks 1–2. The v2 target is a gene interval; v3 uses
-the historical strand-aware TSS conversion. Compatibility arithmetic is
-preserved explicitly rather than silently correcting historical results.
-
-```{r}
-project <- tempfile("portable-example-")
-config_file <- hotnetR2::initialize_analysis(project, "v3")
-config <- hotnetR2::read_analysis_config(config_file)
-hotnetR2::resolve_networks(config)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
 ```
 
-Provision large resources separately using `capture_resources()` and
-`provision_resources()`. The manifest verifies every file using SHA-256.
-Public URLs may be supplied in a manifest, or the user may restore a local
-archival bundle. GWAS and LD resources are not included in the R package.
+## Current versus frozen behavior
 
-For JEME-only analyses, set `regulatory.hic.tissue_type: []` (or `null`) in the
-YAML. HiC is then excluded from both annotations and networks, without requiring
-HiC cached files or alias mappings. Start a fresh output directory and regenerate
-all stages when changing source selection. Nonempty HiC settings retain the
-v2/v3 all-tissue annotation policy; `get_hic(NULL)` remains an all-tissue reader.
+The recommended E092/Gastric profiles use corrected 0-based half-open
+coordinates, strand-aware NCBI TSS anchors, no enhancer-class exclusion and
+current curated harmonization references. These are intentional scientific
+changes from several historical result folders.
 
-```{r eval=FALSE}
-hotnetR2::provision_resources("resources.tsv", project,
-                            source_root = "/path/to/archival-bundle")
-hotnetR2::prepare_ldak_annotations(config, dry_run = FALSE)
-hotnetR2::classify_enhancers(config)
-hotnetR2::generate_ldak_jobs(config, dry_run = FALSE)
-hotnetR2::generate_ldak_local_runner(config, dry_run = FALSE)
-# Execute the generated LDAK runner before summarizing results.
-hotnetR2::summarize_analysis_ldak_results(config, dry_run = FALSE)
-hotnetR2::build_hhotnet_networks(config, dry_run = FALSE)
-hotnetR2::generate_hhotnet_job(config, dry_run = FALSE)
-# Execute the generated HotNet runner before summarizing clusters.
-hotnetR2::summarize_hhotnet_results(config)
-hotnetR2::export_hhotnet_graphs(config)
-hotnetR2::validate_hhotnet_exports(config)
+Frozen v6/v7 outputs remain valuable for their orchestration patterns:
+
+- v6 demonstrates four networks plus standard HHN permutations;
+- v7 demonstrates the same upstream network organization followed by an
+  observed hierarchy and manual delta cuts.
+
+They are not byte-level reference outputs for corrected coordinates or refreshed
+aliases. Never overwrite the frozen folders when testing current behavior.
+
+## What to freeze
+
+A reproducible run records at least:
+
+- `analysis.yaml` and its fully resolved effective copy;
+- source package version and source/tarball SHA-256;
+- hashes of GWAS, LD, JEME, HiC, NCBI, GENCODE/alias and interaction inputs;
+- LDAK, bedtools, Python and Hierarchical HotNet identities;
+- seeds, threads and execution mode;
+- analysis-local logs, manifests and audit tables.
+
+`check_analysis_inputs()` verifies declared presence, not complete provenance.
+`capture_resources()` and `provision_resources()` can verify a declared local
+resource bundle using SHA-256.
+
+```{r provision}
+hotnetR2::provision_resources(
+  "resources.tsv", root = "/path/to/new-project",
+  source_root = "/path/to/frozen-bundle"
+)
 ```
 
-Use `compare_artifacts()` with a declared file inventory. Byte identity of
-deterministic outputs is stronger evidence than matching counts. Gzip content
-comparison is available explicitly; absolute-path and runtime metadata
-differences require separately declared comparisons. Native external-tool
-reproducibility across architectures remains distinct from reproduction of
-package-owned outputs using frozen raw LDAK/HotNet results.
+## Comparison scope
 
-```{r include=FALSE}
-unlink(project, recursive = TRUE)
+Declare which artifacts are expected to be identical. Deterministic package
+outputs can be compared byte-for-byte; gzip content can be compared after
+decompression. Absolute paths, timestamps, environment reports and external
+stochastic results require separately justified comparisons.
+
+```{r compare}
+hotnetR2::compare_artifacts(
+  reference = "/path/to/frozen-analysis",
+  candidate = "/path/to/new-analysis",
+  files = readLines("artifact_inventory.txt")
+)
 ```
+
+Matching selected files or counts is not whole-run equivalence. In particular,
+fresh LDAK permutation-adjusted p-values have shown external variability under
+some historical settings even when observed statistics agree.
+
+## Safe migration procedure
+
+1. Restore immutable inputs into a new project.
+2. Copy a package-local current example; do not copy historical results.
+3. Give the corrected analysis a new name and output directory.
+4. Run `check`, then annotations and interval validation.
+5. Review harmonization and filter audits.
+6. Run LDAK and compare declared statistics without inventing a tolerance.
+7. Build networks and review node/edge counts.
+8. Run the intended HHN mode and validate its mode-specific outputs.
+
+Changing aliases, coordinates, tissue selection, classification, LDAK settings,
+network thresholds or interaction backend creates a new profile. It is not a
+resume of the old analysis.
+
+## Historical initializers
+
+`initialize_analysis()` currently supports only the historical `v2` and `v3`
+templates. Those templates are retained for compatibility and are not the
+recommended way to create a corrected E092/Gastric analysis. Use the examples
+under `inst/extdata/vignette_examples` as described in
+`vignette("analysis-profiles-and-running", package = "hotnetR2")`.

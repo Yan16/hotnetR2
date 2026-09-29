@@ -488,6 +488,7 @@ compare_hhotnet_networks <- function(config, networks = NULL) {
 #' @export
 build_hhotnet_networks <- function(config, networks = NULL, dry_run = TRUE) {
   requested <- resolve_networks(config, networks)
+  interaction_type <- interaction_network_type(config)
   mhc <- config$regulatory$mhc_exclusion %||% list(enabled = FALSE)
   if (isTRUE(dry_run)) {
     return(stats::setNames(vapply(requested, function(network) network_data_file(config, paste0(network, "_edge_list.tsv")), character(1)), requested))
@@ -607,8 +608,55 @@ build_hhotnet_networks <- function(config, networks = NULL, dry_run = TRUE) {
   graphs <- list()
   if (any(needed %in% c("network_1", "network_3"))) graphs$network_1 <- subset_network_components(base, config$networks$thresholds$small_regulatory_score)
   if (any(needed %in% c("network_2", "network_4"))) graphs$network_2 <- subset_network_components(base, config$networks$thresholds$broad_regulatory_score)
-  if ("network_3" %in% needed) graphs$network_3 <- add_network_aracne_edges(graphs$network_1, aracne, config$networks$thresholds$small_plus_aracne_mi, isTRUE(config$networks$preserve_duplicate_edges_during_aracne))
-  if ("network_4" %in% needed) graphs$network_4 <- add_network_aracne_edges(graphs$network_2, aracne, config$networks$thresholds$broad_plus_aracne_mi, isTRUE(config$networks$preserve_duplicate_edges_during_aracne))
+  string_results <- list()
+  if (identical(interaction_type, "aracne")) {
+    if ("network_3" %in% needed) graphs$network_3 <- add_network_aracne_edges(graphs$network_1, aracne, config$networks$thresholds$small_plus_aracne_mi, isTRUE(config$networks$preserve_duplicate_edges_during_aracne))
+    if ("network_4" %in% needed) graphs$network_4 <- add_network_aracne_edges(graphs$network_2, aracne, config$networks$thresholds$broad_plus_aracne_mi, isTRUE(config$networks$preserve_duplicate_edges_during_aracne))
+  } else if (identical(interaction_type, "stringdb") &&
+             any(needed %in% c("network_3", "network_4"))) {
+    settings <- stringdb_settings(config)
+    stringdb <- new_analysis_stringdb(config)
+    if ("network_3" %in% needed) {
+      string_results$network_3 <- prepare_stringdb_augmentation(
+        graphs$network_1, stringdb,
+        score_threshold = settings$score_threshold,
+        mapping_policy = settings$mapping_policy
+      )
+      graphs$network_3 <- string_results$network_3$graph
+    }
+    if ("network_4" %in% needed) {
+      string_results$network_4 <- prepare_stringdb_augmentation(
+        graphs$network_2, stringdb,
+        score_threshold = settings$score_threshold,
+        mapping_policy = settings$mapping_policy
+      )
+      graphs$network_4 <- string_results$network_4$graph
+    }
+  }
+  if (identical(interaction_type, "stringdb")) {
+    bind_string_audit <- function(field) {
+      dplyr::bind_rows(lapply(names(string_results), function(network) {
+        dplyr::mutate(string_results[[network]][[field]], network = network,
+                      .before = 1L)
+      }))
+    }
+    readr::write_tsv(
+      bind_string_audit("mapping"),
+      network_summary_file(config, "stringdb_mapping.tsv")
+    )
+    readr::write_tsv(
+      bind_string_audit("conflicts"),
+      network_summary_file(config, "stringdb_mapping_conflicts.tsv")
+    )
+    readr::write_tsv(
+      bind_string_audit("summary"),
+      network_summary_file(config, "stringdb_summary.tsv")
+    )
+    readr::write_tsv(
+      bind_string_audit("edges"),
+      network_data_file(config, "stringdb_edges.tsv")
+    )
+  }
   stats <- dplyr::bind_rows(lapply(requested, function(network) write_network_graph(config, graphs[[network]], network)))
   readr::write_tsv(stats, network_summary_file(config, "network_file_summary.tsv"))
   stats

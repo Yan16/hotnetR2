@@ -1,0 +1,148 @@
+---
+title: "Current corrected TSS workflow"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Current corrected TSS workflow}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Canonical scope
+
+This vignette describes the recommended E092/Gastric profile. It borrows the
+four-network organization and HHN execution patterns from v6/v7, but it does not
+claim byte identity with their frozen outputs. Corrected coordinates, no
+enhancer-class exclusion and current curated aliases are intentional changes.
+
+## Regulatory sources
+
+- JEME E092 supplies fetal-stomach enhancer--target edges [@Cao2017JEME].
+- Jung Gastric HiC supplies promoter--other and promoter--promoter contacts
+  [@Jung2019HiC].
+- All JEME tissues define the ENSG harmonization universe; E092 defines the
+  selected network edges.
+- HiC promoters are harmonized by gene symbol and curated aliases.
+
+The optional HiC--JEME filter compares selected-tissue JEME enhancers to HiC
+promoter--other fragments with declared flanks. Positive-width overlap removes
+the HiC PO contact. JEME and HiC PP edges are unchanged.
+
+## Correct coordinate conversion
+
+All active `.loc` and bedtools intervals are 0-based, half-open.
+
+For an NCBI GRCh37 record with 1-based inclusive `START`, `END` and strand:
+
+- positive-strand TSS is `START`;
+- negative-strand TSS is `END`;
+- the one-base TSS interval is `[TSS-1,TSS)`;
+- the gene-body interval, when a historical profile explicitly requests it, is
+  `[START-1,END)`.
+
+JEME enhancer bounds and Jung HiC other-end fragments are already BED-style.
+Their starts pass through without another subtraction. Touching half-open
+boundaries are adjacent, not overlapping.
+
+The `.loc` output is headerless:
+
+```text
+name  CHR  START  END
+```
+
+It contains unexpanded coordinates. LDAK receives enhancer and promoter buffers
+separately through `--gene-buffer`.
+
+## No enhancer-class exclusion
+
+The canonical YAML declares:
+
+```yaml
+enhancer_classification:
+  enabled: false
+```
+
+Thus the classification stage is skipped by `run_analysis.sh all`, and no edge
+is removed because of an enhancer class. This is distinct from older gene-body
+or TSS profiles that classified expanded enhancers against promoter windows and
+dropped configured sources. Re-enabling classification is a separate scientific
+profile requiring regenerated annotations, LDAK scores, networks and expected
+results.
+
+The selected-JEME versus HiC-PO overlap filter is independent of enhancer-class
+exclusion and may remain enabled.
+
+## Promoter harmonization
+
+```yaml
+regulatory:
+  promoter_harmonization:
+    enabled: true
+    jeme: true
+    hic: true
+    jeme_strategy: all_tissues_ensg_map
+    hic_strategy: gene_symbol_alias
+    gtf_file: .cache/gencode.v39.GRCh38.genes_nodup.rds
+    hic_alias_file: .cache/alias_link_nodup.rds
+```
+
+JEME target ENSG IDs are resolved across all tissues before the selected E092
+edges are constructed. HiC endpoints use symbol/alias mapping. The current
+curated references mark the mapping direction; unmarked frozen caches must not
+be silently reinterpreted or refreshed.
+
+Promoter coordinates are subsequently rematched to the NCBI GRCh37 feature
+table. Neither the raw JEME TSS nor GENCODE GRCh38 positions replace those
+current LDAK anchors.
+
+## LDAK stages and scores
+
+For each enabled node type, hotnetR2:
+
+1. writes and validates the unexpanded `.loc` file;
+2. runs `--cut-genes` with the configured buffer and p-value file;
+3. runs `--calc-genes-reml` with the configured summary statistics;
+4. runs `--join-genes-reml`;
+5. checks expected artifacts before accepting external exit status;
+6. standardizes enhancer and promoter summary tables.
+
+The current profile uses LDAK-GBAT [@Berrandou2023LDAK] and scores nodes as
+`-log10(LRT_P_Perm)`. With a configured infinity cap, positive infinity becomes
+the maximum finite score plus one. P-values outside `[0,1]` are invalid.
+
+## Regulatory networks
+
+JEME, HiC PO and HiC PP edges are combined after source-specific filtering and
+harmonization. Network thresholds retain whole undirected connected components:
+
+- Network 1: component maximum score at least 4;
+- Network 2: component maximum score at least 3.
+
+Weak connector nodes can therefore remain. These thresholds are not per-node
+filters. The current profiles retain the established input ordering and
+self-loop policy; do not simplify edges unless the profile explicitly changes.
+
+Networks 3/4 add the selected interaction backend only between endpoints already
+present in Network 1/2. ARACNe and STRINGdb policies are described in
+`vignette("analysis-profiles-and-running", package = "hotnetR2")`.
+
+## Audits to review
+
+Before HHN, inspect at least:
+
+- annotation and interval-validation summaries;
+- JEME ENSG and HiC alias mapping tables;
+- unmatched enhancer/promoter scores;
+- selected-JEME/HiC overlap summaries;
+- MHC exclusion counts when enabled;
+- ARACNe or STRING mapping/conflict/edge summaries;
+- network node and edge counts.
+
+Do not interpret a clean software exit as proof of correct resource identity or
+scientific equivalence to an older run.
+
+## References

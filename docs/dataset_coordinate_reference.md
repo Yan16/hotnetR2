@@ -126,6 +126,7 @@ The BIM base-pair field is a **1-based variant position** and its variant IDs ar
 | GENCODE v39 GRCh38 cleaned RDS | GRCh38; GTF-derived `start/end` are 1-based inclusive | Used for ENSG/gene-symbol harmonization only. Its GRCh38 coordinates must never be substituted for GRCh37 LDAK promoter coordinates. |
 | Legacy `alias_link_nodup.rds` | No genomic coordinate contract | Maps symbols/aliases for frozen v6/v7 behavior. The unmarked legacy mapping direction must be preserved; do not silently replace it with the curated package default. |
 | `ARACNe1600/GEjunc/network.txt` | No genomic coordinates; symbol/ENSG endpoints | Supplies GEjunc regulator-target edges with MI and p-value. Coordinate conversion is inapplicable. Preserve endpoint strings until explicit harmonization. |
+| STRINGdb v12 human aliases, protein info and links | No genomic coordinates; protein identifiers, aliases and scored protein-protein links | Optional interaction backend for Network3/4. Pin all three v12 cache files, map only existing promoter-gene nodes, and apply `combined_score >= 700` for the E092/Gastric STRING profile. Coordinate conversion is inapplicable. |
 
 The cached JEME and HiC upstream source formats do not themselves carry a
 machine-readable coordinate-system attribute. Their fields must not be assigned
@@ -134,6 +135,14 @@ intervals, while HiC combines symbol-only promoters with BED-style
 restriction-fragment intervals. A future resource builder should attach assembly and field-level
 coordinate-system metadata and validate it on load rather than infer it from
 column names.
+
+Pinned STRINGdb v12 human cache identities for the E092/Gastric STRING profile:
+
+| Cache artifact | SHA-256 |
+| --- | --- |
+| `9606.protein.aliases.v12.0.txt.gz` | `b65f730b993ed0c1bd72edf4565d3d425db42861101b29699704810e8f125680` |
+| `9606.protein.info.v12.0.txt.gz` | `144de4b0d98c6a7dfde6ddc2591cf88657f27b989eadff4f501450c3ed1f0f1c` |
+| `9606.protein.links.v12.0.txt.gz` | `3e22f32572211aa341d5b4bd08d30c32e693e294603202120936872f87719d4f` |
 
 ### JEME promoter and enhancer audit
 
@@ -207,6 +216,9 @@ declares these fragment intervals BED-style and does not shift their starts.
    `location` is 1-based but JEME enhancer `START/END` are already BED; HiC
    promoter coordinates come from the NCBI rematch, whereas HiC other-end
    fragment coordinates are already BED.
+9. Treat STRINGdb as an identifier/interaction resource, not a genomic-coordinate
+   source. Record release, species, threshold and mapping conflicts; never infer
+   coordinate conventions from STRING identifiers.
 
 ## Scope and unresolved provenance
 

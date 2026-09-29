@@ -1,11 +1,22 @@
 # hotnetR2
 
-A standalone development successor to hotnetR combining dataset preparation with
-the v2_analysis2 and v3_analysis2 LDAK / hierarchical HotNet workflows.
+A standalone successor to hotnetR for tissue-informed LDAK and Hierarchical
+HotNet analyses. Current examples use corrected E092/Gastric strand-aware TSS
+coordinates, no enhancer-class exclusion, current harmonization and explicit
+ARACNe or STRINGdb interaction backends.
 
-**Status: implementation in progress (0.0.5); clean-machine reproduction is
-not yet certified.** No existing analysis is modified. When implementations
-conflict, v2/v3 behavior takes precedence over earlier analysis2 behavior.
+## Documentation
+
+Start with `vignette("hotnetR2-overview", package = "hotnetR2")`. Companion
+guides cover input preprocessing, resource setup, the current corrected
+TSS/no-enhancer-class workflow, ARACNe/STRING analysis profiles, HHN execution
+and reproduction boundaries. New analyses should copy the validated examples in
+`system.file("extdata", "vignette_examples", package = "hotnetR2")`, not a
+historical result folder.
+
+**Status: current package release 0.2.1; complete clean-machine reproduction is
+not yet certified.** No existing analysis is modified. Historical v2/v3 and
+v6/v7 behavior is retained only where the specification explicitly requires it.
 
 ## Installed-package workflow
 

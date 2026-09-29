@@ -1,3 +1,30 @@
+# hotnetR2 0.2.1
+
+- Add a current workflow vignette set covering input preparation, resource
+  setup, corrected TSS/no-enhancer-class analysis, ARACNe and STRINGdb profiles,
+  HHN permutation/manual-delta modes, and reproduction boundaries.
+- Ship validated standalone ARACNe and STRINGdb example YAML files plus a
+  version-pinned analysis launcher. Examples use corrected 0-based half-open
+  coordinates, current harmonization and no enhancer-class exclusion.
+- Classify gene-window/class-exclusion workflows as historical alternatives and
+  the original analysis2/intermediate profiles as obsolete rather than current
+  templates. Frozen v6/v7 remain orchestration and reproduction evidence.
+
+# hotnetR2 0.2.0
+
+- Add an explicit `interaction_network` backend selector while preserving
+  legacy ARACNe behavior for configurations that omit it.
+- Add offline, cache-pinned STRINGdb v12 augmentation. Network3/4 augment
+  Network1/2 with human STRING interactions at an inclusive score threshold,
+  restricted to existing promoter-gene nodes; enhancers and new endpoints are
+  never introduced.
+- Resolve multiple gene names mapped to one STRING protein deterministically by
+  shortest name and lexical tie-break, remove STRING loops and duplicate pairs,
+  preserve existing regulatory edges, and write mapping/conflict/edge/count
+  audit tables.
+- Add `download_stringdb_data()` as an explicit setup action. Analysis execution
+  refuses incomplete STRING caches and never downloads data implicitly.
+
 # hotnetR2 0.1.1
 
 - Correct every active LDAK/bedtools annotation boundary to a 0-based,

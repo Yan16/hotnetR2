@@ -1,0 +1,163 @@
+---
+title: "Install hotnetR2 and provision resources"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Install hotnetR2 and provision resources}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Installation
+
+Install a checked source tarball into the R library used by the analysis
+launcher:
+
+```bash
+R CMD INSTALL /path/to/hotnetR2_VERSION.tar.gz
+Rscript --vanilla -e 'packageVersion("hotnetR2")'
+```
+
+For development, install from a reviewed source checkout with standard R
+package tools. Do not install from an analysis-local copy of helper functions.
+
+## External software
+
+The R package does not bundle LDAK or Hierarchical HotNet.
+
+| Tool | Required for | Configuration |
+|---|---|---|
+| LDAK | Annotation cutting and regional association tests | `reference.ldak_exe` |
+| PLINK binary reference | LD calculation | `reference.bfile_prefix` |
+| bedtools | Interval overlap/classification stages | Available on `PATH` |
+| Python | Hierarchical HotNet | `hhotnet.python_executable` |
+| Hierarchical HotNet checkout | Similarity, hierarchy and clusters | `hhotnet.local_dir` |
+| Apptainer image | Optional container execution | `hhotnet.apptainer_image` |
+
+Validate the exact Python/native Hierarchical HotNet environment independently;
+a source checkout without its compiled extension is incomplete.
+
+## Package-managed reference setup
+
+Installation does not download data. From the project root, explicitly create
+the cache:
+
+```{r setup-data}
+library(hotnetR2)
+
+setup_data(
+  cache_dir = ".cache",
+  overwrite = FALSE,
+  create_harmonization = TRUE,
+  type = "lasso"
+)
+```
+
+This provisions the current package sources for:
+
+- JEME lasso enhancer--target predictions [@Cao2017JEME];
+- Jung promoter--other and promoter--promoter data [@Jung2019HiC];
+- the NCBI GRCh37.p13 feature table;
+- GTEx/GENCODE and HGNC resources used for harmonization.
+
+`overwrite = FALSE` protects an existing cache. Do not refresh a resource in
+place for an established analysis; create a new cache or analysis profile and
+record the change.
+
+### Alias creation and use
+
+Newly built alias tables carry an explicit raw-to-approved mapping direction.
+Unmarked historical caches retain their historical interpretation. The current
+recommended workflow uses the curated, direction-marked aliases and records
+unmapped, ambiguous and changed identifiers in audit tables.
+
+JEME targets are mapped ENSG-first using all tissues before the selected tissue
+is used for network edges. HiC lacks the same target ENSG field and therefore
+uses gene symbols and aliases. GENCODE v39 GRCh38 is an identifier resource in
+the current GRCh37 analysis, not a promoter-coordinate source.
+
+## STRINGdb setup
+
+STRING acquisition is explicit and separate from `setup_data()`:
+
+```{r string-setup}
+download_stringdb_data(
+  cache_dir = ".cache/STRINGdb",
+  version = "12.0",
+  species = 9606,
+  score_threshold = 700,
+  overwrite = FALSE
+)
+```
+
+The analysis requires all three version-matched files:
+
+```text
+.cache/STRINGdb/9606.protein.aliases.v12.0.txt.gz
+.cache/STRINGdb/9606.protein.info.v12.0.txt.gz
+.cache/STRINGdb/9606.protein.links.v12.0.txt.gz
+```
+
+Analysis execution reads these files offline and never downloads them silently.
+The current E092/Gastric profile includes interactions with
+`combined_score >= 700`. Only existing promoter-gene nodes are eligible;
+enhancers and STRING-only endpoints are excluded. Mapping conflicts use the
+documented compatibility rule and are written for review.
+
+## Restore a frozen bundle
+
+For a portable or restricted-data analysis, prefer a checksummed local bundle:
+
+```{r resource-bundle}
+manifest <- hotnetR2::capture_resources(
+  root = "/path/to/frozen-inputs",
+  files = c(
+    ".cache/LDAK/GCF_000001405.25_GRCh37.p13_feature_table.txt.gz",
+    ".cache/gencode.v39.GRCh38.genes_nodup.rds",
+    ".cache/alias_link_nodup.rds"
+  ),
+  file = "resources.tsv"
+)
+
+hotnetR2::provision_resources(
+  "resources.tsv", root = "/path/to/new-project",
+  source_root = "/path/to/frozen-inputs"
+)
+```
+
+The manifest establishes byte identity of supplied files. It does not establish
+how an undocumented upstream dataset was originally generated.
+
+## Expected cache roles
+
+| Cache | Assembly / role |
+|---|---|
+| JEME promoter `location` | GRCh37, 1-based TSS metadata |
+| JEME enhancer bounds | GRCh37 BED intervals |
+| Jung HiC promoter labels | Symbols rematched to NCBI coordinates |
+| Jung HiC other-end fragments | GRCh37 BED intervals |
+| NCBI feature table | GRCh37 1-based inclusive gene bounds |
+| GENCODE v39 | GRCh38 identifier harmonization only |
+| STRING v12 | Protein identifiers and association scores; no genomic coordinates |
+
+## Verify before computation
+
+```{r verify}
+config <- hotnetR2::read_analysis_config(
+  "analysis_E092_Gastric_STRINGdb/analysis.yaml"
+)
+inputs <- hotnetR2::check_analysis_inputs(config, write_report = FALSE)
+print(inputs, row.names = FALSE)
+stopifnot(all(inputs$status == "OK"))
+
+hotnetR2::setup_analysis(config, dry_run = TRUE)
+```
+
+The preflight is read-only presence and boundary validation. Preserve source
+hashes, tool versions and environment information with the run.
+
+## References

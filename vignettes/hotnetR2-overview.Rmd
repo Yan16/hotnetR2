@@ -1,0 +1,157 @@
+---
+title: "hotnetR2 workflow overview"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{hotnetR2 workflow overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Purpose
+
+`hotnetR2` builds tissue-informed, vertex-scored regulatory networks from GWAS
+summary statistics. It combines enhancer--gene links, promoter-centered
+chromatin contacts and an optional interaction backend, calculates regional
+association scores with LDAK-GBAT, and sends the resulting graphs and node
+scores to Hierarchical HotNet.
+
+The current recommended profile is the corrected E092/Gastric TSS workflow:
+
+- one-base, strand-aware promoter anchors derived from NCBI GRCh37 annotations;
+- 0-based, half-open LDAK and bedtools intervals;
+- no enhancer-class exclusion;
+- all-tissue JEME ENSG harmonization followed by tissue selection;
+- curated, direction-marked gene aliases for newly prepared caches;
+- either GEjunc ARACNe or STRINGdb as the interaction backend.
+
+```text
+GWAS summary statistics + matching LD reference
+                         |
+JEME + Jung HiC ---------+--> harmonized regulatory annotations
+                                      |
+                                      v
+                               LDAK regional scores
+                                      |
+                                      v
+                           regulatory Networks 1 and 2
+                                      |
+                      +---------------+---------------+
+                      |                               |
+               ARACNe augmentation            STRING augmentation
+                 Networks 3/4                    Networks 3/4
+                      +---------------+---------------+
+                                      |
+                                      v
+                             Hierarchical HotNet
+```
+
+## Scientific resources
+
+| Resource | Role in hotnetR2 |
+|---|---|
+| JEME [@Cao2017JEME] | Tissue-specific enhancer--target predictions. |
+| Jung promoter-centered HiC [@Jung2019HiC] | Promoter--other and promoter--promoter contacts. |
+| GTEx [@GTEx2020] | Tissue expression source used to reconstruct optional ARACNe networks. |
+| ARACNe / ARACNe-AP [@Margolin2006ARACNe; @Lachmann2016ARACNeAP] | Optional gene-regulatory interaction backend. Raw reconstruction remains project-specific. |
+| STRINGdb v12 [@Szklarczyk2023STRING] | Optional protein-association backend; the current profile uses human interactions with `combined_score >= 700`. |
+| NCBI GRCh37 feature table | Coordinate source for current promoter anchors and gene bodies. |
+| GENCODE v39 / HGNC aliases | Identifier harmonization only in the GRCh37 profiles; GRCh38 positions are not used as GRCh37 promoter coordinates. |
+| LDAK-GBAT [@Berrandou2023LDAK] | Regional association testing from summary statistics and an LD reference. |
+| Hierarchical HotNet [@Reyna2018HHN] | Network propagation, hierarchy construction and optional permutation inference. |
+
+JEME, HiC and annotation resources can be created by explicit setup functions.
+GWAS, LD reference panels, ARACNe output, LDAK and the Hierarchical HotNet
+runtime are supplied by the user. Installation never downloads data.
+
+## Prerequisites
+
+- R 4.1 or newer and the dependencies declared by `hotnetR2`.
+- A compatible LDAK executable and a PLINK `.bed/.bim/.fam` LD reference.
+- Python plus a working Hierarchical HotNet checkout for `local_python` mode,
+  including its compiled requirements.
+- `bedtools` when running annotation overlap stages.
+- Sufficient storage for all-tissue JEME, HiC, STRING and analysis outputs.
+- One consistent analysis assembly. The current examples use GRCh37/hg19.
+
+Cluster or workstation installation choices are local policy. Do not embed
+author-specific absolute paths in a reusable YAML file.
+
+## Canonical profiles
+
+The package examples describe two E092/Gastric analyses with the same corrected
+TSS, harmonization, HiC and LDAK settings:
+
+1. **GEjunc ARACNe:** Networks 3/4 add MI-filtered ARACNe edges to Networks 1/2.
+2. **STRINGdb:** Networks 3/4 add STRING v12 score-700 edges to Networks 1/2.
+
+Network 1 retains complete regulatory components whose maximum node score is at
+least 4; Network 2 uses 3. Interaction augmentation never introduces endpoints
+that are absent from the corresponding base graph.
+
+The v6 analysis is the reference for standard HHN permutation execution. The v7
+analysis is the reference for observed hierarchy plus manual delta cuts. Their
+frozen outputs remain reproduction evidence, not canonical evidence for the
+later coordinate and alias corrections.
+
+## Quick-start map
+
+1. Prepare GWAS and LD inputs as described in
+   `vignette("input-preprocessing", package = "hotnetR2")`.
+2. Install resources using
+   `vignette("resources-and-setup", package = "hotnetR2")`.
+3. Copy and edit a package example from `system.file("extdata",
+   "vignette_examples", package = "hotnetR2")`.
+4. Run `bash run_analysis.sh check` before any compute stage.
+5. Run stages separately or use `bash run_analysis.sh all`.
+6. Interpret the two HHN modes using
+   `vignette("hhotnet-execution", package = "hotnetR2")`.
+
+## Main output areas
+
+Each analysis writes only below its own directory:
+
+```text
+analysis_name/
+|-- analysis.yaml
+|-- run_analysis.sh
+|-- metadata/
+|-- logs/
+|-- LDAK/
+|   |-- annotations/
+|   |-- scripts/
+|   |-- results/
+|   `-- summary/
+`-- hHotnet/
+    |-- data/
+    |-- scripts/
+    |-- intermediate/
+    |-- results/
+    |-- summary/
+    `-- cytoscape/
+```
+
+Audit tables are scientific outputs. Review unmatched identifiers, mapping
+conflicts, enhancer/HiC filtering, excluded MHC nodes, network sizes and STRING
+or ARACNe edge summaries before interpreting clusters.
+
+## Historical and obsolete workflows
+
+| Workflow | Status and limitation |
+|---|---|
+| Gene-body/gene-window promoters with enhancer classes | Historical alternative. It may be restored later as an explicitly named profile, but it is not the current E092/Gastric default. |
+| Enhancer class-based edge exclusion | Historical alternative. It changes both LDAK annotations and network membership and must not be silently combined with the no-class profile. |
+| Original `analysis2/` | Obsolete scientific baseline: superseded coordinate conversions, symbol-only mappings and analysis-local helper code. |
+| Early v2--v5 folders | Development intermediates containing combinations superseded by later decisions. |
+| Frozen v6/v7 results | Valuable orchestration/reproduction evidence, but created with older coordinate/cache behavior. |
+| PP-only and other experimental profiles | Specialized historical alternatives, not package defaults. |
+
+The authoritative behavior is in `PROJECT_SPEC.md`; unresolved limitations are
+in `KNOWN_ISSUES.md`. Historical folders should not be copied forward as new
+analysis templates.
+
+## References

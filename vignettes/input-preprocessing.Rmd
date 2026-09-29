@@ -1,0 +1,237 @@
+---
+title: "Input preprocessing for hotnetR2"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Input preprocessing for hotnetR2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Scope and status
+
+`hotnetR2` consumes processed GWAS, LD-reference and optional ARACNe files. It
+does not prescribe one raw-cohort QC pipeline. Allele QC, sample-size rules,
+liftover, duplicate handling and imputation filters are cohort-specific and
+must be recorded upstream.
+
+> **Current limitation:** complete raw-to-processed recipes for the BEEA GWAS
+> and GEjunc ARACNe data are not yet certified. The schemas and checks below are
+> current input contracts; example transformations are templates, not claims
+> that they reproduce the frozen datasets.
+
+## Assembly and coordinate contract
+
+The current E092/Gastric profiles use GRCh37/hg19.
+
+- GWAS and PLINK BIM positions are 1-based single-base variant identifiers.
+- A predictor is written as `chromosome:position`; do not subtract one.
+- LDAK `.loc` and bedtools intervals are 0-based, half-open.
+- Convert a 1-based inclusive interval `[start,end]` to `[start-1,end)` once.
+- JEME enhancer bounds and Jung HiC other-end fragments are already BED-style;
+  do not decrement their starts again.
+- GENCODE v39 GRCh38 coordinates are used only for identifier harmonization in
+  these profiles.
+
+See `docs/dataset_coordinate_reference.md` in the source package for the
+dataset-specific evidence and cache hashes.
+
+## GWAS files
+
+The YAML declares three files:
+
+```yaml
+gwas:
+  dataset: MY_COHORT
+  summary_file: GWAS/MY_COHORT/ldak_MY_COHORT.tsv
+  pvalue_file: GWAS/MY_COHORT/ldak_MY_COHORT_pvalue.tsv
+  extract_file: GWAS/MY_COHORT/ldak_MY_COHORT_extract.txt
+  sample_size: 50000
+```
+
+### Summary statistics
+
+The current analyses use an LDAK summary file with this header:
+
+```text
+Predictor  A1  A2  Z  n
+10:100000625  A  G  -1.53691  49266
+```
+
+`Predictor` must match the LD-reference BIM identifier exactly. `A1` and `A2`
+are alleles, `Z` is the signed test statistic, and `n` is the effective sample
+size used for that record. Other LDAK-supported summary formats require an
+explicitly tested profile rather than a silent column substitution.
+
+### P-value file
+
+The current LDAK `--cut-genes` input is:
+
+```text
+Predictor  P
+10:100000625  0.1237
+```
+
+P-values must be numeric and within `[0,1]`. Each predictor must use the same ID
+and assembly as the summary file and reference BIM.
+
+### Extraction list
+
+The extraction file is headerless, one predictor per line:
+
+```text
+10:100000625
+10:100000645
+```
+
+It should be the allele-compatible intersection between the processed GWAS and
+the chosen LD reference. Coordinate matching and allele orientation are separate
+checks: compare direct, swapped, complemented and complement-swapped alleles,
+and define an explicit policy for ambiguous A/T and C/G variants.
+
+### Cohort-specific preparation template
+
+Replace the placeholder column names and document every filter. This example is
+deliberately not a BEEA reproduction script.
+
+```{r gwas-template}
+library(dplyr)
+library(readr)
+
+raw <- read_tsv("GWAS/MY_COHORT/raw_summary.tsv.gz")
+
+prepared <- raw |>
+  transmute(
+    chromosome = CHROMOSOME_COLUMN,
+    position = POSITION_GRCH37_COLUMN, # 1-based
+    Predictor = paste0(chromosome, ":", position),
+    A1 = EFFECT_ALLELE_COLUMN,
+    A2 = OTHER_ALLELE_COLUMN,
+    Z = EFFECT_COLUMN / STANDARD_ERROR_COLUMN,
+    n = EFFECTIVE_SAMPLE_SIZE_COLUMN,
+    P = PVALUE_COLUMN
+  ) |>
+  filter(
+    chromosome %in% c(1:22, "X"),
+    is.finite(Z), is.finite(n), n > 0,
+    is.finite(P), P >= 0, P <= 1
+  )
+
+# Next: exact BIM-ID and allele-orientation matching. Do not use position alone.
+stop("PLACEHOLDER: implement and audit cohort-specific BIM allele matching")
+```
+
+Save final tables without row names or quoting:
+
+```{r write-gwas}
+write_tsv(select(prepared, Predictor, A1, A2, Z, n),
+          "GWAS/MY_COHORT/ldak_MY_COHORT.tsv")
+write_tsv(select(prepared, Predictor, P),
+          "GWAS/MY_COHORT/ldak_MY_COHORT_pvalue.tsv")
+write_lines(prepared$Predictor,
+            "GWAS/MY_COHORT/ldak_MY_COHORT_extract.txt")
+```
+
+## LD reference
+
+Supply one PLINK binary prefix:
+
+```text
+LD_ref/reference.bed
+LD_ref/reference.bim
+LD_ref/reference.fam
+```
+
+and configure:
+
+```yaml
+reference:
+  bfile_prefix: LD_ref/reference
+```
+
+The `.bim` file has six fields: chromosome, variant ID, genetic distance,
+1-based base-pair position, allele 1 and allele 2. The reference ancestry and
+assembly should be appropriate for the GWAS. Validate that every extraction ID
+occurs in the BIM and that the three PLINK files share the same prefix.
+
+```{r ld-check}
+bim <- read_table2(
+  "LD_ref/reference.bim", col_names = FALSE,
+  col_types = cols(.default = col_character())
+)
+names(bim) <- c("CHR", "Predictor", "CM", "BP", "A1", "A2")
+extract <- read_lines("GWAS/MY_COHORT/ldak_MY_COHORT_extract.txt")
+stopifnot(!anyDuplicated(bim$Predictor))
+stopifnot(all(extract %in% bim$Predictor))
+```
+
+## ARACNe network
+
+ARACNe reconstructs regulatory associations from expression data
+[@Margolin2006ARACNe; @Lachmann2016ARACNeAP]. `hotnetR2` expects a tab-separated
+file with a header and four columns:
+
+```text
+Regulator  Target  MI  pvalue
+CDX1  ENSG00000277351  0.2515694401671866  0
+```
+
+- `Regulator` and `Target` may contain gene symbols or Ensembl gene IDs.
+- `MI` and `pvalue` must be numeric.
+- Profile thresholds are applied before endpoint harmonization.
+- Current GEjunc settings initially use `MI >= 0` and `pvalue <= 1e-6`; Networks
+  3/4 then use their configured MI thresholds.
+
+The package contains helpers for exporting tissue TPM data and producing an
+ARACNe job, but the exact GTEx release, tissue, gene types, transformation,
+transcription-factor list, adaptive-partitioning version, bootstrap count,
+randomness and consolidation environment must be frozen for a reproducible
+network.
+
+```{r aracne-template}
+# Illustrative only; confirm the installed function help and site environment.
+hotnetR2::download_gtex_tpm(
+  tissue = "Esophagus_Gastroesophageal_Junction"
+)
+hotnetR2::download_gtex_gencode()
+hotnetR2::export_gtex_aracne(
+  tissue = "Esophagus_Gastroesophageal_Junction",
+  output_dir = "ARACNe1600/GEjunc_work"
+)
+hotnetR2::create_aracne_slurm(
+  tissue = "Esophagus_Gastroesophageal_Junction",
+  output_dir = "ARACNe1600/GEjunc_work",
+  aracne_jar = "/path/to/aracne.jar"
+)
+```
+
+After external execution, normalize the consolidated network to the four-column
+schema and preserve the raw network, commands, logs, software identity and
+checksums. Do not substitute an all-gene network for a coding/lincRNA/miRNA
+profile without declaring a new analysis.
+
+## STRINGdb alternative
+
+STRINGdb does not require ARACNe preprocessing. Use the explicit setup described
+in `vignette("resources-and-setup", package = "hotnetR2")`. The aliases,
+protein-info and links files must all use the same release and species.
+
+## Preflight
+
+Before analysis, load the YAML and require every declared input to be present:
+
+```{r preflight}
+config <- hotnetR2::read_analysis_config("analysis_name/analysis.yaml")
+check <- hotnetR2::check_analysis_inputs(config, write_report = FALSE)
+print(check, row.names = FALSE)
+stopifnot(all(check$status == "OK"))
+```
+
+Presence is not proof of provenance. Keep checksums and upstream decisions in an
+immutable run manifest.
+
+## References

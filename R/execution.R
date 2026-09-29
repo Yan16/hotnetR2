@@ -14,7 +14,9 @@ run_ldak <- function(config, node_types = c("enhancer", "promoter")) {
   generate_ldak_local_runner(config, dry_run = FALSE)
   paths <- analysis_paths(config)
   inputs <- input_paths(config)
-  inputs <- inputs[names(inputs) != "aracne"]
+  inputs <- inputs[!names(inputs) %in% c(
+    "aracne", "stringdb_aliases", "stringdb_info", "stringdb_links"
+  )]
   for (kind in node_types) {
     result <- file.path(paths[["ldak_results"]], ldak_result_subdir(config, kind))
     assert_unlinked_result(result)

@@ -1,0 +1,216 @@
+---
+title: "Create and run an analysis profile"
+output: rmarkdown::html_vignette
+bibliography: references.bib
+vignette: >
+  %\VignetteIndexEntry{Create and run an analysis profile}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Start from a package example
+
+Do not copy a historical analysis folder with results. Copy one reviewed YAML
+and the standalone launcher files from the installed package:
+
+```{r locate-examples}
+examples <- system.file(
+  "extdata", "vignette_examples", package = "hotnetR2", mustWork = TRUE
+)
+list.files(examples)
+```
+
+From the project root:
+
+```bash
+mkdir analysis_E092_Gastric_GEjunc
+cp "$(Rscript --vanilla -e 'cat(system.file("extdata", "vignette_examples", package="hotnetR2"))')/analysis_aracne.yaml" \
+   analysis_E092_Gastric_GEjunc/analysis.yaml
+cp "$(Rscript --vanilla -e 'cat(system.file("extdata", "vignette_examples", package="hotnetR2"))')/run_analysis.sh" \
+   analysis_E092_Gastric_GEjunc/
+cp "$(Rscript --vanilla -e 'cat(system.file("extdata", "vignette_examples", package="hotnetR2"))')/run_analysis.R" \
+   analysis_E092_Gastric_GEjunc/
+chmod +x analysis_E092_Gastric_GEjunc/run_analysis.sh
+```
+
+For STRINGdb, substitute `analysis_stringdb.yaml`. Change the folder and
+`analysis.name` together. The examples contain placeholder tool/input paths and
+will not pass preflight until edited.
+
+## Directory boundary
+
+An analysis folder contains configuration and outputs only for that profile:
+
+```text
+analysis_name/
+|-- analysis.yaml
+|-- run_analysis.sh
+|-- run_analysis.R
+|-- metadata/
+|-- logs/
+|-- LDAK/
+`-- hHotnet/
+```
+
+Shared GWAS, LD and caches normally live in the project root and are referenced
+by paths relative to `project.root`. Never symlink a writable result directory
+from an older analysis.
+
+## Important YAML sections
+
+| Section | Purpose |
+|---|---|
+| `analysis` | Unique name, label and analysis seed. |
+| `project` | Root against which input paths resolve. |
+| `gwas` | Processed summary, p-value, extraction files and sample size. |
+| `reference` | LDAK, LD prefix, assembly and NCBI coordinate source. |
+| `regulatory` | JEME tissue, HiC tissue/types, overlap filter and harmonization. |
+| `enhancer_classification` | Disabled in the current canonical profiles. |
+| `interaction_network` | Explicit `ARACNe`, `STRINGdb` or `none` backend. |
+| `aracne` | Input, initial thresholds and identifier policy. |
+| `ldak` | Buffers, TSS mode, result names, model and permutations. |
+| `scores` | P-value column and transformation. |
+| `networks` | Selected graphs, regulatory thresholds and legacy edge policies. |
+| `hhotnet` | Permutation/manual mode and Python runtime. |
+| `slurm` | Resource values for generated cluster scripts. |
+
+Schema version 1 accepts the additive `interaction_network` section. Older YAML
+files that omit it retain legacy ARACNe selection; new profiles should always
+declare it explicitly.
+
+## GEjunc ARACNe profile
+
+```yaml
+interaction_network:
+  type: ARACNe
+
+aracne:
+  enabled: true
+  file: ARACNe1600/GEjunc/network.txt
+  MI_threshold: 0
+  pvalue_threshold: 1.0e-6
+  harmonization:
+    enabled: true
+    gtf_file: .cache/gencode.v39.GRCh38.genes_nodup.rds
+    alias_file: .cache/alias_link_nodup.rds
+    map_ensembl: true
+    map_aliases: true
+    ambiguous: drop
+    unmapped_ensembl: drop
+    unmatched_symbols: keep
+
+networks:
+  available: [network_1, network_2, network_3, network_4]
+  selected: [network_1, network_2, network_3, network_4]
+  thresholds:
+    small_regulatory_score: 4
+    broad_regulatory_score: 3
+    small_plus_aracne_mi: 0.3
+    broad_plus_aracne_mi: 0.65
+```
+
+Network 3 adds qualifying ARACNe edges to Network 1; Network 4 augments Network
+2. Endpoints absent from the base graph are not introduced. Review the ARACNe
+harmonization mapping and endpoint summaries before interpreting results.
+
+## STRINGdb profile
+
+```yaml
+interaction_network:
+  type: STRINGdb
+  stringdb:
+    version: "12.0"
+    species: 9606
+    score_threshold: 700
+    cache_dir: .cache/STRINGdb
+    mapping_policy: legacy_shortest_gene_per_string_id
+
+aracne:
+  enabled: false
+```
+
+Network 3 adds STRING v12 edges with `combined_score >= 700` to Network 1;
+Network 4 augments Network 2. Only existing `promoter_gene` nodes are mapped.
+STRING loops and duplicate gene pairs are removed; pairs already present in the
+base graph are audited but do not replace regulatory edges.
+
+The mapping policy resolves several graph gene names assigned to one STRING ID
+by shortest name, with a lexical tie-break. This is deterministic compatibility,
+not biological disambiguation; inspect `stringdb_mapping_conflicts.tsv`.
+
+## Validate without running
+
+From the project root:
+
+```bash
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh check
+```
+
+This checks the exact installed package version requested by the launcher,
+parses the YAML, validates declared inputs and verifies that output paths remain
+inside the analysis folder. It does not run LDAK or HHN.
+
+The equivalent R commands are:
+
+```{r check}
+config <- hotnetR2::read_analysis_config(
+  "analysis_E092_Gastric_STRINGdb/analysis.yaml"
+)
+inputs <- hotnetR2::check_analysis_inputs(config, write_report = FALSE)
+print(inputs, row.names = FALSE)
+stopifnot(all(inputs$status == "OK"))
+hotnetR2::setup_analysis(config, dry_run = TRUE)
+```
+
+## Run stages
+
+Run one stage at a time when establishing a new profile:
+
+```bash
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh annotations
+# classification is intentionally skipped when enabled: false
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh ldak
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh scores
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh networks
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh hotnet
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh exports
+```
+
+Or run the configured sequence:
+
+```bash
+bash analysis_E092_Gastric_STRINGdb/run_analysis.sh all
+```
+
+The launcher writes a timestamped stage log. `run_analysis()` uses content
+fingerprints for safe reuse, but an external tool's exit code alone is not
+accepted as completion; expected artifacts are checked.
+
+## Review before HHN
+
+After `networks`, inspect:
+
+```text
+hHotnet/summary/network_file_summary.tsv
+hHotnet/summary/promoter_harmonization_summary.tsv
+hHotnet/summary/aracne_harmonization_summary.tsv       # ARACNe profile
+hHotnet/summary/stringdb_summary.tsv                   # STRING profile
+hHotnet/summary/stringdb_mapping_conflicts.tsv         # STRING profile
+```
+
+Also inspect annotation validation and LDAK summary manifests. A surprising
+drop in mapped promoters or graph size should stop the workflow before HHN.
+
+## Changing a profile
+
+Changing assembly, coordinates, aliases, source selection, overlap rules,
+enhancer-class policy, LDAK parameters, score column, network thresholds or
+interaction backend is a scientific change. Use a new analysis name and output
+directory. Do not relabel old outputs or refresh inputs inside an established
+profile.
+
+## References

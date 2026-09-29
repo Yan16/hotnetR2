@@ -1,0 +1,142 @@
+# Canonical corrected TSS/no-enhancer-class example with ARACNe augmentation.
+# Replace every /path/to or MY_* placeholder before running `check`.
+schema_version: 1
+
+analysis:
+  name: analysis_E092_Gastric_GEjunc
+  label: MY_GWAS with JEME E092, Gastric HiC and GEjunc ARACNe
+  random_seed: 12345
+
+project:
+  root: ".."
+
+gwas:
+  dataset: MY_GWAS
+  summary_file: GWAS/MY_GWAS/ldak_MY_GWAS.tsv
+  pvalue_file: GWAS/MY_GWAS/ldak_MY_GWAS_pvalue.tsv
+  extract_file: GWAS/MY_GWAS/ldak_MY_GWAS_extract.txt
+  sample_size: 50000
+
+reference:
+  ldak_exe: /path/to/ldak
+  bfile_prefix: LD_ref/MY_GRCh37_REFERENCE
+  genome_build: GRCh37
+  annotation_genome_build: GRCh37
+  promoter_alias_file: null
+  promoter_alias_columns: {alias: alias, gene_symbol: gene_symbol}
+  ncbi_feature_table: .cache/LDAK/GCF_000001405.25_GRCh37.p13_feature_table.txt.gz
+
+regulatory:
+  jeme:
+    key_column: tiss
+    value: E092
+    method: lasso
+    simplified: true
+    label: Fetal Stomach
+  hic:
+    tissue_type: Gastric
+    edge_types: [PO, PP]
+    jeme_overlap:
+      enabled: true
+      hic_flank_bp: 1000
+      jeme_flank_bp: 1000
+  promoter_harmonization:
+    enabled: true
+    jeme: true
+    hic: true
+    jeme_strategy: all_tissues_ensg_map
+    hic_strategy: gene_symbol_alias
+    gtf_file: .cache/gencode.v39.GRCh38.genes_nodup.rds
+    hic_alias_file: .cache/alias_link_nodup.rds
+  mhc_exclusion:
+    enabled: true
+    genome_build: hg19
+    chr: 6
+    start: 25000000
+    end: 34000000
+
+enhancer_classification:
+  enabled: false
+  enhancer_flank_bp: 1000
+  promoter_window: strand_aware_tss
+  promoter_flank_bp: 2000
+  class1_label: enh_class1
+  class2_label: enh_class2
+  class3_label: enh_class3
+  drop_non_class1_edge_sources: []
+  retain_non_enhancer_edges: true
+
+interaction_network:
+  type: ARACNe
+
+aracne:
+  enabled: true
+  file: ARACNe1600/GEjunc/network.txt
+  MI_threshold: 0
+  pvalue_threshold: 1.0e-6
+  harmonization:
+    enabled: true
+    gtf_file: .cache/gencode.v39.GRCh38.genes_nodup.rds
+    alias_file: .cache/alias_link_nodup.rds
+    map_ensembl: true
+    map_aliases: true
+    ambiguous: drop
+    unmapped_ensembl: drop
+    unmatched_symbols: keep
+
+ldak:
+  enhancer_flank_bp: 1000
+  promoter_flank_bp: 2000
+  promoter_interval_mode: strand_aware_tss
+  result_dirs:
+    enhancer: enhancer_tss_1k
+    promoter: promoter_tss_2k
+  annotation_tissues:
+    jeme: ALL
+    hic: ALL
+    jeme_method: lasso
+  power: -0.25
+  pruning: 0.95
+  permutations: 10
+  threads: 8
+  ignore_weights: true
+  allow_ambiguous: true
+
+scores:
+  pvalue_column: LRT_P_Perm
+  transform: neg_log10
+  infinite_score_cap: null
+
+networks:
+  available: [network_1, network_2, network_3, network_4]
+  selected: [network_1, network_2, network_3, network_4]
+  regulatory_edge_filter: legacy_filter_network_ldak
+  node_order: legacy_input
+  preserve_self_loops: true
+  preserve_duplicate_edges_during_aracne: true
+  deduplicate_jeme_edges_before_harmonization: true
+  split_multi_promoter_edges: true
+  thresholds:
+    small_regulatory_score: 4
+    broad_regulatory_score: 3
+    small_plus_aracne_mi: 0.3
+    broad_plus_aracne_mi: 0.65
+
+hhotnet:
+  analysis_mode: permutation
+  execution_mode: local_python
+  local_dir: /path/to/hierarchical-hotnet
+  python_executable: python3
+  compat_dir: analysis_E092_Gastric_GEjunc/hHotnet/compat
+  apptainer_image: /path/to/hhotnet.sif
+  score_name: nodes_all
+  num_permutations: 100
+  permutation_seed: 0
+  lower_size_bound: 10
+  cpus: 16
+
+slurm:
+  time: "12:00:00"
+  memory: "16G"
+  partition: general-compute
+  qos: general-compute
