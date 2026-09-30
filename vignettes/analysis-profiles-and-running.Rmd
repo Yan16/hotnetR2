@@ -82,6 +82,9 @@ Schema version 1 accepts the additive `interaction_network` section. Older YAML
 files that omit it retain legacy ARACNe selection; new profiles should always
 declare it explicitly.
 
+For every field, implemented fallback, allowed value and affected stage, see
+`vignette("analysis-yaml-reference", package = "hotnetR2")`.
+
 ## GEjunc ARACNe profile
 
 ```yaml

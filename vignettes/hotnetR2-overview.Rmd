@@ -106,9 +106,11 @@ later coordinate and alias corrections.
    `vignette("resources-and-setup", package = "hotnetR2")`.
 3. Copy and edit a package example from `system.file("extdata",
    "vignette_examples", package = "hotnetR2")`.
-4. Run `bash run_analysis.sh check` before any compute stage.
-5. Run stages separately or use `bash run_analysis.sh all`.
-6. Interpret the two HHN modes using
+4. Consult `vignette("analysis-yaml-reference", package = "hotnetR2")` for
+   field requirements, implemented fallbacks and change impacts.
+5. Run `bash run_analysis.sh check` before any compute stage.
+6. Run stages separately or use `bash run_analysis.sh all`.
+7. Interpret the two HHN modes using
    `vignette("hhotnet-execution", package = "hotnetR2")`.
 
 ## Main output areas

@@ -10,11 +10,13 @@ ARACNe or STRINGdb interaction backends.
 Start with `vignette("hotnetR2-overview", package = "hotnetR2")`. Companion
 guides cover input preprocessing, resource setup, the current corrected
 TSS/no-enhancer-class workflow, ARACNe/STRING analysis profiles, HHN execution
-and reproduction boundaries. New analyses should copy the validated examples in
+and reproduction boundaries. The complete field reference is
+`vignette("analysis-yaml-reference", package = "hotnetR2")`. New analyses
+should copy the validated examples in
 `system.file("extdata", "vignette_examples", package = "hotnetR2")`, not a
 historical result folder.
 
-**Status: current package release 0.2.1; complete clean-machine reproduction is
+**Status: current package release 0.2.3; complete clean-machine reproduction is
 not yet certified.** No existing analysis is modified. Historical v2/v3 and
 v6/v7 behavior is retained only where the specification explicitly requires it.
 

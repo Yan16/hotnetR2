@@ -108,11 +108,24 @@ For each enabled node type, hotnetR2:
 3. runs `--calc-genes-reml` with the configured summary statistics;
 4. runs `--join-genes-reml`;
 5. checks expected artifacts before accepting external exit status;
-6. standardizes enhancer and promoter summary tables.
+6. standardizes enhancer and promoter summary tables;
+7. expands enhancer scores over all unique JEME target/tissue associations in
+   `enhancer_ldak_long.tsv.gz`.
 
 The current profile uses LDAK-GBAT [@Berrandou2023LDAK] and scores nodes as
 `-log10(LRT_P_Perm)`. With a configured infinity cap, positive infinity becomes
 the maximum finite score plus one. P-values outside `[0,1]` are invalid.
+
+The long enhancer table adds raw JEME `promoterFull` and `ENSG`, then the
+harmonized `promoter`, `tissue` (for example `E092`) and `tissue_name` (for
+example `Fetal Stomach`). It retains HiC-only enhancers with missing JEME
+fields. For a completed analysis, recreate only this additive report without
+running LDAK:
+
+```{r enhancer-long}
+config <- hotnetR2::read_analysis_config("analysis_name/analysis.yaml")
+hotnetR2::create_enhancer_ldak_long_summary(config)
+```
 
 ## Regulatory networks
 

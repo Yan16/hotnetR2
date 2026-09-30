@@ -20,10 +20,20 @@ test_that("summaries regenerate from completed LDAK files without rerunning LDAK
   config <- write_network_test_config()
   write_ldak_summary_fixture(config, "enhancer")
   write_ldak_summary_fixture(config, "promoter")
+  local_mocked_bindings(
+    get_jeme = function(...) tibble::tibble(
+      enhancer = c("A", "A", "A"), promoter = c("P1", "P2", "P1"),
+      promoterFull = c("ENSG000001$P1", "ENSG000002$P2", "ENSG000001$P1"),
+      ENSG = c("ENSG000001", "ENSG000002", "ENSG000001"),
+      nfile = c("90", "90", "90")
+    )
+  )
 
   first <- summarize_analysis_ldak_results(config, dry_run = FALSE)
   enhancer_file <- ldak_summary_specs(config)$enhancer$output_file
+  long_file <- enhancer_ldak_long_file(config)
   first_table <- readr::read_tsv(enhancer_file, show_col_types = FALSE)
+  long_table <- readr::read_tsv(long_file, show_col_types = FALSE)
   second <- summarize_analysis_ldak_results(config, dry_run = FALSE)
   second_table <- readr::read_tsv(enhancer_file, show_col_types = FALSE)
 
@@ -33,6 +43,46 @@ test_that("summaries regenerate from completed LDAK files without rerunning LDAK
   expect_true(all(c("SE", "SD", "Min_Pvalue", "FDR", "gene", "flank") %in% names(first_table)))
   expect_equal(first_table$SD, first_table$SE)
   expect_equal(first_table$Min_Pvalue, c(0.001, 0.05))
+  expect_equal(nrow(long_table), 3L)
+  expect_equal(long_table$promoterFull, c("ENSG000001$P1", "ENSG000002$P2", NA_character_))
+  expect_equal(long_table$ENSG, c("ENSG000001", "ENSG000002", NA_character_))
+  expect_equal(long_table$promoter, c("P1", "P2", NA_character_))
+  expect_equal(long_table$tissue, c("E092", "E092", NA_character_))
+  expect_equal(long_table$tissue_name, c("Fetal Stomach", "Fetal Stomach", NA_character_))
+})
+
+test_that("enhancer long summary expands unique targets across JEME tissues", {
+  config <- write_network_test_config()
+  output_dir <- analysis_paths(config)[["ldak_summary"]]
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  readr::write_tsv(
+    tibble::tibble(Gene_Name = c("E1", "E2"), LRT_P_Perm = c(0.01, 0.2)),
+    ldak_summary_specs(config)$enhancer$output_file
+  )
+  local_mocked_bindings(
+    get_jeme = function(...) tibble::tibble(
+      enhancer = c("E1", "E1", "E1", "E1", "E3"),
+      promoter = c("P1", "P2", "P1", "P1", "P3"),
+      promoterFull = c("ENSG000001$P1", "ENSG000002$P2", "ENSG000001$P1", "ENSG000001$P1", "ENSG000003$P3"),
+      ENSG = c("ENSG000001", "ENSG000002", "ENSG000001", "ENSG000001", "ENSG000003"),
+      nfile = c("90", "90", "92", "92", "90")
+    )
+  )
+
+  output <- create_enhancer_ldak_long_summary(config)
+  observed <- readr::read_tsv(output, show_col_types = FALSE)
+
+  expect_equal(basename(output), "enhancer_ldak_long.tsv.gz")
+  expect_equal(nrow(observed), 4L)
+  expect_equal(observed$Gene_Name, c("E1", "E1", "E1", "E2"))
+  expect_equal(observed$promoterFull,
+               c("ENSG000001$P1", "ENSG000002$P2", "ENSG000001$P1", NA_character_))
+  expect_equal(observed$ENSG,
+               c("ENSG000001", "ENSG000002", "ENSG000001", NA_character_))
+  expect_equal(observed$promoter, c("P1", "P2", "P1", NA_character_))
+  expect_equal(observed$tissue, c("E092", "E092", "E094", NA_character_))
+  expect_equal(observed$tissue_name,
+               c("Fetal Stomach", "Fetal Stomach", "Gastric", NA_character_))
 })
 
 test_that("standardized-score comparison quantifies common score fields", {

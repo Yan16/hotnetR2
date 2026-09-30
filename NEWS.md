@@ -1,3 +1,26 @@
+# hotnetR2 0.2.3
+
+- Add `create_enhancer_ldak_long_summary()` and call it from the LDAK summary
+  stage. The additive `enhancer_ldak_long.tsv.gz` output retains all enhancer
+  scores and expands JEME enhancers to unique promoter/tissue combinations
+  across every configured JEME file.
+- Add raw JEME `promoterFull` and `ENSG`, plus harmonized `promoter`, `tissue`
+  and `tissue_name` columns. HiC-only enhancers remain represented with missing
+  JEME fields.
+- Support updating completed summaries directly from `enhancer_ldak.tsv.gz` and
+  the JEME cache, without rerunning LDAK.
+
+# hotnetR2 0.2.2
+
+- Add a field-by-field `analysis.yaml` schema-version-1 vignette documenting
+  required and conditional fields, implemented fallbacks, allowed values,
+  runtime consumers, scientific effects and the earliest stage to regenerate.
+- Distinguish recommended E092/Gastric example values from package fallbacks,
+  and explicitly mark legacy aliases, weakly validated runtime requirements,
+  and accepted fields that currently have no computational effect.
+- Record candidates for a future versioned schema cleanup without changing any
+  current default, analysis behavior, example profile or analysis directory.
+
 # hotnetR2 0.2.1
 
 - Add a current workflow vignette set covering input preparation, resource

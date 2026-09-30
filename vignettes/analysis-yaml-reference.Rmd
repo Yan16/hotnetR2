@@ -1,0 +1,396 @@
+---
+title: "analysis.yaml reference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{analysis.yaml reference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Scope and notation
+
+This is the field-by-field reference for `analysis.yaml` schema version 1 in
+`hotnetR2` 0.2.2. It documents the implemented parser, validator and runtime
+consumers. The two installed examples remain the recommended starting points:
+
+```{r examples}
+example_dir <- system.file(
+  "extdata", "vignette_examples", package = "hotnetR2", mustWork = TRUE
+)
+file.path(example_dir, c("analysis_aracne.yaml", "analysis_stringdb.yaml"))
+```
+
+The terms in the tables have precise meanings:
+
+| Term | Meaning |
+|---|---|
+| Required | Omission is rejected by validation, or the field is required by a later stage. |
+| Conditional | Required only when the named feature or execution mode is used. |
+| Fallback | The value used by current code when the key is omitted. It is a compatibility behavior, not necessarily the recommended scientific value. |
+| Example | A value in the current E092/Gastric profiles; it is not an implicit package default. |
+| Inert/reserved | Accepted in YAML but currently has no computational effect. Do not use it to infer behavior. |
+| Legacy fallback | Retained so older configurations still parse; new profiles should use the replacement key. |
+
+YAML keys are case-sensitive. Enumerated values are shown using their canonical
+spelling, although `interaction_network.type` is normalized to lower case.
+Relative input paths resolve from `project.root`. Output paths always remain
+below the directory containing `analysis.yaml`, unless `output_root` is passed
+to `read_analysis_config()` for an isolated reproduction run.
+
+The authoritative executable rules are `read_analysis_config()` and the
+internal validator. This vignette intentionally identifies weak validation and
+inactive fields so a future schema revision can remove or formalize them.
+
+## Minimum structure
+
+Schema version 1 requires these top-level sections:
+
+```yaml
+schema_version: 1
+analysis: {}
+project: {}
+gwas: {}
+reference: {}
+regulatory: {}
+aracne: {}
+ldak: {}
+scores: {}
+networks: {}
+hhotnet: {}
+```
+
+`interaction_network`, `enhancer_classification`, `resources`, `validation`
+and `slurm` are optional sections, although new profiles should declare the
+interaction backend explicitly. The empty mappings above are only structural;
+the required child fields described below must also be supplied.
+
+## Identity, paths and GWAS inputs
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `schema_version` | Required; only integer `1` | Selects the configuration schema. Other values are rejected by `read_analysis_config()`. |
+| `analysis.name` | Required string | Analysis identifier used in generated job names, graph metadata and exported filenames. |
+| `analysis.label` | Optional; no fallback | Descriptive metadata only; current workflow code does not consume it. |
+| `analysis.random_seed` | Runtime-required integer | Passed to LDAK `--random-seed`. The validator does not yet enforce it, so omitting it can produce an invalid generated command. |
+| `project.root` | Required path | Base for shared inputs and tools. A relative value is resolved from the YAML directory. It is never the output root. |
+| `resources.cache_dir` | Fallback `.cache` | Base cache used by JEME and HiC readers. `read_analysis_config(cache_dir=)` overrides it. |
+| `resources.profile` | Optional, inert/reserved | Written by the historical `initialize_analysis()` helper but not used by execution. |
+| `gwas.dataset` | Required string | Cohort label in score summaries and provenance. |
+| `gwas.summary_file` | Required path | LDAK summary-statistics input passed to `--summary`. |
+| `gwas.pvalue_file` | Required path | Predictor/p-value input passed to `--pvalues`. |
+| `gwas.extract_file` | Required path | Variant allow-list passed to LDAK `--extract`. |
+| `gwas.sample_size` | Required positive integer | Sample size passed to LDAK `--SNP-data`. |
+
+`check_analysis_inputs()` checks the GWAS files, LD reference components,
+LDAK executable, and the selected interaction cache or network before compute.
+It does not prove that column semantics or genome assembly are correct. Variant
+positions in the current BEEA and MVP sources are 1-based identifiers; they
+must not be treated as BED starts. See
+`docs/dataset_coordinate_reference.md` in the installed source tree.
+
+## Reference and annotation coordinates
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `reference.ldak_exe` | Required path | Executable used by generated LDAK scripts. |
+| `reference.bfile_prefix` | Required path prefix | Resolves the matching `.bed`, `.bim` and `.fam` LD-reference files. |
+| `reference.genome_build` | Required string | Assembly of GWAS/LD inputs. Common GRCh37 aliases are normalized. |
+| `reference.annotation_genome_build` | Required string; must equal `genome_build` after normalization | Assembly of regulatory and promoter annotations. The validator prevents cross-build analysis. |
+| `reference.ncbi_feature_table` | Runtime-required path | NCBI feature table used to create promoter TSS/gene-body intervals. Automatic download during analysis is deliberately disabled. |
+| `reference.promoter_alias_file` | Fallback `null` | Optional two-column TSV for aliases absent from the NCBI table. `null` keeps source symbols and audits them as identity mappings. |
+| `reference.promoter_alias_columns.alias` | Fallback `alias` | Alias-column name in `promoter_alias_file`. |
+| `reference.promoter_alias_columns.gene_symbol` | Fallback `gene_symbol` | Approved-symbol column name in `promoter_alias_file`. Conflicting one-to-many aliases are rejected. |
+
+`prepare_ldak_annotations()` creates 0-based, half-open `.loc` intervals. NCBI
+1-based inclusive gene coordinates are converted explicitly. A positive-strand
+TSS uses NCBI `START`, a negative-strand TSS uses `END`, and the one-base BED
+anchor is `[TSS - 1, TSS)`. JEME enhancers and HiC restriction fragments are
+already BED intervals and are not shifted again.
+
+## JEME and HiC sources
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `regulatory.jeme.key_column` | Runtime-required | JEME metadata column used for tissue selection, normally `tiss`. |
+| `regulatory.jeme.value` | Runtime-required scalar or list | Selected JEME value(s), for example `E092`. Controls network edges and the selected-JEME reference for the HiC overlap filter. |
+| `regulatory.jeme.method` | Fallback `lasso` | JEME cache family loaded by `get_jeme()`. |
+| `regulatory.jeme.simplified` | Fallback `true` for network loading | Selects the simplified JEME representation. Annotation preparation uses its own simplified source contract. |
+| `regulatory.jeme.label` | Optional, inert/reserved | Human-readable tissue label; current stages do not consume it. |
+| `regulatory.hic.enabled` | Fallback enabled unless explicitly `false` | Master HiC switch. HiC is also disabled by an absent, empty, `null` or blank tissue selection. |
+| `regulatory.hic.tissue_type` | Empty disables HiC | One or more HiC tissues, for example `Gastric`. Restricts network edges; annotation preparation still uses all tissues for enabled edge types. |
+| `regulatory.hic.edge_types` | Fallback `[PO, PP]`; values `PO`, `PP`, or both | Selects promoter-other and/or promoter-promoter contacts before annotation and network construction. No duplicates are allowed. |
+
+HiC state is interpreted by the internal `analysis_hic_enabled()`,
+`analysis_hic_tissues()` and `analysis_hic_edge_types()` helpers. The public
+data-reader meaning of `get_hic(NULL)` remains “all tissues”; the empty-value
+disable rule applies only to analysis configuration.
+
+### Optional HiC--JEME overlap filter
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `regulatory.hic.jeme_overlap.enabled` | Required if the subsection is present | When `true`, removes HiC PO enhancers that overlap the selected JEME enhancer union. PP contacts are unchanged. |
+| `regulatory.hic.jeme_overlap.hic_flank_bp` | Fallback `1000`; nonnegative integer | Expands each HiC enhancer by this many bases at both ends for overlap testing. |
+| `regulatory.hic.jeme_overlap.jeme_flank_bp` | Fallback `1000`; nonnegative integer | Expands each selected JEME enhancer by this many bases at both ends. |
+
+The filter uses 0-based, half-open intersection; touching boundaries do not
+overlap. It runs for both the annotation and network source loads and writes
+separate audit tables. It requires `bedtools` when enabled.
+
+### Promoter identifier harmonization
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `regulatory.promoter_harmonization.enabled` | Fallback `false` | Enables canonical promoter mapping before annotation and network construction. Current profiles set `true`. |
+| `.jeme` | Fallback `true` when harmonization is enabled | Applies the JEME mapping. |
+| `.hic` | Fallback `true` when harmonization is enabled | Applies the HiC symbol/alias mapping. Has no HiC effect if HiC is disabled. |
+| `.jeme_strategy` | Fallback and only value `all_tissues_ensg_map` | Builds one ENSG-to-symbol map across all JEME tissues, then applies it consistently to all-tissue annotations and selected-tissue edges. |
+| `.hic_strategy` | Fallback and only value `gene_symbol_alias` | Harmonizes HiC PO/PP promoter symbols through the alias reference. |
+| `.gtf_file` | Conditional path | Required when harmonization is enabled; RDS must provide the expected GENCODE gene mapping. It is used for identifiers, not GRCh38 coordinates. |
+| `.hic_alias_file` | Conditional path | Required when harmonization and HiC are enabled; RDS contains the curated alias mapping. |
+
+## MHC exclusion
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `regulatory.mhc_exclusion.enabled` | Fallback `false` | If enabled, removes every node type overlapping the fixed conservative MHC interval and all incident regulatory edges. |
+| `.genome_build` | Fixed `hg19`/GRCh37 | Optional explicit assertion; any other assembly is rejected. |
+| `.chr` | Fixed `6` | Optional explicit assertion. |
+| `.start` | Fixed `25000000` | 1-based inclusive source-region start, converted internally for BED overlap. |
+| `.end` | Fixed `34000000` | 1-based inclusive source-region end. |
+
+The region cannot be narrowed through YAML. Legacy `enhancers` or `promoters`
+switches are rejected because exclusion is deliberately all-node-type.
+
+## Enhancer classification
+
+The current E092/Gastric profiles set `enhancer_classification.enabled: false`:
+they use corrected TSS annotations with no enhancer-class exclusion. The keys
+below preserve a historical alternative and should not be copied into the
+canonical profile as if they were defaults.
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `enhancer_classification.enabled` | Fallback `false` | Enables `classify_enhancers()` and class-dependent retention. |
+| `.source_analysis` | Conditional string, currently inert/reserved | Required by validation when enabled, but not read by classification or execution. |
+| `.enhancer_flank_bp` | Conditional nonnegative integer | Expands enhancer BED intervals during enhancer-versus-promoter classification. |
+| `.promoter_window` | Legacy fallback `gene_body`; values `gene_body`, `strand_aware_tss` | Labels the classification profile and controls the fallback source-retention policy. It should agree with `ldak.promoter_interval_mode`. |
+| `.promoter_flank_bp` | Conditional nonnegative integer | Expands the chosen promoter intervals for classification. |
+| `.gene_node_flank_bp` | Legacy fallback for `promoter_flank_bp` | Older spelling accepted by `read_analysis_config()`; do not use in new YAML. |
+| `.class1_label`, `.class2_label`, `.class3_label` | Conditional, unique safe identifiers | Names no-overlap, fully-contained and partial-overlap classes, respectively. |
+| `.drop_non_class1_edge_sources` | Optional list from `JEME`, `HiC_PO` | Explicitly drops class2/3 edges from listed sources. Empty `[]` retains all classes. If omitted, TSS mode drops only `HiC_PO`; gene-body mode drops both. |
+| `.retain_non_enhancer_edges` | Inert/reserved | Present in older templates but not consumed by current code. |
+
+Classification uses `bedtools`; it writes complete class and overlap audits plus
+the retained enhancer `.loc` input. The run sequence must skip the
+`classification` stage when classification is disabled.
+
+## Interaction backend
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `interaction_network.type` | Recommended explicit value: `ARACNe`, `STRINGdb`, or `none` | Selects the backend used to augment Networks 1/2 into Networks 3/4. |
+
+If this key is omitted, legacy behavior selects ARACNe when
+`aracne.enabled` is omitted or true, and `none` when it is false. This fallback
+is for old files; new profiles should always state the backend. With `none`,
+`networks.available` cannot include Network 3 or 4.
+
+### STRINGdb settings
+
+| Key | Fallback or allowed values | Effect and related code |
+|---|---|---|
+| `interaction_network.stringdb.version` | `"12.0"` | Pins the STRING release and expected cache filenames. Quote it so YAML preserves the version string. |
+| `.species` | `9606` | NCBI taxonomy ID; current examples use human. |
+| `.score_threshold` | `700`; numeric 0--1000 | Inclusive minimum `combined_score`. Networks 3/4 receive qualifying STRING pairs between existing promoter-gene nodes. |
+| `.cache_dir` | `.cache/STRINGdb` | STRING-specific cache root, resolved from `project.root`; it is independent of `resources.cache_dir`. |
+| `.mapping_policy` | Only `legacy_shortest_gene_per_string_id` | Resolves multiple graph genes mapped to one STRING ID by shortest name then lexical tie-break. Conflicts are audited. |
+
+`download_stringdb_data()` is an explicit setup operation. Analysis execution
+never downloads missing STRING files. Loops, duplicate pairs and pairs already
+represented by a regulatory edge are handled and reported by the network
+builder; STRING does not introduce enhancer or new gene nodes.
+
+### ARACNe settings
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `aracne.enabled` | Legacy fallback `true` | Must be true for the ARACNe backend and false for STRINGdb or `none`. |
+| `aracne.file` | Conditional path | Required when ARACNe is enabled. |
+| `aracne.MI_threshold` | Fallback `0` | Initial inclusive MI filter in `read_ARACNe()`. Separate Network 3/4 MI thresholds are applied later. |
+| `aracne.pvalue_threshold` | Fallback `1e-6` | Initial inclusive maximum p-value filter. |
+| `aracne.keep_genes` | Fallback `null` | Optional vector used by `read_ARACNe()` to retain edges involving named genes in addition to threshold-passing edges. |
+| `aracne.harmonization.enabled` | Fallback `true` | Enables endpoint identifier harmonization. |
+| `.gtf_file` | Fallback `.cache/gencode.v39.GRCh38.genes_nodup.rds` | ENSG and canonical-symbol mapping input. |
+| `.alias_file` | Fallback `.cache/alias_link_nodup.rds` | Curated alias mapping input. |
+| `.map_ensembl` | Fallback `true` | Enables ENSG mapping. |
+| `.map_aliases` | Fallback `true` | Enables alias mapping. |
+| `.ambiguous` | Only `drop` | Drops identifiers with multiple canonical candidates. |
+| `.unmapped_ensembl` | Only `drop` | Drops unresolved ENSG endpoints. |
+| `.unmatched_symbols` | Only `keep` | Retains unmatched non-ENSG symbols unchanged. |
+
+`harmonize_aracne_endpoints()` writes mapping, endpoint and edge summaries.
+Disabling harmonization is permitted, but the path fields are still normalized
+by the current settings helper and the resulting identifiers must already agree
+with graph gene names.
+
+## LDAK annotations and jobs
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `ldak.enhancer_flank_bp` | Required in new profiles; nonnegative integer | LDAK region flank for enhancer annotations. |
+| `ldak.promoter_flank_bp` | Required in new profiles; nonnegative integer | LDAK region flank for promoter annotations. |
+| `ldak.flank_bp` | Legacy common fallback | Used only when a node-specific flank is absent. Do not use in new profiles. |
+| `ldak.promoter_interval_mode` | Fallback `gene_body`; values `gene_body`, `strand_aware_tss` | Chooses NCBI gene-body intervals or one-base strand-aware TSS anchors. Current profiles use `strand_aware_tss`. |
+| `ldak.result_dirs.enhancer` | Fallback `enhancer` | Safe subdirectory below `LDAK/results`; change it when results are scientifically incompatible. |
+| `ldak.result_dirs.promoter` | Fallback `promoter` | Equivalent promoter-result subdirectory. |
+| `ldak.annotation_tissues.jeme` | Fallback `ALL`; currently only `ALL` | Source universe for LDAK annotations. Tissue-restricted annotation preparation is not implemented. |
+| `ldak.annotation_tissues.hic` | Fallback `ALL`; currently only `ALL` when HiC enabled | HiC annotation universe. Selected tissues still restrict network edges. |
+| `ldak.annotation_tissues.jeme_method` | Fallback `lasso` | JEME method used for the all-tissue annotation universe. |
+| `ldak.power` | Runtime-required numeric | Passed to LDAK `--power`; current examples use `-0.25`. |
+| `ldak.pruning` | Runtime-required numeric | Passed to `--gene-prune`; current examples use `0.95`. |
+| `ldak.permutations` | Required nonnegative integer | Passed to `--gene-permutations`; current examples use `10`. |
+| `ldak.threads` | Required positive integer | Default thread count in generated LDAK scripts; current examples use `8`. |
+| `ldak.ignore_weights` | Required boolean | Emits LDAK `--ignore-weights YES/NO`. |
+| `ldak.allow_ambiguous` | Required boolean | Emits LDAK `--allow-ambiguous YES/NO`. |
+
+`prepare_ldak_annotations()`, `generate_ldak_jobs()`, `run_ldak()` and
+`validate_ldak_results()` are the main consumers. LDAK result reuse is guarded
+by input/configuration fingerprints. A symbolic-link result directory is never
+used as a write target.
+
+## Score conversion
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `scores.pvalue_column` | Required string | Column read from LDAK output, normally `LRT_P_Perm`. |
+| `scores.transform` | Required; only `neg_log10` | Node score is `-log10(p)`. |
+| `scores.infinite_score_cap` | Fallback `null`, or positive number | Replaces positive infinity from `p = 0`. With `null`, the cap is one above the largest finite score, or 1 when none is finite. |
+
+These values are consumed by `summarize_analysis_ldak_results()` and
+`build_hhotnet_networks()`. P-values outside `[0, 1]` are rejected.
+
+## Network construction
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `networks.available` | Legacy fallback to `selected` | Complete buildable set; unique subset of `network_1` through `network_4`. |
+| `networks.selected` | Required nonempty list | Default set used when a function receives no explicit `networks` argument. Must be a subset of `available`. |
+| `networks.regulatory_edge_filter` | Required; `current` or `legacy_filter_network_ldak` | `current` removes incomplete edges and exact duplicates before score/node filtering. The legacy mode preserves historical row behavior. |
+| `networks.node_order` | Required; `score_descending` or `legacy_input` | Controls numeric node IDs written for HHN. Gene membership and scores are unchanged, but file order and IDs differ. |
+| `networks.preserve_self_loops` | Fallback `true` | Keeps or removes regulatory and interaction self-loops before graph creation. |
+| `networks.deduplicate_jeme_edges_before_harmonization` | Required boolean | If true, collapses duplicate enhancer--promoter JEME rows before harmonization. |
+| `networks.split_multi_promoter_edges` | Required boolean | Splits semicolon-delimited promoter targets into separate edges. |
+| `networks.preserve_duplicate_edges_during_aracne` | Conditional boolean | ARACNe-only compatibility policy for duplicate augmented edges. |
+| `networks.thresholds.small_regulatory_score` | Required nonnegative number | Network 1 retains regulatory components whose maximum node score meets this cutoff; Network 3 starts from that graph. Current example: `4`. |
+| `.broad_regulatory_score` | Required nonnegative number | Equivalent cutoff for Networks 2/4. Current example: `3`. |
+| `.small_plus_aracne_mi` | ARACNe-only required nonnegative number | Minimum MI for ARACNe edges added to Network 1 to form Network 3. Current example: `0.3`. |
+| `.broad_plus_aracne_mi` | ARACNe-only required nonnegative number | Minimum MI for ARACNe edges added to Network 2 to form Network 4. Current example: `0.65`. |
+
+For STRINGdb, Networks 3/4 instead use the single STRING score threshold. For
+`none`, advertise only Networks 1/2. `available_networks()` and
+`resolve_networks()` expose the resolved sets; `build_hhotnet_networks()` writes
+the graphs, index tables, scores and audit summaries.
+
+## Hierarchical HotNet
+
+| Key | Requirement or fallback | Effect and related code |
+|---|---|---|
+| `hhotnet.analysis_mode` | Fallback `permutation`; `permutation` or `manual_delta` | Standard permutation inference, or observed hierarchy with user-selected delta cuts. `manual_delta` requires `local_python`. |
+| `hhotnet.execution_mode` | Fallback `apptainer`; `apptainer` or `local_python` | Selects the HHN runtime used by generated scripts. |
+| `hhotnet.local_dir` | Required for `local_python` | Hierarchical HotNet checkout containing `src/`. |
+| `hhotnet.python_executable` | Fallback `python3` | Python command for local execution. |
+| `hhotnet.compat_dir` | Fallback `hHotnet/compat` below the analysis output | Python compatibility shim directory. A relative explicit path resolves from `project.root`. |
+| `hhotnet.apptainer_image` | Runtime-required for `apptainer` | Container image. It may remain as unused metadata in a local-Python profile. |
+| `hhotnet.score_name` | Runtime-required; related readers fall back to `nodes_all` | Basename of the score table and part of HHN result paths. New profiles should set it explicitly to `nodes_all`. |
+| `hhotnet.num_permutations` | Required nonnegative integer | Number of score/hierarchy permutations in standard mode. Manual-delta mode stops before permutations. |
+| `hhotnet.permutation_seed` | Fallback `0`; nonnegative integer | Base seed for score permutations. |
+| `hhotnet.lower_size_bound` | Required positive integer | Minimum cluster size supplied to permutation hierarchy processing. |
+| `hhotnet.cpus` | Required positive integer | Parallelism for HHN jobs and generated Slurm CPU request. |
+| `hhotnet.delta_values` | Fallback `[0.05, 0.1, 0.2, 0.5]` in `run_analysis()` | Manual-delta cuts of the observed hierarchy. They are exploratory and have no permutation significance. |
+
+The main consumers are `generate_hhotnet_job()`, `run_hhotnet()`,
+`extract_hhotnet_delta_clusters()`, `summarize_hhotnet_results()` and
+`export_hhotnet_graphs()`. Environment variables beginning `HHOTNET_` can
+override selected generated-script values; they are included in reuse
+fingerprints.
+
+## Slurm and optional reference comparisons
+
+| Key | Fallback | Effect and related code |
+|---|---|---|
+| `slurm.time` | LDAK `12:00:00`; HHN `72:00:00` | Generated `#SBATCH --time`. The current examples explicitly use `12:00:00` for both. |
+| `slurm.memory` | LDAK `16G` | LDAK generated memory request. The HHN generator does not currently emit a memory directive. |
+| `slurm.partition` | `general-compute` | Generated partition for both job types. |
+| `slurm.qos` | `general-compute` | Generated QoS for both job types. |
+| `validation.reference_ldak_dir` | `null` | Optional read-only historical result root used by LDAK comparison helpers. It does not validate routine runs automatically. |
+| `validation.reference_hhotnet_dir` | `null` | Optional read-only historical `hHotnet` root used by `compare_hhotnet_networks()`. |
+
+Slurm keys affect generated scripts, not statistical results, except that CPU
+settings can affect runtime. Submission remains a user/cluster operation;
+`hotnetR2` does not call `sbatch` automatically.
+
+## Functions related to configuration
+
+| Function | Role |
+|---|---|
+| `read_analysis_config()` | Reads YAML, applies limited compatibility normalization, validates it, and resolves root/cache metadata. |
+| `check_analysis_inputs()` | Reports whether required files for the chosen backend exist. |
+| `analysis_paths()` | Returns guarded analysis-local output directories. |
+| `setup_analysis()` | Creates the output structure and records configuration/provenance. |
+| `write_effective_config()` | Writes resolved roots, paths and network sets to `metadata/effective_analysis.yaml`. It does not currently materialize every fallback value. |
+| `available_networks()` / `resolve_networks()` | Resolve the advertised and default network sets. |
+| `prepare_ldak_annotations()` | Consumes reference, regulatory, harmonization, MHC and LDAK interval settings. |
+| `classify_enhancers()` | Consumes the optional enhancer-classification policy. |
+| `generate_ldak_jobs()` / `run_ldak()` | Consume GWAS, LD, LDAK, analysis seed and Slurm settings. |
+| `summarize_analysis_ldak_results()` | Converts LDAK outputs into enhancer/promoter score tables and creates the all-tissue JEME long enhancer report. |
+| `create_enhancer_ldak_long_summary()` | Recreates `enhancer_ldak_long.tsv.gz` from an existing enhancer summary and JEME cache without rerunning LDAK. |
+| `build_hhotnet_networks()` | Consumes source, score, backend and network policies. |
+| `generate_hhotnet_job()` / `run_hhotnet()` | Consume runtime, permutation and Slurm settings. |
+| `extract_hhotnet_delta_clusters()` | Applies manual delta values to an observed hierarchy. |
+| `run_analysis()` | Runs selected stages in order; it does not automatically suppress `classification` when disabled. |
+
+The low-level validator is intentionally internal. Calling
+`read_analysis_config()` is the supported validation interface.
+
+## Change impact: what must be regenerated
+
+| Changed setting | Earliest affected stage | Regenerate downstream |
+|---|---|---|
+| Assembly, NCBI table, JEME/HiC selection, harmonization, MHC, overlap filter, annotation tissue universe | `annotations` | Classification if used, LDAK, scores, networks, HHN, exports |
+| Enhancer-class flanks/window/retention | `classification` | Enhancer LDAK, scores, networks, HHN, exports |
+| LDAK flank, model, pruning, permutations, ambiguity policy, GWAS or LD input | `ldak` | Scores, networks, HHN, exports |
+| Score p-value column or infinity cap | `scores` | Networks, HHN, exports |
+| Regulatory thresholds, edge policies, node order, ARACNe/STRING backend or thresholds | `networks` | HHN and exports |
+| HHN runtime, permutation count/seed, lower bound or analysis mode | `hotnet` | HHN results and exports |
+| Manual `delta_values` only | `exports` after a valid observed hierarchy | Manual-delta tables and graph exports |
+| Slurm scheduling fields only | job generation | Regenerate scripts; scientific inputs are unchanged |
+
+For any scientific change, use a new analysis directory/name and new result
+subdirectories. Do not reinterpret old artifacts under an edited YAML file.
+
+## Compatibility and future schema cleanup
+
+The following are candidates for a later schema revision:
+
+- remove implicit ARACNe selection and require `interaction_network.type`;
+- remove `ldak.flank_bp` and `enhancer_classification.gene_node_flank_bp`;
+- either implement or remove `resources.profile`, `analysis.label`,
+  `regulatory.jeme.label`, `enhancer_classification.source_analysis` and
+  `enhancer_classification.retain_non_enhancer_edges`;
+- enforce runtime-required `analysis.random_seed`, `reference.ncbi_feature_table`,
+  `ldak.power`, `ldak.pruning`, `hhotnet.score_name` and the mode-specific
+  `hhotnet.apptainer_image` during initial validation;
+- materialize all effective fallback values, not only paths and network sets,
+  in the provenance YAML;
+- introduce a new `schema_version` when a removal or changed default would make
+  the same YAML produce a different analysis.
+
+Until such a versioned change is made, do not silently alter the fallbacks in
+this document. Add a validator regression test, update both installed example
+YAML files where relevant, record the decision in `PROJECT_SPEC.md` and
+`NEWS.md`, and describe whether existing analyses must be regenerated.

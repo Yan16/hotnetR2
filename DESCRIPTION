@@ -1,6 +1,6 @@
 Package: hotnetR2
 Title: Reproducible Regulatory Network Analyses with LDAK and HotNet
-Version: 0.2.1
+Version: 0.2.3
 Authors@R: person("Yan", "Li", email = "yan.li@roswellpark.org", role = c("aut", "cre"))
 Description: Data preparation, identifier harmonization, regional association
     scores, and hierarchical HotNet workflows. Integrates tissue-specific

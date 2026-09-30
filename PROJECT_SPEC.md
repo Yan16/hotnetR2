@@ -1,7 +1,7 @@
 # hotnetR2 — current specification and decision ledger
 
 Audit date: 2026-09-28. Runtime baseline: **0.0.7, a722b47** (clean source at
-audit start); current source version: **0.2.1**. This document describes
+audit start); current source version: **0.2.3**. This document describes
 accepted/current behavior, not a proposal to change science. Documentation and
 version commits do not change the frozen 0.0.7 runtime baseline.
 Read with `KNOWN_ISSUES.md`, `CHANGELOG.md`, and the sibling
@@ -47,6 +47,7 @@ Source map (paths relative to package):
 | Download/cache readers | `R/download_JEME.R`, `download_HiC.R`, `download_GTEx.R`, `JEME_access.R`, `data.R` |
 | Setup and harmonization resources | `R/setup.R`, `harmonization_setup.R`, `inst/scripts/setup_data.R`, `inst/scripts/harmonization/` |
 | Configuration, validation, paths | `R/workflow_config.R` |
+| User-facing schema reference | `vignettes/analysis-yaml-reference.Rmd` |
 | Portable bundles and historical templates | `R/resources.R`, `inst/extdata/v2.yaml`, `v3.yaml` |
 | Annotation coordinates and source harmonization | `R/workflow_ldak_annotations.R`, other harmonization helpers in `R/` |
 | Source enablement/filtering | `R/workflow_sources.R`, `hic_jeme_overlap.R` |
@@ -156,6 +157,7 @@ duplicates and reference bounds. Changing duplicate selection changes coordinate
 | P24 | HHN hierarchy construction restricts to a largest SCC when needed. Not every input-network node must be in reported clusters. | local HHN `construct_hierarchy.py`; v6 network4: 2391 graph nodes, 1732 hierarchy members. |
 | P25 | Interaction backends are explicit. Omitted `interaction_network.type` preserves legacy ARACNe selection. With `type: stringdb`, Network3/4 augment Network1/2 using cached human STRING v12 interactions with `combined_score >= 700` for the current profile. Only already-present `promoter_gene` nodes may map; no enhancers or new endpoints are introduced. Multiple genes for one STRING ID resolve by shortest name then lexical order and are audited. STRING loops, duplicate gene pairs and pairs already present in the base graph are not added, so existing regulatory edges and sources remain intact. | `stringdb_workflow.R`, `test-stringdb-workflow.R`; cache download is an explicit setup action, never an analysis side effect. |
 | P26 | Documentation and new analysis templates use the corrected E092/Gastric TSS profile: NCBI GRCh37 strand-aware TSS anchors, 0-based half-open intervals, no enhancer-class exclusion, all-tissue JEME ENSG mapping, selected-tissue JEME/HiC edges and current curated aliases. v6/v7 remain references for four-network orchestration and permutation/manual-delta modes, not exact corrected-coordinate or refreshed-alias baselines. | `vignettes/`, `inst/extdata/vignette_examples/`, example tests. Gene-body/gene-window plus enhancer-class exclusion is a separately named historical alternative; original analysis2 and early intermediates are obsolete templates. |
+| P27 | LDAK summarization also creates `enhancer_ldak_long.tsv.gz` by left-expanding the standardized enhancer table over distinct all-tissue JEME enhancer--target associations. It preserves raw JEME `promoterFull` and `ENSG`, adds the configured-harmonized `promoter` plus tissue metadata, and retains non-JEME enhancers with missing target fields. | `create_enhancer_ldak_long_summary()`, summary tests and real-cache test. This is an additive report and never reruns or changes LDAK statistics. |
 
 Key API contract:
 
@@ -202,7 +204,9 @@ universal defaults for values merely present in an example template.
   not portable configuration.
 - Standard summaries: `enhancer_ldak.tsv.gz`, `promoter_ldak.tsv.gz`; fields
   include raw LDAK statistics, gene/region name, node_type, cohort, flank and
-  annotations. Network data: headerless contiguous 1-based index and two-column
+  annotations. `enhancer_ldak_long.tsv.gz` repeats those enhancer fields for
+  each unique JEME `promoterFull`/`ENSG`/promoter/tissue association and retains
+  unmatched enhancers with missing JEME fields. Network data: headerless contiguous 1-based index and two-column
   integer edge list; named score TSV; full node/edge tables retain attributes.
 - STRINGdb profiles additionally write `stringdb_mapping.tsv`,
   `stringdb_mapping_conflicts.tsv`, `stringdb_summary.tsv` and

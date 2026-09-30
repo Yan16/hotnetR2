@@ -31,6 +31,128 @@ ldak_summary_specs <- function(config) {
   )
 }
 
+enhancer_ldak_long_file <- function(config) {
+  file.path(analysis_paths(config)[["ldak_summary"]], "enhancer_ldak_long.tsv.gz")
+}
+
+jeme_long_target_table <- function(config) {
+  method <- config$ldak$annotation_tissues$jeme_method %||%
+    config$regulatory$jeme$method %||% "lasso"
+  if (!method %in% c("lasso", "elasticnet")) {
+    stop("Unsupported JEME method for enhancer long summary: ", method, call. = FALSE)
+  }
+
+  jeme <- get_jeme(method = method, simplified = TRUE, cache_dir = config$cache_dir)
+  required <- c("enhancer", "promoterFull", "ENSG", "promoter", "nfile")
+  missing <- setdiff(required, names(jeme))
+  if (length(missing)) {
+    stop("JEME data lack long-summary column(s): ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+
+  harmonization <- config$regulatory$promoter_harmonization %||% list()
+  if (isTRUE(harmonization$enabled %||% FALSE) &&
+      isTRUE(harmonization$jeme %||% TRUE)) {
+    gtf_file <- resolve_config_path(harmonization$gtf_file, config$project_root)
+    if (!file.exists(gtf_file)) {
+      stop("Missing JEME GENCODE mapping: ", gtf_file, call. = FALSE)
+    }
+    mapping <- build_all_tissue_jeme_ensg_map(jeme, readRDS(gtf_file))
+    jeme <- apply_all_tissue_jeme_ensg_map(jeme, mapping)
+  }
+
+  key_env <- new.env(parent = emptyenv())
+  utils::data("key_tissues_jeme", package = "hotnetR2", envir = key_env)
+  keys <- key_env$key_tissues_jeme
+  if (is.null(keys)) stop("Internal dataset key_tissues_jeme not found", call. = FALSE)
+  key_required <- c("file", "nfile", "tiss", "desc1", "desc2")
+  key_missing <- setdiff(key_required, names(keys))
+  if (length(key_missing)) {
+    stop("JEME tissue key lacks: ", paste(key_missing, collapse = ", "), call. = FALSE)
+  }
+  keys <- keys[grepl(paste0("^", method, "[.]"), keys$file), key_required, drop = FALSE]
+  keys$nfile <- as.character(keys$nfile)
+  assert_unique_key(keys, "nfile", paste0(method, " JEME tissue key"))
+  metadata <- dplyr::transmute(
+    keys,
+    nfile = .data$nfile,
+    tissue = as.character(.data$tiss),
+    tissue_name = dplyr::coalesce(as.character(.data$desc2), as.character(.data$desc1))
+  )
+
+  targets <- dplyr::transmute(
+    jeme,
+    enhancer = trimws(as.character(.data$enhancer)),
+    promoterFull = trimws(as.character(.data$promoterFull)),
+    ENSG = trimws(as.character(.data$ENSG)),
+    promoter = trimws(as.character(.data$promoter)),
+    nfile = as.character(.data$nfile)
+  ) |>
+    dplyr::filter(
+      !is.na(.data$enhancer), nzchar(.data$enhancer),
+      !is.na(.data$promoter), nzchar(.data$promoter)
+    ) |>
+    dplyr::left_join(metadata, by = "nfile", relationship = "many-to-one")
+  if (any(is.na(targets$tissue) | !nzchar(targets$tissue))) {
+    missing_ids <- sort(unique(targets$nfile[is.na(targets$tissue) | !nzchar(targets$tissue)]))
+    stop("JEME tissue metadata missing for nfile: ",
+         paste(utils::head(missing_ids, 10L), collapse = ", "), call. = FALSE)
+  }
+  targets |>
+    dplyr::select("enhancer", "promoterFull", "ENSG", "promoter", "tissue", "tissue_name") |>
+    dplyr::distinct() |>
+    dplyr::arrange(.data$enhancer, .data$tissue, .data$promoter)
+}
+
+#' Create a long enhancer LDAK summary with JEME targets
+#'
+#' Expands the existing `enhancer_ldak.tsv.gz` table to one row for every unique
+#' enhancer--promoter--tissue association found across all configured JEME
+#' files. Enhancers without a JEME association, including HiC-only enhancers,
+#' remain as one row with missing `promoterFull`, `ENSG`, `promoter`, `tissue`,
+#' and `tissue_name`. `promoterFull` and `ENSG` retain the raw JEME target
+#' identifiers; `promoter` uses the analysis JEME harmonization policy when it
+#' is enabled.
+#'
+#' The output filename is `enhancer_ldak_long.tsv.gz`.
+#'
+#' @param config Configuration returned by [read_analysis_config()].
+#' @return Normalized path to the written long-format gzip TSV.
+#' @export
+create_enhancer_ldak_long_summary <- function(config) {
+  if (!requireNamespace("dplyr", quietly = TRUE) || !requireNamespace("readr", quietly = TRUE)) {
+    stop("Enhancer long-summary creation requires dplyr and readr", call. = FALSE)
+  }
+  input_file <- ldak_summary_specs(config)$enhancer$output_file
+  if (!file.exists(input_file)) {
+    stop("Missing standardized enhancer LDAK summary: ", input_file, call. = FALSE)
+  }
+  enhancer <- readr::read_tsv(input_file, show_col_types = FALSE, progress = FALSE)
+  if (!"Gene_Name" %in% names(enhancer)) {
+    stop("Enhancer LDAK summary lacks Gene_Name: ", input_file, call. = FALSE)
+  }
+  assert_unique_key(enhancer, "Gene_Name", "standardized enhancer LDAK summary")
+  added <- c("promoterFull", "ENSG", "promoter", "tissue", "tissue_name")
+  collisions <- intersect(added, names(enhancer))
+  if (length(collisions)) {
+    stop("Enhancer LDAK summary already contains long-format column(s): ",
+         paste(collisions, collapse = ", "), call. = FALSE)
+  }
+
+  targets <- jeme_long_target_table(config)
+  long <- enhancer |>
+    dplyr::mutate(.summary_order = dplyr::row_number()) |>
+    dplyr::left_join(targets, by = c("Gene_Name" = "enhancer"),
+                     relationship = "one-to-many") |>
+    dplyr::arrange(.data$.summary_order, .data$tissue, .data$promoter) |>
+    dplyr::select(-".summary_order")
+
+  output_file <- enhancer_ldak_long_file(config)
+  dir.create(dirname(output_file), recursive = TRUE, showWarnings = FALSE)
+  readr::write_tsv(long, output_file, na = "NA")
+  normalizePath(output_file, mustWork = TRUE)
+}
+
 summarize_one_ldak_result <- function(config, node_type, spec) {
   reml_file <- file.path(spec$result_dir, "remls.all")
   if (!file.exists(reml_file)) stop("Missing ", node_type, " LDAK result: ", reml_file, call. = FALSE)
@@ -97,7 +219,10 @@ summarize_analysis_ldak_results <- function(config, dry_run = TRUE) {
     stop("LDAK summarization requires dplyr and readr", call. = FALSE)
   }
   specs <- ldak_summary_specs(config)
-  output_paths <- vapply(specs, `[[`, character(1), "output_file")
+  output_paths <- c(
+    vapply(specs, `[[`, character(1), "output_file"),
+    enhancer_long = enhancer_ldak_long_file(config)
+  )
   if (isTRUE(dry_run)) return(output_paths)
 
   paths <- analysis_paths(config)
@@ -109,11 +234,12 @@ summarize_analysis_ldak_results <- function(config, dry_run = TRUE) {
   for (node_type in names(results)) {
     readr::write_tsv(results[[node_type]]$data, specs[[node_type]]$output_file, na = "NA")
   }
+  create_enhancer_ldak_long_summary(config)
   report <- data.frame(
     node_type = names(results),
     reml_rows = vapply(results, `[[`, numeric(1), "reml_rows"),
     unmatched_annotations = vapply(results, `[[`, numeric(1), "unmatched_annotations"),
-    output_file = unname(output_paths),
+    output_file = unname(output_paths[names(results)]),
     stringsAsFactors = FALSE
   )
   readr::write_tsv(report, file.path(paths[["ldak_summary"]], "summary_manifest.tsv"))
