@@ -16,7 +16,7 @@ should copy the validated examples in
 `system.file("extdata", "vignette_examples", package = "hotnetR2")`, not a
 historical result folder.
 
-**Status: current package release 0.2.3; complete clean-machine reproduction is
+**Status: current package release 0.2.4; complete clean-machine reproduction is
 not yet certified.** No existing analysis is modified. Historical v2/v3 and
 v6/v7 behavior is retained only where the specification explicitly requires it.
 

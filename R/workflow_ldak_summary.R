@@ -50,6 +50,10 @@ jeme_long_target_table <- function(config) {
          call. = FALSE)
   }
 
+  # Preserve the source JEME promoter label before optional ENSG-based
+  # harmonization replaces `promoter` with the canonical analysis symbol.
+  jeme$original_promoter <- trimws(as.character(jeme$promoter))
+
   harmonization <- config$regulatory$promoter_harmonization %||% list()
   if (isTRUE(harmonization$enabled %||% FALSE) &&
       isTRUE(harmonization$jeme %||% TRUE)) {
@@ -85,6 +89,7 @@ jeme_long_target_table <- function(config) {
     enhancer = trimws(as.character(.data$enhancer)),
     promoterFull = trimws(as.character(.data$promoterFull)),
     ENSG = trimws(as.character(.data$ENSG)),
+    original_promoter = .data$original_promoter,
     promoter = trimws(as.character(.data$promoter)),
     nfile = as.character(.data$nfile)
   ) |>
@@ -99,9 +104,48 @@ jeme_long_target_table <- function(config) {
          paste(utils::head(missing_ids, 10L), collapse = ", "), call. = FALSE)
   }
   targets |>
-    dplyr::select("enhancer", "promoterFull", "ENSG", "promoter", "tissue", "tissue_name") |>
+    dplyr::select("enhancer", "promoterFull", "ENSG", "original_promoter",
+                  "promoter", "tissue", "tissue_name") |>
     dplyr::distinct() |>
     dplyr::arrange(.data$enhancer, .data$tissue, .data$promoter)
+}
+
+collapse_original_promoters <- function(x) {
+  values <- sort(unique(trimws(as.character(x))))
+  values <- values[!is.na(values) & nzchar(values)]
+  if (length(values)) paste(values, collapse = ";") else NA_character_
+}
+
+upgrade_enhancer_ldak_summary <- function(enhancer, targets, input_file) {
+  if (!"Gene_Name" %in% names(enhancer)) {
+    stop("Enhancer LDAK summary lacks Gene_Name: ", input_file, call. = FALSE)
+  }
+  assert_unique_key(enhancer, "Gene_Name", "standardized enhancer LDAK summary")
+
+  if ("gene" %in% names(enhancer)) {
+    legacy_gene <- as.character(enhancer$gene)
+    canonical_gene <- as.character(enhancer$Gene_Name)
+    mismatch <- xor(is.na(legacy_gene), is.na(canonical_gene)) |
+      (!is.na(legacy_gene) & !is.na(canonical_gene) & legacy_gene != canonical_gene)
+    if (any(mismatch, na.rm = TRUE)) {
+      stop("Legacy gene column disagrees with Gene_Name in enhancer LDAK summary: ",
+           input_file, call. = FALSE)
+    }
+    enhancer <- dplyr::select(enhancer, -"gene")
+  }
+  if ("original_promoter" %in% names(enhancer)) {
+    enhancer <- dplyr::select(enhancer, -"original_promoter")
+  }
+
+  original_promoters <- targets |>
+    dplyr::summarise(
+      original_promoter = collapse_original_promoters(.data$original_promoter),
+      .by = "enhancer"
+    )
+  enhancer |>
+    dplyr::left_join(original_promoters, by = c("Gene_Name" = "enhancer"),
+                     relationship = "one-to-one") |>
+    dplyr::relocate("original_promoter", .after = "Gene_Name")
 }
 
 #' Create a long enhancer LDAK summary with JEME targets
@@ -109,10 +153,13 @@ jeme_long_target_table <- function(config) {
 #' Expands the existing `enhancer_ldak.tsv.gz` table to one row for every unique
 #' enhancer--promoter--tissue association found across all configured JEME
 #' files. Enhancers without a JEME association, including HiC-only enhancers,
-#' remain as one row with missing `promoterFull`, `ENSG`, `promoter`, `tissue`,
-#' and `tissue_name`. `promoterFull` and `ENSG` retain the raw JEME target
-#' identifiers; `promoter` uses the analysis JEME harmonization policy when it
-#' is enabled.
+#' remain as one row with missing JEME target fields. `promoterFull`, `ENSG`,
+#' and `original_promoter` retain raw JEME identifiers; `promoter` uses the
+#' analysis JEME harmonization policy when it is enabled. The function also
+#' upgrades `enhancer_ldak.tsv.gz` in place: `Gene_Name` is the sole node
+#' identifier, the deprecated duplicate `gene` column is removed, and
+#' `original_promoter` contains sorted distinct raw promoter labels collapsed
+#' with semicolons for each enhancer.
 #'
 #' The output filename is `enhancer_ldak_long.tsv.gz`.
 #'
@@ -128,10 +175,6 @@ create_enhancer_ldak_long_summary <- function(config) {
     stop("Missing standardized enhancer LDAK summary: ", input_file, call. = FALSE)
   }
   enhancer <- readr::read_tsv(input_file, show_col_types = FALSE, progress = FALSE)
-  if (!"Gene_Name" %in% names(enhancer)) {
-    stop("Enhancer LDAK summary lacks Gene_Name: ", input_file, call. = FALSE)
-  }
-  assert_unique_key(enhancer, "Gene_Name", "standardized enhancer LDAK summary")
   added <- c("promoterFull", "ENSG", "promoter", "tissue", "tissue_name")
   collisions <- intersect(added, names(enhancer))
   if (length(collisions)) {
@@ -140,7 +183,10 @@ create_enhancer_ldak_long_summary <- function(config) {
   }
 
   targets <- jeme_long_target_table(config)
+  enhancer <- upgrade_enhancer_ldak_summary(enhancer, targets, input_file)
+  readr::write_tsv(enhancer, input_file, na = "NA")
   long <- enhancer |>
+    dplyr::select(-"original_promoter") |>
     dplyr::mutate(.summary_order = dplyr::row_number()) |>
     dplyr::left_join(targets, by = c("Gene_Name" = "enhancer"),
                      relationship = "one-to-many") |>
@@ -195,7 +241,6 @@ summarize_one_ldak_result <- function(config, node_type, spec) {
   summary <- dplyr::left_join(result, details, by = "Gene_Name") |>
     dplyr::mutate(
       FDR = stats::p.adjust(.data[[config$scores$pvalue_column]], method = "fdr"),
-      gene = .data$Gene_Name,
       node_type = node_type,
       cohort = config$gwas$dataset,
       flank = flank_value
@@ -206,9 +251,11 @@ summarize_one_ldak_result <- function(config, node_type, spec) {
 
 #' Summarize enhancer and promoter LDAK results
 #'
-#' Standardized tables retain LDAK's `SE` when present and always provide `SD`
-#' for compatibility with the established h-HotNet score tables. Joins require
-#' unique identifiers and report any LDAK rows without annotation provenance.
+#' Standardized tables use `Gene_Name` as their sole node identifier, retain
+#' LDAK's `SE` when present, and always provide `SD` for compatibility with the
+#' established h-HotNet score tables. The enhancer table also records raw JEME
+#' promoter labels in `original_promoter`. Joins require unique identifiers and
+#' report any LDAK rows without annotation provenance.
 #'
 #' @param config A configuration returned by [read_analysis_config()].
 #' @param dry_run If `TRUE`, return expected outputs without reading results.

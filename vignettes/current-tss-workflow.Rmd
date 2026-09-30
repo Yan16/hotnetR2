@@ -116,11 +116,15 @@ The current profile uses LDAK-GBAT [@Berrandou2023LDAK] and scores nodes as
 `-log10(LRT_P_Perm)`. With a configured infinity cap, positive infinity becomes
 the maximum finite score plus one. P-values outside `[0,1]` are invalid.
 
-The long enhancer table adds raw JEME `promoterFull` and `ENSG`, then the
-harmonized `promoter`, `tissue` (for example `E092`) and `tissue_name` (for
-example `Fetal Stomach`). It retains HiC-only enhancers with missing JEME
-fields. For a completed analysis, recreate only this additive report without
-running LDAK:
+Standard summaries use `Gene_Name` as their sole node identifier; the former
+duplicate `gene` column is not written. The standard enhancer table adds
+`original_promoter`, collapsing sorted distinct raw JEME promoter labels with
+semicolons for each enhancer. The long enhancer table keeps one
+`original_promoter` per association together with raw JEME `promoterFull` and
+`ENSG`, harmonized `promoter`, `tissue` (for example `E092`) and `tissue_name`
+(for example `Fetal Stomach`). It retains HiC-only enhancers with missing JEME
+fields. For a completed analysis, upgrade the standard enhancer summary and
+recreate the long report without running LDAK:
 
 ```{r enhancer-long}
 config <- hotnetR2::read_analysis_config("analysis_name/analysis.yaml")

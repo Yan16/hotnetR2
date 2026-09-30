@@ -41,7 +41,7 @@ test_that("PP-only annotations and networks exclude PO while retaining JEME and 
   expect_setequal(details$name, c("A", "B"))
   expect_false(any(grepl("HiC_PO", details$interaction_type)))
   for (kind in c("enhancer", "promoter")) {
-    readr::write_tsv(tibble::tibble(gene = if (kind == "enhancer") "chr1:100-110" else c("A", "B"),
+    readr::write_tsv(tibble::tibble(Gene_Name = if (kind == "enhancer") "chr1:100-110" else c("A", "B"),
       cohort = "test", LRT_P_Perm = 1e-6), file.path(paths[["ldak_summary"]], paste0(kind, "_ldak.tsv.gz")))
   }
   expect_no_error(build_hhotnet_networks(config, dry_run = FALSE))

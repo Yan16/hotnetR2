@@ -348,7 +348,7 @@ settings can affect runtime. Submission remains a user/cluster operation;
 | `classify_enhancers()` | Consumes the optional enhancer-classification policy. |
 | `generate_ldak_jobs()` / `run_ldak()` | Consume GWAS, LD, LDAK, analysis seed and Slurm settings. |
 | `summarize_analysis_ldak_results()` | Converts LDAK outputs into enhancer/promoter score tables and creates the all-tissue JEME long enhancer report. |
-| `create_enhancer_ldak_long_summary()` | Recreates `enhancer_ldak_long.tsv.gz` from an existing enhancer summary and JEME cache without rerunning LDAK. |
+| `create_enhancer_ldak_long_summary()` | Upgrades the existing enhancer summary to the `Gene_Name`/`original_promoter` schema and recreates `enhancer_ldak_long.tsv.gz` from the JEME cache without rerunning LDAK. |
 | `build_hhotnet_networks()` | Consumes source, score, backend and network policies. |
 | `generate_hhotnet_job()` / `run_hhotnet()` | Consume runtime, permutation and Slurm settings. |
 | `extract_hhotnet_delta_clusters()` | Applies manual delta values to an observed hierarchy. |

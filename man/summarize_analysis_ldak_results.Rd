@@ -15,7 +15,9 @@ summarize_analysis_ldak_results(config, dry_run = TRUE)
 Named output paths for dry runs, or a data frame summary when run.
 }
 \description{
-Standardized tables retain LDAK's \code{SE} when present and always provide \code{SD}
-for compatibility with the established h-HotNet score tables. Joins require
-unique identifiers and report any LDAK rows without annotation provenance.
+Standardized tables use \code{Gene_Name} as their sole node identifier, retain
+LDAK's \code{SE} when present, and always provide \code{SD} for compatibility with the
+established h-HotNet score tables. The enhancer table also records raw JEME
+promoter labels in \code{original_promoter}. Joins require unique identifiers and
+report any LDAK rows without annotation provenance.
 }

@@ -1,3 +1,14 @@
+# hotnetR2 0.2.4
+
+- Make `Gene_Name` the sole public node identifier in standardized LDAK
+  summaries and migrate current network construction to read it. The redundant
+  duplicate `gene` output column is removed.
+- Preserve the pre-harmonization JEME promoter label as `original_promoter` in
+  both enhancer summaries. The standard table collapses sorted distinct labels
+  with semicolons; the long table retains one label per target/tissue row.
+- Upgrade existing `enhancer_ldak.tsv.gz` files in place when recreating the
+  long summary. A conflicting legacy `gene` alias is rejected explicitly.
+
 # hotnetR2 0.2.3
 
 - Add `create_enhancer_ldak_long_summary()` and call it from the LDAK summary

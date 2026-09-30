@@ -286,14 +286,21 @@ filter_analysis_network_ldak <- function(data, config) {
     dplyr::transmute(node = .data$gene, node_sources = .data$sources, node_key = normalise_network_node_id(.data$gene)) |>
     dplyr::filter(!is.na(.data$node), nzchar(.data$node)) |>
     dplyr::distinct()
-  enhancers <- readr::read_tsv(enhancer_file, show_col_types = FALSE, progress = FALSE) |>
-    dplyr::mutate(node_key = normalise_network_node_id(.data$gene)) |>
+  enhancer_scores <- readr::read_tsv(enhancer_file, show_col_types = FALSE, progress = FALSE)
+  promoter_scores <- readr::read_tsv(promoter_file, show_col_types = FALSE, progress = FALSE)
+  if (!"Gene_Name" %in% names(enhancer_scores) || !"Gene_Name" %in% names(promoter_scores)) {
+    stop("Standardized LDAK summaries must contain Gene_Name", call. = FALSE)
+  }
+  enhancers <- enhancer_scores |>
+    dplyr::mutate(node_key = normalise_network_node_id(.data$Gene_Name)) |>
     dplyr::inner_join(enhancer_nodes, by = "node_key") |>
-    dplyr::select(-"node_key")
-  promoters <- readr::read_tsv(promoter_file, show_col_types = FALSE, progress = FALSE) |>
-    dplyr::mutate(node_key = normalise_network_node_id(.data$gene)) |>
+    dplyr::select(-"node_key") |>
+    dplyr::rename(gene = "Gene_Name")
+  promoters <- promoter_scores |>
+    dplyr::mutate(node_key = normalise_network_node_id(.data$Gene_Name)) |>
     dplyr::inner_join(promoter_nodes, by = "node_key") |>
-    dplyr::select(-"node_key")
+    dplyr::select(-"node_key") |>
+    dplyr::rename(gene = "Gene_Name")
   list(
     enhancers = enhancers, promoters = promoters,
     unmatched_enhancers = dplyr::anti_join(enhancer_nodes, dplyr::mutate(enhancers, node_key = normalise_network_node_id(.data$gene)), by = "node_key"),

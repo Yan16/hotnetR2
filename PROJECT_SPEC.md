@@ -1,7 +1,7 @@
 # hotnetR2 — current specification and decision ledger
 
 Audit date: 2026-09-28. Runtime baseline: **0.0.7, a722b47** (clean source at
-audit start); current source version: **0.2.3**. This document describes
+audit start); current source version: **0.2.4**. This document describes
 accepted/current behavior, not a proposal to change science. Documentation and
 version commits do not change the frozen 0.0.7 runtime baseline.
 Read with `KNOWN_ISSUES.md`, `CHANGELOG.md`, and the sibling
@@ -157,7 +157,8 @@ duplicates and reference bounds. Changing duplicate selection changes coordinate
 | P24 | HHN hierarchy construction restricts to a largest SCC when needed. Not every input-network node must be in reported clusters. | local HHN `construct_hierarchy.py`; v6 network4: 2391 graph nodes, 1732 hierarchy members. |
 | P25 | Interaction backends are explicit. Omitted `interaction_network.type` preserves legacy ARACNe selection. With `type: stringdb`, Network3/4 augment Network1/2 using cached human STRING v12 interactions with `combined_score >= 700` for the current profile. Only already-present `promoter_gene` nodes may map; no enhancers or new endpoints are introduced. Multiple genes for one STRING ID resolve by shortest name then lexical order and are audited. STRING loops, duplicate gene pairs and pairs already present in the base graph are not added, so existing regulatory edges and sources remain intact. | `stringdb_workflow.R`, `test-stringdb-workflow.R`; cache download is an explicit setup action, never an analysis side effect. |
 | P26 | Documentation and new analysis templates use the corrected E092/Gastric TSS profile: NCBI GRCh37 strand-aware TSS anchors, 0-based half-open intervals, no enhancer-class exclusion, all-tissue JEME ENSG mapping, selected-tissue JEME/HiC edges and current curated aliases. v6/v7 remain references for four-network orchestration and permutation/manual-delta modes, not exact corrected-coordinate or refreshed-alias baselines. | `vignettes/`, `inst/extdata/vignette_examples/`, example tests. Gene-body/gene-window plus enhancer-class exclusion is a separately named historical alternative; original analysis2 and early intermediates are obsolete templates. |
-| P27 | LDAK summarization also creates `enhancer_ldak_long.tsv.gz` by left-expanding the standardized enhancer table over distinct all-tissue JEME enhancer--target associations. It preserves raw JEME `promoterFull` and `ENSG`, adds the configured-harmonized `promoter` plus tissue metadata, and retains non-JEME enhancers with missing target fields. | `create_enhancer_ldak_long_summary()`, summary tests and real-cache test. This is an additive report and never reruns or changes LDAK statistics. |
+| P27 | LDAK summarization also creates `enhancer_ldak_long.tsv.gz` by left-expanding the standardized enhancer table over distinct all-tissue JEME enhancer--target associations. It preserves raw JEME `promoterFull`, `ENSG`, and `original_promoter`, adds the configured-harmonized `promoter` plus tissue metadata, and retains non-JEME enhancers with missing target fields. The standard enhancer table stores sorted distinct raw promoter labels collapsed with `;`. | `create_enhancer_ldak_long_summary()`, summary tests and real-cache test. The updater also upgrades an existing standard enhancer summary without rerunning or changing LDAK statistics. |
+| P28 | `Gene_Name` is the sole public node identifier in standardized enhancer and promoter LDAK summaries. The redundant duplicate `gene` column is not written. Current network construction reads `Gene_Name` and only renames it to the separate internal network-node `gene` schema after summary ingestion. | `summarize_one_ldak_result()`, `create_enhancer_ldak_long_summary()`, `filter_analysis_network_ldak()` and regression tests. A legacy enhancer summary is accepted only when `gene` exactly agrees with `Gene_Name`; the updater then removes `gene`. |
 
 Key API contract:
 
@@ -203,10 +204,14 @@ universal defaults for values merely present in an example template.
   local. Shared datasets are input-only in migration. Absolute author paths are
   not portable configuration.
 - Standard summaries: `enhancer_ldak.tsv.gz`, `promoter_ldak.tsv.gz`; fields
-  include raw LDAK statistics, gene/region name, node_type, cohort, flank and
-  annotations. `enhancer_ldak_long.tsv.gz` repeats those enhancer fields for
-  each unique JEME `promoterFull`/`ENSG`/promoter/tissue association and retains
-  unmatched enhancers with missing JEME fields. Network data: headerless contiguous 1-based index and two-column
+  include raw LDAK statistics, canonical node identifier `Gene_Name`, node_type,
+  cohort, flank and annotations. The former duplicate `gene` field is absent.
+  `enhancer_ldak.tsv.gz` additionally contains `original_promoter`, with sorted
+  distinct raw JEME promoter labels collapsed by `;` per enhancer.
+  `enhancer_ldak_long.tsv.gz` repeats the enhancer fields for each unique JEME
+  `promoterFull`/`ENSG`/`original_promoter`/harmonized-promoter/tissue
+  association and retains unmatched enhancers with missing JEME fields. Network
+  data: headerless contiguous 1-based index and two-column
   integer edge list; named score TSV; full node/edge tables retain attributes.
 - STRINGdb profiles additionally write `stringdb_mapping.tsv`,
   `stringdb_mapping_conflicts.tsv`, `stringdb_summary.tsv` and

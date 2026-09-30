@@ -53,7 +53,7 @@ test_that("JEME-only annotations, classification and networks need no HiC resour
   details <- readr::read_tsv(file.path(paths[["ldak_annotations"]], "promoters.details.tsv.gz"), show_col_types = FALSE)
   expect_equal(details$source, "JEME")
   for (kind in c("enhancer", "promoter")) {
-    readr::write_tsv(tibble::tibble(gene = if (kind == "enhancer") "chr1:100-110" else "A",
+    readr::write_tsv(tibble::tibble(Gene_Name = if (kind == "enhancer") "chr1:100-110" else "A",
       cohort = "test", LRT_P_Perm = 1e-6), file.path(paths[["ldak_summary"]], paste0(kind, "_ldak.tsv.gz")))
   }
   expect_no_error(build_hhotnet_networks(config, dry_run = FALSE))

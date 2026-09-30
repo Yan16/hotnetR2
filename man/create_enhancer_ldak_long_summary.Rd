@@ -16,10 +16,13 @@ Normalized path to the written long-format gzip TSV.
 Expands the existing \code{enhancer_ldak.tsv.gz} table to one row for every unique
 enhancer--promoter--tissue association found across all configured JEME
 files. Enhancers without a JEME association, including HiC-only enhancers,
-remain as one row with missing \code{promoterFull}, \code{ENSG}, \code{promoter}, \code{tissue},
-and \code{tissue_name}. \code{promoterFull} and \code{ENSG} retain the raw JEME target
-identifiers; \code{promoter} uses the analysis JEME harmonization policy when it
-is enabled.
+remain as one row with missing JEME target fields. \code{promoterFull}, \code{ENSG},
+and \code{original_promoter} retain raw JEME identifiers; \code{promoter} uses the
+analysis JEME harmonization policy when it is enabled. The function also
+upgrades \code{enhancer_ldak.tsv.gz} in place: \code{Gene_Name} is the sole node
+identifier, the deprecated duplicate \code{gene} column is removed, and
+\code{original_promoter} contains sorted distinct raw promoter labels collapsed
+with semicolons for each enhancer.
 }
 \details{
 The output filename is \code{enhancer_ldak_long.tsv.gz}.
