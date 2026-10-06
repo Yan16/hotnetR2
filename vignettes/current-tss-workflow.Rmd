@@ -121,7 +121,8 @@ duplicate `gene` column is not written. The standard enhancer table adds
 `original_promoter`, collapsing sorted distinct raw JEME promoter labels with
 semicolons for each enhancer. The long enhancer table keeps one
 `original_promoter` per association together with raw JEME `promoterFull` and
-`ENSG`, harmonized `promoter`, `tissue` (for example `E092`) and `tissue_name`
+`ENSG`, harmonized `promoter`, source JEME `conf_score`, `tissue` (for example
+`E092`) and `tissue_name`
 (for example `Fetal Stomach`). It retains HiC-only enhancers with missing JEME
 fields. For a completed analysis, upgrade the standard enhancer summary and
 recreate the long report without running LDAK:

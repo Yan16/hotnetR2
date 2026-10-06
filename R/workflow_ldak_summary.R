@@ -43,7 +43,9 @@ jeme_long_target_table <- function(config) {
   }
 
   jeme <- get_jeme(method = method, simplified = TRUE, cache_dir = config$cache_dir)
-  required <- c("enhancer", "promoterFull", "ENSG", "promoter", "nfile")
+  required <- c(
+    "enhancer", "promoterFull", "ENSG", "promoter", "conf_score", "nfile"
+  )
   missing <- setdiff(required, names(jeme))
   if (length(missing)) {
     stop("JEME data lack long-summary column(s): ", paste(missing, collapse = ", "),
@@ -91,6 +93,7 @@ jeme_long_target_table <- function(config) {
     ENSG = trimws(as.character(.data$ENSG)),
     original_promoter = .data$original_promoter,
     promoter = trimws(as.character(.data$promoter)),
+    conf_score = as.numeric(.data$conf_score),
     nfile = as.character(.data$nfile)
   ) |>
     dplyr::filter(
@@ -103,10 +106,23 @@ jeme_long_target_table <- function(config) {
     stop("JEME tissue metadata missing for nfile: ",
          paste(utils::head(missing_ids, 10L), collapse = ", "), call. = FALSE)
   }
-  targets |>
+  if (any(!is.finite(targets$conf_score))) {
+    stop("JEME conf_score must be finite for every enhancer target association",
+         call. = FALSE)
+  }
+  targets <- targets |>
     dplyr::select("enhancer", "promoterFull", "ENSG", "original_promoter",
-                  "promoter", "tissue", "tissue_name") |>
-    dplyr::distinct() |>
+                  "promoter", "conf_score", "tissue", "tissue_name") |>
+    dplyr::distinct()
+  association_key <- c(
+    "enhancer", "promoterFull", "ENSG", "original_promoter", "promoter",
+    "tissue", "tissue_name"
+  )
+  if (anyDuplicated(targets[association_key])) {
+    stop("JEME cache has conflicting conf_score values for one target association",
+         call. = FALSE)
+  }
+  targets |>
     dplyr::arrange(.data$enhancer, .data$tissue, .data$promoter)
 }
 
@@ -155,7 +171,8 @@ upgrade_enhancer_ldak_summary <- function(enhancer, targets, input_file) {
 #' files. Enhancers without a JEME association, including HiC-only enhancers,
 #' remain as one row with missing JEME target fields. `promoterFull`, `ENSG`,
 #' and `original_promoter` retain raw JEME identifiers; `promoter` uses the
-#' analysis JEME harmonization policy when it is enabled. The function also
+#' analysis JEME harmonization policy when it is enabled, and `conf_score`
+#' retains the source JEME confidence score for that association. The function also
 #' upgrades `enhancer_ldak.tsv.gz` in place: `Gene_Name` is the sole node
 #' identifier, the deprecated duplicate `gene` column is removed, and
 #' `original_promoter` contains sorted distinct raw promoter labels collapsed
@@ -175,7 +192,9 @@ create_enhancer_ldak_long_summary <- function(config) {
     stop("Missing standardized enhancer LDAK summary: ", input_file, call. = FALSE)
   }
   enhancer <- readr::read_tsv(input_file, show_col_types = FALSE, progress = FALSE)
-  added <- c("promoterFull", "ENSG", "promoter", "tissue", "tissue_name")
+  added <- c(
+    "promoterFull", "ENSG", "promoter", "conf_score", "tissue", "tissue_name"
+  )
   collisions <- intersect(added, names(enhancer))
   if (length(collisions)) {
     stop("Enhancer LDAK summary already contains long-format column(s): ",

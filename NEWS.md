@@ -1,3 +1,10 @@
+# hotnetR2 0.2.5
+
+- Add the source JEME `conf_score` to every JEME association row in
+  `enhancer_ldak_long.tsv.gz`. HiC-only enhancer rows retain a missing value.
+- Keep `conf_score` out of the one-row-per-enhancer standard summary because it
+  is specific to an enhancer--target--tissue association.
+
 # hotnetR2 0.2.4
 
 - Make `Gene_Name` the sole public node identifier in standardized LDAK

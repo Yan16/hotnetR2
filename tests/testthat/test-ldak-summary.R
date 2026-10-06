@@ -25,6 +25,7 @@ test_that("summaries regenerate from completed LDAK files without rerunning LDAK
       enhancer = c("A", "A", "A"), promoter = c("P1", "P2", "P1"),
       promoterFull = c("ENSG000001$P1", "ENSG000002$P2", "ENSG000001$P1"),
       ENSG = c("ENSG000001", "ENSG000002", "ENSG000001"),
+      conf_score = c(0.91, 0.72, 0.91),
       nfile = c("90", "90", "90")
     )
   )
@@ -55,6 +56,7 @@ test_that("summaries regenerate from completed LDAK files without rerunning LDAK
   expect_equal(long_table$ENSG, c("ENSG000001", "ENSG000002", NA_character_))
   expect_equal(long_table$original_promoter, c("P1", "P2", NA_character_))
   expect_equal(long_table$promoter, c("P1", "P2", NA_character_))
+  expect_equal(long_table$conf_score, c(0.91, 0.72, NA_real_))
   expect_equal(long_table$tissue, c("E092", "E092", NA_character_))
   expect_equal(long_table$tissue_name, c("Fetal Stomach", "Fetal Stomach", NA_character_))
 })
@@ -74,6 +76,7 @@ test_that("enhancer long summary expands unique targets across JEME tissues", {
       promoter = c("P1", "P2", "P1", "P1", "P3"),
       promoterFull = c("ENSG000001$P1", "ENSG000002$P2", "ENSG000001$P1", "ENSG000001$P1", "ENSG000003$P3"),
       ENSG = c("ENSG000001", "ENSG000002", "ENSG000001", "ENSG000001", "ENSG000003"),
+      conf_score = c(0.91, 0.72, 0.88, 0.88, 0.65),
       nfile = c("90", "90", "92", "92", "90")
     )
   )
@@ -93,6 +96,7 @@ test_that("enhancer long summary expands unique targets across JEME tissues", {
                c("ENSG000001", "ENSG000002", "ENSG000001", NA_character_))
   expect_equal(observed$original_promoter, c("P1", "P2", "P1", NA_character_))
   expect_equal(observed$promoter, c("P1", "P2", "P1", NA_character_))
+  expect_equal(observed$conf_score, c(0.91, 0.72, 0.88, NA_real_))
   expect_equal(observed$tissue, c("E092", "E092", "E094", NA_character_))
   expect_equal(observed$tissue_name,
                c("Fetal Stomach", "Fetal Stomach", "Gastric", NA_character_))
@@ -112,13 +116,36 @@ test_that("enhancer summary rejects a conflicting legacy gene alias", {
   local_mocked_bindings(
     get_jeme = function(...) tibble::tibble(
       enhancer = "E1", promoter = "P1", promoterFull = "ENSG000001$P1",
-      ENSG = "ENSG000001", nfile = "90"
+      ENSG = "ENSG000001", conf_score = 0.91, nfile = "90"
     )
   )
 
   expect_error(
     create_enhancer_ldak_long_summary(config),
     "Legacy gene column disagrees with Gene_Name"
+  )
+})
+
+test_that("enhancer long summary rejects conflicting association scores", {
+  config <- write_network_test_config()
+  output_dir <- analysis_paths(config)[["ldak_summary"]]
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  readr::write_tsv(
+    tibble::tibble(Gene_Name = "E1", LRT_P_Perm = 0.01),
+    ldak_summary_specs(config)$enhancer$output_file
+  )
+  local_mocked_bindings(
+    get_jeme = function(...) tibble::tibble(
+      enhancer = c("E1", "E1"), promoter = c("P1", "P1"),
+      promoterFull = c("ENSG000001$P1", "ENSG000001$P1"),
+      ENSG = c("ENSG000001", "ENSG000001"),
+      conf_score = c(0.91, 0.72), nfile = c("90", "90")
+    )
+  )
+
+  expect_error(
+    create_enhancer_ldak_long_summary(config),
+    "conflicting conf_score values"
   )
 })
 
