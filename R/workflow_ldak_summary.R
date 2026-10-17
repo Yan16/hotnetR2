@@ -172,8 +172,10 @@ upgrade_enhancer_ldak_summary <- function(enhancer, targets, input_file) {
 #' remain as one row with missing JEME target fields. `promoterFull`, `ENSG`,
 #' and `original_promoter` retain raw JEME identifiers; `promoter` uses the
 #' analysis JEME harmonization policy when it is enabled, and `conf_score`
-#' retains the source JEME confidence score for that association. The function also
-#' upgrades `enhancer_ldak.tsv.gz` in place: `Gene_Name` is the sole node
+#' retains the source JEME confidence score for that association. The long
+#' output omits the annotation-level plural `tissues` column; association-level
+#' `tissue` and `tissue_name` remain. The function also upgrades
+#' `enhancer_ldak.tsv.gz` in place: `Gene_Name` is the sole node
 #' identifier, the deprecated duplicate `gene` column is removed, and
 #' `original_promoter` contains sorted distinct raw promoter labels collapsed
 #' with semicolons for each enhancer.
@@ -205,7 +207,7 @@ create_enhancer_ldak_long_summary <- function(config) {
   enhancer <- upgrade_enhancer_ldak_summary(enhancer, targets, input_file)
   readr::write_tsv(enhancer, input_file, na = "NA")
   long <- enhancer |>
-    dplyr::select(-"original_promoter") |>
+    dplyr::select(-dplyr::any_of(c("original_promoter", "tissues"))) |>
     dplyr::mutate(.summary_order = dplyr::row_number()) |>
     dplyr::left_join(targets, by = c("Gene_Name" = "enhancer"),
                      relationship = "one-to-many") |>

@@ -1,3 +1,14 @@
+# hotnetR2 0.2.6
+
+- Prefer stable JEME `tiss` codes such as `E092` when aggregating annotation
+  provenance. Consequently, the standard `enhancer_ldak.tsv.gz` `tissues`
+  column uses JEME codes instead of JEME tissue descriptions; HiC entries keep
+  their native tissue labels because HiC has no Roadmap `E###` identifier.
+
+- Omit the annotation-level plural `tissues` column from
+  `enhancer_ldak_long.tsv.gz`; retain the association-level `tissue` and
+  `tissue_name` columns and keep `tissues` in the standard enhancer summary.
+
 # hotnetR2 0.2.5
 
 - Add the source JEME `conf_score` to every JEME association row in

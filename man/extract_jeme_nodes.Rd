@@ -19,7 +19,7 @@ A named list with two elements:
 \item{\code{START}}
 \item{\code{END}}
 \item{\code{files}} (aggregated file identifiers where the enhancer appears)
-\item{\code{tissues}} (aggregated tissue descriptions)
+\item{\code{tissues}} (aggregated JEME tissue codes, such as \code{E092})
 }
 }
 \item{promoters}{A data frame of unique promoter nodes with the columns:
@@ -29,13 +29,16 @@ A named list with two elements:
 \item{\code{CHR2}}
 \item{\code{location}}
 \item{\code{files}} (aggregated file identifiers where the promoter appears)
-\item{\code{tissues}} (aggregated tissue descriptions)
+\item{\code{tissues}} (aggregated JEME tissue codes, such as \code{E092})
 }
 }
 }
 Each returned data frame contains aggregated identifier columns (\code{files}, \code{nfiles})
-and a \code{tissues} column when available. Column names reflect the conventions used
-by the input JEME data and by \code{promoter_range()} processing.
+and a \code{tissues} column when available. \code{tiss} codes are preferred over tissue
+descriptions so annotation provenance and standard LDAK summaries retain
+stable identifiers such as \code{E092}; legacy inputs without \code{tiss} fall back to
+\code{desc1}. Column names reflect the conventions used by the input JEME data and
+by \code{promoter_range()} processing.
 }
 \description{
 Extract unique enhancer and promoter nodes from JEME data

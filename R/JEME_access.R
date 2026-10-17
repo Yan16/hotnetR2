@@ -125,7 +125,7 @@ get_jeme <- function(key_column = NULL, value = NULL, method = c("lasso", "elast
 #'       \item{`START`}
 #'       \item{`END`}
 #'       \item{`files`} (aggregated file identifiers where the enhancer appears)
-#'       \item{`tissues`} (aggregated tissue descriptions)
+#'       \item{`tissues`} (aggregated JEME tissue codes, such as `E092`)
 #'     }
 #'   }
 #'   \item{promoters}{A data frame of unique promoter nodes with the columns:
@@ -135,13 +135,16 @@ get_jeme <- function(key_column = NULL, value = NULL, method = c("lasso", "elast
 #'       \item{`CHR2`}
 #'       \item{`location`}
 #'       \item{`files`} (aggregated file identifiers where the promoter appears)
-#'       \item{`tissues`} (aggregated tissue descriptions)
+#'       \item{`tissues`} (aggregated JEME tissue codes, such as `E092`)
 #'     }
 #'   }
 #' }
 #' Each returned data frame contains aggregated identifier columns (`files`, `nfiles`)
-#' and a `tissues` column when available. Column names reflect the conventions used
-#' by the input JEME data and by `promoter_range()` processing.
+#' and a `tissues` column when available. `tiss` codes are preferred over tissue
+#' descriptions so annotation provenance and standard LDAK summaries retain
+#' stable identifiers such as `E092`; legacy inputs without `tiss` fall back to
+#' `desc1`. Column names reflect the conventions used by the input JEME data and
+#' by `promoter_range()` processing.
 #' @importFrom dplyr mutate select arrange distinct case_when across .data all_of group_by summarise filter if_all bind_rows
 #' @export
 extract_jeme_nodes <- function(jeme_data) {
@@ -155,13 +158,19 @@ extract_jeme_nodes <- function(jeme_data) {
   id_cols <- c("file", "nfile")
   id_cols <- id_cols[id_cols %in% colnames(jeme_data)]
 
-  desc_col <- if ("desc1" %in% colnames(jeme_data)) "desc1" else NULL
+  tissue_col <- if ("tiss" %in% colnames(jeme_data)) {
+    "tiss"
+  } else if ("desc1" %in% colnames(jeme_data)) {
+    "desc1"
+  } else {
+    NULL
+  }
 
   # Internal helper for efficient aggregation
-  aggregate_nodes <- function(data, cols, ids, desc) {
+  aggregate_nodes <- function(data, cols, ids, tissue) {
     # 1. Select only needed columns and deduplicate rows early for efficiency
     relevant_cols <- c(cols, ids)
-    if (!is.null(desc)) relevant_cols <- c(relevant_cols, desc)
+    if (!is.null(tissue)) relevant_cols <- c(relevant_cols, tissue)
 
     data |>
       dplyr::select(dplyr::all_of(relevant_cols)) |>
@@ -170,8 +179,9 @@ extract_jeme_nodes <- function(jeme_data) {
       dplyr::summarise(
         # Aggregate multiple IDs into pluralized columns (e.g., file -> files, nfile -> nfiles)
         dplyr::across(dplyr::all_of(ids), ~ paste(unique(.x), collapse = ", "), .names = "{.col}s"),
-        # Aggregate tissues if desc exists
-        tissues = if (!is.null(desc)) paste(unique(.data[[desc]]), collapse = ", ") else NA_character_,
+        # Prefer stable JEME tissue codes; retain a description fallback for
+        # legacy inputs that do not carry `tiss`.
+        tissues = if (!is.null(tissue)) paste(unique(.data[[tissue]]), collapse = ", ") else NA_character_,
         .groups = "drop"
       ) |>
       # Final filtering for NA nodes (ensures unique keys don't contain NAs)
@@ -188,7 +198,7 @@ extract_jeme_nodes <- function(jeme_data) {
 
   # Aggregate if any columns are found
   enhancers <- if (length(available_enhancer) > 0) {
-    aggregate_nodes(jeme_data, available_enhancer, id_cols, desc_col)
+    aggregate_nodes(jeme_data, available_enhancer, id_cols, tissue_col)
   } else {
     data.frame()
   }
@@ -210,7 +220,7 @@ extract_jeme_nodes <- function(jeme_data) {
     existing_base <- promoter_base_cols[promoter_base_cols %in% colnames(jeme_data)]
 
     processed_proms <- jeme_data |>
-      dplyr::select(dplyr::all_of(c(existing_base, id_cols, desc_col))) |>
+      dplyr::select(dplyr::all_of(c(existing_base, id_cols, tissue_col))) |>
       promoter_range(source = "jeme")
 
     # 2. Identify available columns for aggregation
@@ -218,7 +228,7 @@ extract_jeme_nodes <- function(jeme_data) {
     target_promoter_cols <- c("promoterFull", "promoter", "ENSG", "CHR2", "location", "CHR", "START", "END")
     available_target <- target_promoter_cols[target_promoter_cols %in% colnames(processed_proms)]
 
-    aggregate_nodes(processed_proms, available_target, id_cols, desc_col)
+    aggregate_nodes(processed_proms, available_target, id_cols, tissue_col)
   } else {
     data.frame()
   }

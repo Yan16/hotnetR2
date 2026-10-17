@@ -4,7 +4,10 @@ write_ldak_summary_fixture <- function(config, node_type) {
   dir.create(result_dir, recursive = TRUE, showWarnings = FALSE)
   details_file <- file.path(paths[["ldak_annotations"]], paste0(node_type, "s.details.tsv.gz"))
   dir.create(dirname(details_file), recursive = TRUE, showWarnings = FALSE)
-  readr::write_tsv(data.frame(name = c("A", "B"), source = "fixture"), details_file)
+  readr::write_tsv(
+    data.frame(name = c("A", "B"), source = "fixture", tissues = c("E092", "E094")),
+    details_file
+  )
   writeLines(c(
     "Gene_Name Heritability SE LRT_P_Perm",
     "A 0.1 0.2 0.01",
@@ -49,6 +52,7 @@ test_that("summaries regenerate from completed LDAK files without rerunning LDAK
   expect_false("gene" %in% names(first_table))
   expect_false("gene" %in% names(promoter_table))
   expect_equal(first_table$original_promoter, c("P1;P2", NA_character_))
+  expect_equal(first_table$tissues, c("E092", "E094"))
   expect_equal(first_table$SD, first_table$SE)
   expect_equal(first_table$Min_Pvalue, c(0.001, 0.05))
   expect_equal(nrow(long_table), 3L)
@@ -67,7 +71,8 @@ test_that("enhancer long summary expands unique targets across JEME tissues", {
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
   readr::write_tsv(
     tibble::tibble(Gene_Name = c("E1", "E2"), gene = c("E1", "E2"),
-                   LRT_P_Perm = c(0.01, 0.2)),
+                   LRT_P_Perm = c(0.01, 0.2),
+                   tissues = c("E092;E094", "Gastric")),
     ldak_summary_specs(config)$enhancer$output_file
   )
   local_mocked_bindings(
@@ -100,8 +105,10 @@ test_that("enhancer long summary expands unique targets across JEME tissues", {
   expect_equal(observed$tissue, c("E092", "E092", "E094", NA_character_))
   expect_equal(observed$tissue_name,
                c("Fetal Stomach", "Fetal Stomach", "Gastric", NA_character_))
+  expect_false("tissues" %in% names(observed))
   expect_false("gene" %in% names(observed))
   expect_false("gene" %in% names(standard))
+  expect_equal(standard$tissues, c("E092;E094", "Gastric"))
   expect_equal(standard$original_promoter, c("P1;P2", NA_character_))
 })
 

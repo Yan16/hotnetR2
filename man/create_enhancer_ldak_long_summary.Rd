@@ -19,8 +19,10 @@ files. Enhancers without a JEME association, including HiC-only enhancers,
 remain as one row with missing JEME target fields. \code{promoterFull}, \code{ENSG},
 and \code{original_promoter} retain raw JEME identifiers; \code{promoter} uses the
 analysis JEME harmonization policy when it is enabled, and \code{conf_score}
-retains the source JEME confidence score for that association. The function also
-upgrades \code{enhancer_ldak.tsv.gz} in place: \code{Gene_Name} is the sole node
+retains the source JEME confidence score for that association. The long
+output omits the annotation-level plural \code{tissues} column; association-level
+\code{tissue} and \code{tissue_name} remain. The function also upgrades
+\code{enhancer_ldak.tsv.gz} in place: \code{Gene_Name} is the sole node
 identifier, the deprecated duplicate \code{gene} column is removed, and
 \code{original_promoter} contains sorted distinct raw promoter labels collapsed
 with semicolons for each enhancer.
