@@ -29,12 +29,14 @@ test_that("vignette analysis examples validate as current canonical profiles", {
   }
 })
 
-test_that("vignette launchers parse", {
-  examples <- system.file(
-    "extdata", "vignette_examples", package = "hotnetR2", mustWork = TRUE
-  )
-  expect_silent(parse(file.path(examples, "run_analysis.R")))
+test_that("schema-v2 dispatchers and generated launchers parse", {
+  dispatcher <- system.file("scripts", "run_analysis.R", package = "hotnetR2",
+                            mustWork = TRUE)
+  expect_silent(parse(dispatcher))
   testthat::skip_on_os("windows")
-  status <- system2("bash", c("-n", file.path(examples, "run_analysis.sh")))
-  expect_identical(status, 0L)
+  for (profile in c("local", "hpc")) {
+    script <- tempfile(fileext = ".sh")
+    writeLines(hotnetR2:::launcher_lines(profile, "0.3.0"), script)
+    expect_identical(system2("bash", c("-n", script)), 0L)
+  }
 })

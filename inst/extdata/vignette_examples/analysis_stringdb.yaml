@@ -1,83 +1,57 @@
-# Canonical corrected TSS/no-enhancer-class example with STRINGdb augmentation.
-# Replace every /path/to or MY_* placeholder before running `check`.
-schema_version: 1
-
+schema_version: 2
 analysis:
   name: analysis_E092_Gastric_STRINGdb
   label: MY_GWAS with JEME E092, Gastric HiC and STRINGdb v12
   random_seed: 12345
-
 project:
-  root: ".."
-
+  root: ..
 gwas:
   dataset: MY_GWAS
+  raw_file: GWAS/MY_GWAS/raw_gwas.tsv.gz
   summary_file: GWAS/MY_GWAS/ldak_MY_GWAS.tsv
   pvalue_file: GWAS/MY_GWAS/ldak_MY_GWAS_pvalue.tsv
   extract_file: GWAS/MY_GWAS/ldak_MY_GWAS_extract.txt
   sample_size: 50000
-
 reference:
-  ldak_exe: /path/to/ldak
   bfile_prefix: LD_ref/MY_GRCh37_REFERENCE
   genome_build: GRCh37
   annotation_genome_build: GRCh37
-  promoter_alias_file: null
-  promoter_alias_columns: {alias: alias, gene_symbol: gene_symbol}
   ncbi_feature_table: .cache/LDAK/GCF_000001405.25_GRCh37.p13_feature_table.txt.gz
-
 regulatory:
   jeme:
     key_column: tiss
     value: E092
     method: lasso
-    simplified: true
+    simplified: yes
     label: Fetal Stomach
   hic:
     tissue_type: Gastric
-    edge_types: [PO, PP]
+    edge_types:
+    - PO
+    - PP
     jeme_overlap:
-      enabled: true
+      enabled: yes
       hic_flank_bp: 1000
       jeme_flank_bp: 1000
   promoter_harmonization:
-    enabled: true
-    jeme: true
-    hic: true
-    jeme_strategy: all_tissues_ensg_map
-    hic_strategy: gene_symbol_alias
+    enabled: yes
+    jeme: yes
+    hic: yes
     gtf_file: .cache/gencode.v39.GRCh38.genes_nodup.rds
     hic_alias_file: .cache/alias_link_nodup.rds
   mhc_exclusion:
-    enabled: true
+    enabled: yes
     genome_build: hg19
     chr: 6
     start: 25000000
     end: 34000000
-
-enhancer_classification:
-  enabled: false
-  enhancer_flank_bp: 1000
-  promoter_window: strand_aware_tss
-  promoter_flank_bp: 2000
-  class1_label: enh_class1
-  class2_label: enh_class2
-  class3_label: enh_class3
-  drop_non_class1_edge_sources: []
-  retain_non_enhancer_edges: true
-
 interaction_network:
   type: STRINGdb
   stringdb:
-    version: "12.0"
+    version: '12.0'
     species: 9606
     score_threshold: 700
     cache_dir: .cache/STRINGdb
-    mapping_policy: legacy_shortest_gene_per_string_id
-
-aracne:
-  enabled: false
-
 ldak:
   enhancer_flank_bp: 1000
   promoter_flank_bp: 2000
@@ -92,42 +66,97 @@ ldak:
   power: -0.25
   pruning: 0.95
   permutations: 10
-  threads: 8
-  ignore_weights: true
-  allow_ambiguous: true
-
+  ignore_weights: yes
+  allow_ambiguous: yes
 scores:
   pvalue_column: LRT_P_Perm
   transform: neg_log10
-  infinite_score_cap: null
-
 networks:
-  available: [network_1, network_2, network_3, network_4]
-  selected: [network_1, network_2, network_3, network_4]
+  available:
+  - network_1
+  - network_2
+  - network_3
+  - network_4
+  selected:
+  - network_1
+  - network_2
+  - network_3
+  - network_4
   regulatory_edge_filter: legacy_filter_network_ldak
   node_order: legacy_input
-  preserve_self_loops: true
-  deduplicate_jeme_edges_before_harmonization: true
-  split_multi_promoter_edges: true
+  preserve_self_loops: yes
+  deduplicate_jeme_edges_before_harmonization: yes
+  split_multi_promoter_edges: yes
   thresholds:
     small_regulatory_score: 4
     broad_regulatory_score: 3
-
 hhotnet:
   analysis_mode: permutation
-  execution_mode: local_python
-  local_dir: /path/to/hierarchical-hotnet
-  python_executable: python3
-  compat_dir: analysis_E092_Gastric_STRINGdb/hHotnet/compat
-  apptainer_image: /path/to/hhotnet.sif
   score_name: nodes_all
   num_permutations: 100
   permutation_seed: 0
   lower_size_bound: 10
-  cpus: 16
-
-slurm:
-  time: "12:00:00"
-  memory: "16G"
-  partition: general-compute
-  qos: general-compute
+features:
+  enhancer_classification: no
+  aracne: no
+advanced_settings:
+  promoter_aliases: ~
+  enhancer_classification:
+    enhancer_flank_bp: 1000
+    promoter_window: strand_aware_tss
+    promoter_flank_bp: 2000
+    class1_label: enh_class1
+    class2_label: enh_class2
+    class3_label: enh_class3
+    drop_non_class1_edge_sources: []
+    retain_non_enhancer_edges: yes
+  score_infinity_cap: ~
+requirements:
+  hotnetR2: '>= 0.3.0'
+  hhotnet_compat: '>= 1.0.0'
+execution:
+  default_profile: local
+  profiles:
+    local:
+      platform:
+        os: macos
+        architecture: arm64
+      ldak:
+        executable: software/ldak6.3.mac
+        version: '>= 6.3'
+      hhotnet:
+        mode: local_python
+        source_dir: software/hierarchical-hotnet
+        python_executable: python3
+      resources:
+        ldak_threads: 8
+        hhotnet_cpus: 16
+      scheduler:
+        type: direct
+    hpc:
+      platform:
+        os: linux
+        architecture: x86_64
+      environment:
+        modules:
+        - gcc/11.2.0
+        - bedtools/2.30.0
+        - openmpi
+        - r
+        - r-bundle-bioconductor
+      ldak:
+        executable: software/ldak7.01.linux
+        version: '>= 7.01'
+      hhotnet:
+        mode: apptainer
+        image: software/hhotnet.sif
+      resources:
+        ldak_threads: 8
+        hhotnet_cpus: 16
+      scheduler:
+        type: slurm
+        time: '12:00:00'
+        memory: 16G
+        hhotnet_memory: 128G
+        partition: general-compute
+        qos: general-compute

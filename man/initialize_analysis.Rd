@@ -2,7 +2,7 @@
 % Please edit documentation in R/resources.R
 \name{initialize_analysis}
 \alias{initialize_analysis}
-\title{Initialize a portable v2 or v3 analysis project}
+\title{Initialize a portable schema-v2 analysis}
 \usage{
 initialize_analysis(path, profile = c("v2", "v3"), tools = list())
 }
@@ -11,13 +11,15 @@ initialize_analysis(path, profile = c("v2", "v3"), tools = list())
 
 \item{profile}{Either \code{v2} (gene body) or \code{v3} (TSS).}
 
-\item{tools}{Named list overriding \code{ldak_exe}, \code{hhotnet_dir}, and \code{python}.}
+\item{tools}{Named list overriding local \code{ldak_exe}, \code{hhotnet_dir}, and
+\code{python} paths.}
 }
 \value{
 Path to the created YAML file.
 }
 \description{
-Creates an analysis YAML using project-relative input paths. Large datasets
-and external executables are provisioned separately. The profiles preserve
-the historical v2/v3 decisions, including interval boundary arithmetic.
+Creates a schema-v2 analysis YAML, local/HPC launchers, and profile-specific
+job scripts using project-relative paths. The \code{profile} argument retains the
+historical v2/v3 scientific choices; execution profiles are named \code{local}
+and \code{hpc} in both cases.
 }

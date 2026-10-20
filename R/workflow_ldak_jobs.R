@@ -75,7 +75,7 @@ make_ldak_job_lines <- function(config, node_type, annotation, output) {
     "",
     "set -euo pipefail",
     "SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"",
-    "ANALYSIS_ROOT=\"$(cd \"${SCRIPT_DIR}/../..\" && pwd)\"",
+    paste0("ANALYSIS_ROOT=\"$(cd \"${SCRIPT_DIR}/", script_to_analysis_root(config), "\" && pwd)\""),
     project_root_line,
     ldak_exe_line,
     input_assignment("BFILE_REF", bfile),

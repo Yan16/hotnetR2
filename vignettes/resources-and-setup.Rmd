@@ -31,15 +31,25 @@ The R package does not bundle LDAK or Hierarchical HotNet.
 
 | Tool | Required for | Configuration |
 |---|---|---|
-| LDAK | Annotation cutting and regional association tests | `reference.ldak_exe` |
+| LDAK | Annotation cutting and regional association tests | `execution.profiles.<name>.ldak.executable` |
 | PLINK binary reference | LD calculation | `reference.bfile_prefix` |
 | bedtools | Interval overlap/classification stages | Available on `PATH` |
-| Python | Hierarchical HotNet | `hhotnet.python_executable` |
-| Hierarchical HotNet checkout | Similarity, hierarchy and clusters | `hhotnet.local_dir` |
-| Apptainer image | Optional container execution | `hhotnet.apptainer_image` |
+| Python | Hierarchical HotNet | `execution.profiles.local.hhotnet.python_executable` |
+| Hierarchical HotNet checkout | Similarity, hierarchy and clusters | `execution.profiles.local.hhotnet.source_dir` |
+| Apptainer image | HPC container execution | `execution.profiles.hpc.hhotnet.image` |
 
 Validate the exact Python/native Hierarchical HotNet environment independently;
 a source checkout without its compiled extension is incomplete.
+
+Install the project-wide Python compatibility layer once after package
+installation:
+
+```r
+hotnetR2::initialize_project(project_root = ".")
+```
+
+Every analysis uses `software/hHotnet/compat/`; templates check its manifest
+instead of creating analysis-local copies.
 
 ## Package-managed reference setup
 

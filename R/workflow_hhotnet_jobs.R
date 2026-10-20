@@ -17,9 +17,13 @@ make_hhotnet_job_lines <- function(config, networks = NULL) {
   }
   networks <- resolve_networks(config, networks)
   network_words <- paste(networks, collapse = " ")
-  image <- config$hhotnet$apptainer_image
-  if (!is_absolute_path(image)) image <- project_relative_value(config, resolve_config_path(image, config$project_root))
-  image_line <- if (is_absolute_path(image)) {
+  image <- config$hhotnet$apptainer_image %||% ""
+  if (nzchar(image) && !is_absolute_path(image)) {
+    image <- project_relative_value(config, resolve_config_path(image, config$project_root))
+  }
+  image_line <- if (!nzchar(image)) {
+    "DEFAULT_IMAGE=''"
+  } else if (is_absolute_path(image)) {
     paste0("DEFAULT_IMAGE=", shell_quote(image))
   } else {
     paste0("DEFAULT_IMAGE=\"${PROJECT_ROOT}/", image, "\"")
@@ -36,14 +40,14 @@ make_hhotnet_job_lines <- function(config, networks = NULL) {
     paste0("#SBATCH --time=", config$slurm$time %||% "72:00:00"),
     "#SBATCH --nodes=1",
     paste0("#SBATCH --cpus-per-task=", as.integer(config$hhotnet$cpus)),
-    "#SBATCH --mem=128G",
+    paste0("#SBATCH --mem=", config$slurm$hhotnet_memory %||% "128G"),
     paste0("#SBATCH --partition=", config$slurm$partition %||% "general-compute"),
     paste0("#SBATCH --qos=", config$slurm$qos %||% "general-compute"),
     "#SBATCH --output=%x_%j.log",
     "",
     "set -euo pipefail",
     "SCRIPT_DIR=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"",
-    "ANALYSIS_ROOT=\"$(cd \"${SCRIPT_DIR}/../..\" && pwd)\"",
+    paste0("ANALYSIS_ROOT=\"$(cd \"${SCRIPT_DIR}/", script_to_analysis_root(config), "\" && pwd)\""),
     project_root_line,
     image_line,
     paste0("DEFAULT_MODE=", shell_quote(execution_mode)),

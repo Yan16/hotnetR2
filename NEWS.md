@@ -1,3 +1,18 @@
+# hotnetR2 0.3.0
+
+- Introduce `analysis.yaml` schema version 2 with shared scientific settings
+  and portable `execution.profiles.local` and `execution.profiles.hpc` runtime
+  definitions.
+- Resolve tools and datasets relative to `project.root` by default, accept
+  explicit absolute paths beginning with `/`, and fingerprint resolved symlink
+  targets.
+- Generate separate local/HPC launchers and profile-specific LDAK and h-HotNet
+  scripts without manual platform edits.
+- Install one manifest-verified h-HotNet compatibility layer under
+  `software/hHotnet/compat`, shared by every analysis in a project.
+- Add schema-v1 migration with backups, minimum-version (`>=`) requirements,
+  profile-aware provenance, and correct processx stderr forwarding.
+
 # hotnetR2 0.2.7
 
 - Recover JEME `E###` tissue codes from `nfile` and the packaged tissue key

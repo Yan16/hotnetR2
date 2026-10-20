@@ -15,20 +15,30 @@ run_ldak <- function(config, node_types = c("enhancer", "promoter")) {
   paths <- analysis_paths(config)
   inputs <- input_paths(config)
   inputs <- inputs[!names(inputs) %in% c(
-    "aracne", "stringdb_aliases", "stringdb_info", "stringdb_links"
+    "gwas_raw", "aracne", "stringdb_aliases", "stringdb_info", "stringdb_links",
+    "hhotnet_source", "hhotnet_compat", "hhotnet_image"
   )]
   for (kind in node_types) {
     result <- file.path(paths[["ldak_results"]], ldak_result_subdir(config, kind))
     assert_unlinked_result(result)
-    signature <- execution_signature(config$ldak, c(inputs,
+    signature <- execution_signature(list(
+      profile = config$execution_profile,
+      ldak = config$ldak,
+      runtime = config$selected_execution$ldak %||% NULL
+    ), c(inputs,
       file.path(paths[["ldak_annotations"]], paste0(if (kind == "enhancer") "enhancers" else "promoters", ".loc"))))
     stamp <- file.path(paths[["metadata"]], paste0("ldak_", kind, "_fingerprint.rds"))
     artifacts <- file.path(result, c("remls.all", "genes.details"))
     if (execution_current(stamp, signature, artifacts)) next
     archive_execution_dirs(config, result)
     log <- file.path(paths[["logs"]], paste0("ldak_", kind, ".log"))
-    processx::run("bash", file.path(paths[["ldak_scripts"]], paste0("run_ldak_", kind, ".sh")),
-                  stdout = log, stderr = "2>&1", error_on_status = TRUE)
+    processx::run(
+      "bash",
+      file.path(paths[["ldak_scripts"]], paste0("run_ldak_", kind, ".sh")),
+      stdout = log,
+      stderr_to_stdout = TRUE,
+      error_on_status = TRUE
+    )
     # LDAK can report input errors without a nonzero exit code.
     if (!all(file.exists(artifacts)) || any(file.info(artifacts)$size == 0)) {
       stop("LDAK did not produce complete results; inspect ", log, call. = FALSE)
@@ -79,7 +89,16 @@ run_hhotnet <- function(config, networks = NULL) {
     inputs <- file.path(paths[["hhotnet_data"]],
                          c(paste0(network, "_index_gene.tsv"), paste0(network, "_edge_list.tsv"),
                            paste0(config$hhotnet$score_name, ".tsv")))
-    signature <- execution_signature(list(config$hhotnet, environment, overrides), c(inputs, tool_files))
+    signature <- execution_signature(
+      list(
+        profile = config$execution_profile,
+        hhotnet = config$hhotnet,
+        runtime = config$selected_execution$hhotnet %||% NULL,
+        environment = environment,
+        overrides = overrides
+      ),
+      c(inputs, tool_files)
+    )
     stamp <- file.path(paths[["metadata"]], paste0(network, "_fingerprint.rds"))
     result <- file.path(paths[["hhotnet_results"]], network)
     files <- list.files(result, full.names = TRUE, recursive = TRUE)

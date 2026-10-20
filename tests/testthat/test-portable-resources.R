@@ -19,10 +19,14 @@ test_that("installed templates preserve both profiles without machine paths", {
     root <- withr::local_tempdir(pattern = "new project ")
     file <- initialize_analysis(root, profile)
     config <- read_analysis_config(file)
+    expect_identical(as.integer(config$schema_version), 2L)
+    expect_identical(config$execution_profile, "local")
     expect_identical(config$enhancer_classification$promoter_window,
                      if (profile == "v2") "gene_body" else "strand_aware_tss")
     expect_identical(resolve_networks(config), c("network_1", "network_2"))
-    expect_true(file.exists(file.path(root, "tools", "compat", "sitecustomize.py")))
+    expect_true(file.exists(file.path(root, "run_analysis_local.sh")))
+    expect_true(file.exists(file.path(root, "run_analysis_hpc.sh")))
+    expect_false(dir.exists(file.path(root, "hHotnet", "compat")))
     expect_false(any(grepl("/Users/", readLines(file), fixed = TRUE)))
     expect_error(initialize_analysis(root, profile), "already exists")
   }

@@ -7,7 +7,8 @@
 read_analysis_config(
   file = "analysis.yaml",
   output_root = NULL,
-  cache_dir = NULL
+  cache_dir = NULL,
+  profile = NULL
 )
 }
 \arguments{
@@ -16,6 +17,9 @@ read_analysis_config(
 \item{output_root}{Optional separate output directory for a reproducibility run.}
 
 \item{cache_dir}{Optional explicit root of cached JEME and HiC resources.}
+
+\item{profile}{Schema-v2 execution profile (\code{"local"} or \code{"hpc"}). \code{NULL}
+uses \code{execution.default_profile}.}
 }
 \value{
 A validated configuration list with resolved internal metadata.

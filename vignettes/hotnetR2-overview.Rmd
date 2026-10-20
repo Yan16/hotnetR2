@@ -108,8 +108,8 @@ later coordinate and alias corrections.
    "vignette_examples", package = "hotnetR2")`.
 4. Consult `vignette("analysis-yaml-reference", package = "hotnetR2")` for
    field requirements, implemented fallbacks and change impacts.
-5. Run `bash run_analysis.sh check` before any compute stage.
-6. Run stages separately or use `bash run_analysis.sh all`.
+5. Run `bash run_analysis_local.sh check` before any compute stage.
+6. Run stages separately or use `bash run_analysis_local.sh all`.
 7. Interpret the two HHN modes using
    `vignette("hhotnet-execution", package = "hotnetR2")`.
 
@@ -120,7 +120,8 @@ Each analysis writes only below its own directory:
 ```text
 analysis_name/
 |-- analysis.yaml
-|-- run_analysis.sh
+|-- run_analysis_local.sh
+|-- run_analysis_hpc.sh
 |-- metadata/
 |-- logs/
 |-- LDAK/

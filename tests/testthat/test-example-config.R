@@ -4,7 +4,8 @@ test_that("the shipped example configuration validates", {
     package = "hotnetR2", mustWork = TRUE
   )
   config <- read_analysis_config(example)
-  expect_equal(config$schema_version, 1)
+  expect_equal(config$schema_version, 2)
+  expect_identical(config$execution_profile, "local")
   expect_equal(available_networks(config), paste0("network_", 1:4))
   expect_equal(resolve_networks(config), paste0("network_", 1:3))
   expect_equal(

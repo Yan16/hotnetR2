@@ -1,8 +1,8 @@
 ---
-title: "analysis.yaml reference"
+title: "Legacy analysis.yaml schema-v1 reference"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{analysis.yaml reference}
+  %\VignetteIndexEntry{Legacy analysis.yaml schema-v1 reference}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,8 +13,11 @@ knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
 
 ## Scope and notation
 
-This is the field-by-field reference for `analysis.yaml` schema version 1 in
-`hotnetR2` 0.2.2. It documents the implemented parser, validator and runtime
+This is the retained field-by-field reference for legacy `analysis.yaml` schema
+version 1. hotnetR2 0.3.0 generates schema version 2; use
+`vignette("analysis-yaml-v2", package = "hotnetR2")` for current profiles and
+`migrate_analysis_config()` to upgrade existing files. This document records
+the legacy parser, validator and runtime
 consumers. The two installed examples remain the recommended starting points:
 
 ```{r examples}

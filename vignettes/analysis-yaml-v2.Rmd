@@ -1,0 +1,146 @@
+---
+title: "analysis.yaml schema version 2"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{analysis.yaml schema version 2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, collapse = TRUE, comment = "#>")
+```
+
+## Design
+
+Schema version 2 stores scientific choices once and machine-specific choices in
+`execution.profiles.local` and `execution.profiles.hpc`. Selecting a profile
+must not change regulatory sources, LDAK model parameters, network construction,
+scores, seeds, or h-HotNet permutation settings.
+
+All tool and dataset paths are relative to `project.root` unless they begin
+with `/`. Relative symbolic links are supported. `~`, environment variables,
+and shell substitution are rejected. Outputs remain below the analysis folder.
+
+## Core structure
+
+```yaml
+schema_version: 2
+analysis: {}
+project: {root: ".."}
+gwas: {}
+reference: {}
+regulatory: {}
+interaction_network: {}
+ldak: {}
+scores: {}
+networks: {}
+hhotnet: {}
+features: {}
+advanced_settings: {}
+requirements: {}
+execution:
+  default_profile: local
+  profiles:
+    local: {}
+    hpc: {}
+```
+
+Use the installed `analysis_stringdb.yaml` and `analysis_aracne.yaml` examples
+for complete scientific sections.
+
+## Execution profiles
+
+```yaml
+requirements:
+  hotnetR2: ">= 0.3.0"
+  hhotnet_compat: ">= 1.0.0"
+
+execution:
+  default_profile: local
+  profiles:
+    local:
+      platform: {os: macos, architecture: arm64}
+      ldak:
+        executable: software/ldak6.3.mac
+        version: ">= 6.3"
+      hhotnet:
+        mode: local_python
+        source_dir: software/hierarchical-hotnet
+        python_executable: python3
+      resources: {ldak_threads: 8, hhotnet_cpus: 16}
+      scheduler: {type: direct}
+
+    hpc:
+      platform: {os: linux, architecture: x86_64}
+      environment:
+        modules: [gcc/11.2.0, bedtools/2.30.0, openmpi, r,
+                  r-bundle-bioconductor]
+      ldak:
+        executable: software/ldak7.01.linux
+        version: ">= 7.01"
+      hhotnet:
+        mode: apptainer
+        image: software/hhotnet.sif
+      resources: {ldak_threads: 8, hhotnet_cpus: 16}
+      scheduler:
+        type: slurm
+        time: "12:00:00"
+        memory: 16G
+        hhotnet_memory: 128G
+        partition: general-compute
+        qos: general-compute
+```
+
+Version requirements use minimum comparisons. The exact observed executable
+version and SHA-256 hash are still recorded and participate in result-reuse
+fingerprints.
+
+## Optional and advanced settings
+
+The current E092 analyses keep `features.enhancer_classification: false` and
+`features.aracne: false` for STRINGdb. Parameters for disabled enhancer
+classification live under `advanced_settings.enhancer_classification` instead
+of cluttering the core workflow. Optional promoter aliases and a manual
+infinite-score cap live under `advanced_settings.promoter_aliases` and
+`advanced_settings.score_infinity_cap`.
+
+Fixed single-choice behavior, including the current promoter-harmonization
+strategies and STRINGdb mapping policy, is materialized in
+`metadata/effective_analysis.yaml` even when omitted from the concise source
+YAML.
+
+## Shared compatibility layer
+
+Install the shared files once after installing hotnetR2:
+
+```r
+hotnetR2::initialize_project(project_root = ".")
+hotnetR2::check_project_compat(project_root = ".")
+```
+
+The manifest-verified directory is `software/hHotnet/compat/`. Analysis
+templates report its state but never create analysis-local copies.
+
+## Generate and run
+
+```r
+hotnetR2::generate_analysis_scripts("analysis_name/analysis.yaml",
+                                    overwrite = TRUE)
+```
+
+This creates `run_analysis_local.sh`, `run_analysis_hpc.sh`, `run_analysis.R`,
+and separate `local/` and `hpc/` LDAK/h-HotNet script directories. Use
+`run_analysis_local.sh all` locally. On HPC, use `run_analysis_hpc.sh submit
+ldak`, wait for both jobs, run `scores` and `networks`, and then use
+`run_analysis_hpc.sh submit hhotnet`.
+
+## Migration
+
+```r
+hotnetR2::migrate_analysis_config("analysis_name/analysis.yaml")
+```
+
+Migration writes `analysis_schema_v1.yaml`, preserves legacy launchers and flat
+scripts under schema-v1 names/directories, validates both profiles, and
+generates the new launchers and scripts.

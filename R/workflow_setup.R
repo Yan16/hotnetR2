@@ -26,6 +26,13 @@ check_analysis_inputs <- function(config, write_report = TRUE) {
   )
   report$status <- ifelse(report$exists, "OK", "FAIL")
   report$detail <- ifelse(report$exists, "", "missing")
+  executable <- report$item == "ldak_exe" & report$exists
+  not_executable <- executable & file.access(report$path, mode = 1L) != 0L
+  report$status[not_executable] <- "FAIL"
+  report$detail[not_executable] <- "exists but is not executable"
+  links <- Sys.readlink(report$path)
+  linked <- !is.na(links) & nzchar(links)
+  report$detail[linked & report$status == "OK"] <- paste0("symlink -> ", links[linked & report$status == "OK"])
 
   if (isTRUE(write_report)) {
     paths <- analysis_paths(config)

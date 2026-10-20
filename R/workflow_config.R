@@ -5,7 +5,46 @@
 }
 
 is_absolute_path <- function(path) {
-  grepl("^(/|[A-Za-z]:[/\\\\]|~)", path)
+  startsWith(path, "/")
+}
+
+validate_config_path_syntax <- function(path, field = "path") {
+  assert_scalar(path, field, "character")
+  if (grepl("^(~|[A-Za-z]:[/\\\\])|[$`]", path)) {
+    stop(
+      field, " must be project-relative or an absolute path beginning with /; ",
+      "shell expansion is not supported",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+assert_known_fields <- function(x, allowed, field) {
+  unknown <- setdiff(names(x %||% list()), allowed)
+  if (length(unknown)) {
+    stop(
+      "Unknown schema-v2 field(s) in ", field, ": ",
+      paste(unknown, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+version_requirement_minimum <- function(requirement, field) {
+  assert_scalar(requirement, field, "character")
+  match <- regexec("^>=\\s*([0-9]+(?:[.][0-9]+)*)$", trimws(requirement))
+  parts <- regmatches(trimws(requirement), match)[[1L]]
+  if (length(parts) != 2L) {
+    stop(field, " must use the form '>= VERSION'", call. = FALSE)
+  }
+  parts[[2L]]
+}
+
+version_meets_requirement <- function(observed, requirement, field = "version") {
+  minimum <- version_requirement_minimum(requirement, field)
+  utils::compareVersion(as.character(observed), minimum) >= 0L
 }
 
 assert_scalar <- function(x, field, type = NULL, allow_null = FALSE) {
@@ -78,11 +117,196 @@ normalise_network_names <- function(networks, field) {
 }
 
 resolve_config_path <- function(path, base_dir) {
-  assert_scalar(path, "path", "character")
+  validate_config_path_syntax(path)
   if (is_absolute_path(path)) {
     return(normalizePath(path, mustWork = FALSE))
   }
   normalizePath(file.path(base_dir, path), mustWork = FALSE)
+}
+
+schema_v2_profile <- function(config, profile = NULL) {
+  execution <- config$execution %||% list()
+  assert_known_fields(execution, c("default_profile", "profiles"), "execution")
+  profiles <- execution$profiles %||% list()
+  if (!all(c("local", "hpc") %in% names(profiles))) {
+    stop("schema v2 requires execution.profiles.local and execution.profiles.hpc", call. = FALSE)
+  }
+  selected <- profile %||% execution$default_profile %||% "local"
+  assert_scalar(selected, "execution profile", "character")
+  if (!selected %in% names(profiles)) {
+    stop(
+      "Unknown execution profile: ", selected, ". Available: ",
+      paste(names(profiles), collapse = ", "),
+      call. = FALSE
+    )
+  }
+  list(name = selected, settings = profiles[[selected]])
+}
+
+normalize_schema_v2 <- function(config, profile = NULL) {
+  allowed_top <- c(
+    "schema_version", "analysis", "project", "gwas", "reference",
+    "regulatory", "features", "interaction_network", "aracne", "ldak",
+    "scores", "networks", "hhotnet", "requirements", "execution",
+    "advanced_settings", "resources", "validation"
+  )
+  assert_known_fields(config, allowed_top, "analysis.yaml")
+  selected <- schema_v2_profile(config, profile)
+  runtime <- selected$settings
+  assert_known_fields(
+    runtime,
+    c("platform", "environment", "ldak", "hhotnet", "resources", "scheduler"),
+    paste0("execution.profiles.", selected$name)
+  )
+  assert_known_fields(runtime$ldak, c("executable", "version"),
+                      paste0("execution.profiles.", selected$name, ".ldak"))
+  assert_known_fields(
+    runtime$hhotnet,
+    c("mode", "source_dir", "python_executable", "image", "version"),
+    paste0("execution.profiles.", selected$name, ".hhotnet")
+  )
+  assert_known_fields(
+    runtime$resources,
+    c("ldak_threads", "hhotnet_cpus"),
+    paste0("execution.profiles.", selected$name, ".resources")
+  )
+  assert_known_fields(
+    runtime$scheduler,
+    c("type", "time", "memory", "hhotnet_memory", "partition", "qos"),
+    paste0("execution.profiles.", selected$name, ".scheduler")
+  )
+  requirements <- config$requirements %||% list()
+  assert_known_fields(requirements, c("hotnetR2", "hhotnet_compat"), "requirements")
+  for (field in names(requirements)) {
+    version_requirement_minimum(requirements[[field]], paste0("requirements.", field))
+  }
+  if (!is.null(requirements$hotnetR2)) {
+    installed <- as.character(utils::packageVersion("hotnetR2"))
+    if (!version_meets_requirement(installed, requirements$hotnetR2,
+                                   "requirements.hotnetR2")) {
+      stop(
+        "hotnetR2 ", requirements$hotnetR2, " is required; installed version is ",
+        installed,
+        call. = FALSE
+      )
+    }
+  }
+  if (!is.null(runtime$ldak$version)) {
+    version_requirement_minimum(runtime$ldak$version,
+      paste0("execution.profiles.", selected$name, ".ldak.version"))
+  }
+  platform <- runtime$platform %||% list()
+  assert_known_fields(platform, c("os", "architecture"),
+                      paste0("execution.profiles.", selected$name, ".platform"))
+  assert_scalar(platform$os,
+                paste0("execution.profiles.", selected$name, ".platform.os"),
+                "character")
+  assert_scalar(platform$architecture,
+                paste0("execution.profiles.", selected$name, ".platform.architecture"),
+                "character")
+  scheduler_type <- runtime$scheduler$type %||% "direct"
+  if (!scheduler_type %in% c("direct", "slurm")) {
+    stop("scheduler.type must be direct or slurm", call. = FALSE)
+  }
+
+  advanced <- config$advanced_settings %||% list()
+  assert_known_fields(
+    advanced,
+    c("promoter_aliases", "enhancer_classification", "score_infinity_cap"),
+    "advanced_settings"
+  )
+  features <- config$features %||% list()
+  assert_known_fields(features, c("enhancer_classification", "aracne"), "features")
+
+  aliases <- advanced$promoter_aliases
+  if (!is.null(aliases)) {
+    assert_known_fields(aliases, c("file", "columns"),
+                        "advanced_settings.promoter_aliases")
+  }
+  config$reference$ldak_exe <- runtime$ldak$executable
+  config$reference$promoter_alias_file <- aliases$file %||% NULL
+  config$reference$promoter_alias_columns <- aliases$columns %||%
+    list(alias = "alias", gene_symbol = "gene_symbol")
+
+  classification <- advanced$enhancer_classification %||% list()
+  classification_enabled <- features$enhancer_classification %||% FALSE
+  if (isTRUE(classification_enabled)) {
+    defaults <- list(
+      source_analysis = ".", enhancer_flank_bp = 1000L,
+      promoter_window = "strand_aware_tss", promoter_flank_bp = 2000L,
+      class1_label = "enh_class1", class2_label = "enh_class2",
+      class3_label = "enh_class3", drop_non_class1_edge_sources = "HiC_PO",
+      retain_non_enhancer_edges = TRUE
+    )
+    classification <- utils::modifyList(defaults, classification)
+  }
+  classification <- c(
+    list(enabled = classification_enabled),
+    classification[setdiff(names(classification), "enabled")]
+  )
+  config$enhancer_classification <- classification
+
+  config$aracne <- config$aracne %||% list()
+  config$aracne$enabled <- features$aracne %||% FALSE
+  config$scores["infinite_score_cap"] <- list(advanced$score_infinity_cap %||% NULL)
+
+  harmonization <- config$regulatory$promoter_harmonization %||% list()
+  if (isTRUE(harmonization$enabled %||% FALSE)) {
+    harmonization$jeme_strategy <- harmonization$jeme_strategy %||%
+      "all_tissues_ensg_map"
+    harmonization$hic_strategy <- harmonization$hic_strategy %||%
+      "gene_symbol_alias"
+    config$regulatory$promoter_harmonization <- c(
+      harmonization[intersect(c("enabled", "jeme", "hic"), names(harmonization))],
+      list(
+        jeme_strategy = harmonization$jeme_strategy,
+        hic_strategy = harmonization$hic_strategy
+      ),
+      harmonization[setdiff(
+        names(harmonization),
+        c("enabled", "jeme", "hic", "jeme_strategy", "hic_strategy")
+      )]
+    )
+  }
+  if (identical(tolower(config$interaction_network$type %||% ""), "stringdb")) {
+    config$interaction_network$stringdb$mapping_policy <-
+      config$interaction_network$stringdb$mapping_policy %||%
+      "legacy_shortest_gene_per_string_id"
+  }
+
+  assert_scalar(runtime$ldak$executable,
+                paste0("execution.profiles.", selected$name, ".ldak.executable"),
+                "character")
+  validate_config_path_syntax(runtime$ldak$executable,
+                              paste0("execution.profiles.", selected$name, ".ldak.executable"))
+  config$ldak$threads <- runtime$resources$ldak_threads %||% config$ldak$threads
+
+  mode <- runtime$hhotnet$mode
+  assert_scalar(mode, paste0("execution.profiles.", selected$name, ".hhotnet.mode"),
+                "character")
+  config$hhotnet$execution_mode <- mode
+  config$hhotnet$local_dir <- runtime$hhotnet$source_dir %||% NULL
+  config$hhotnet$python_executable <- runtime$hhotnet$python_executable %||% "python3"
+  config$hhotnet$apptainer_image <- runtime$hhotnet$image %||% NULL
+  config$hhotnet$compat_dir <- "software/hHotnet/compat"
+  config$hhotnet$cpus <- runtime$resources$hhotnet_cpus %||% config$hhotnet$cpus
+  if (identical(mode, "local_python")) {
+    validate_config_path_syntax(
+      runtime$hhotnet$source_dir,
+      paste0("execution.profiles.", selected$name, ".hhotnet.source_dir")
+    )
+  } else if (identical(mode, "apptainer")) {
+    validate_config_path_syntax(
+      runtime$hhotnet$image,
+      paste0("execution.profiles.", selected$name, ".hhotnet.image")
+    )
+  }
+
+  scheduler <- runtime$scheduler %||% list(type = "direct")
+  config$slurm <- scheduler[c("time", "memory", "hhotnet_memory", "partition", "qos")]
+  config$execution_profile <- selected$name
+  config$selected_execution <- runtime
+  config
 }
 
 interaction_network_type <- function(config) {
@@ -173,8 +397,8 @@ validate_analysis_config <- function(config) {
     stop("Configuration missing section(s): ", paste(missing, collapse = ", "), call. = FALSE)
   }
   if (!is.numeric(config$schema_version) || length(config$schema_version) != 1L ||
-      is.na(config$schema_version) || !identical(as.integer(config$schema_version), 1L)) {
-    stop("Unsupported schema_version; expected 1", call. = FALSE)
+      is.na(config$schema_version) || !as.integer(config$schema_version) %in% c(1L, 2L)) {
+    stop("Unsupported schema_version; expected 1 or 2", call. = FALSE)
   }
   assert_scalar(config$analysis$name, "analysis.name", "character")
   assert_scalar(config$project$root, "project.root", "character")
@@ -483,14 +707,24 @@ validate_analysis_config <- function(config) {
 #' @param file Path to `analysis.yaml`.
 #' @param output_root Optional separate output directory for a reproducibility run.
 #' @param cache_dir Optional explicit root of cached JEME and HiC resources.
+#' @param profile Schema-v2 execution profile (`"local"` or `"hpc"`). `NULL`
+#'   uses `execution.default_profile`.
 #' @return A validated configuration list with resolved internal metadata.
 #' @export
-read_analysis_config <- function(file = "analysis.yaml", output_root = NULL, cache_dir = NULL) {
+read_analysis_config <- function(file = "analysis.yaml", output_root = NULL,
+                                 cache_dir = NULL, profile = NULL) {
   if (!requireNamespace("yaml", quietly = TRUE)) {
     stop("Package 'yaml' is required to read analysis.yaml", call. = FALSE)
   }
   file <- normalizePath(file, mustWork = TRUE)
   config <- yaml::read_yaml(file)
+  if (identical(as.integer(config$schema_version), 2L)) {
+    config <- normalize_schema_v2(config, profile = profile)
+  } else if (!is.null(profile)) {
+    stop("Execution profiles require schema_version: 2", call. = FALSE)
+  } else {
+    config$execution_profile <- "legacy"
+  }
   if (isTRUE(config$enhancer_classification$enabled)) {
     config$enhancer_classification$promoter_flank_bp <-
       config$enhancer_classification$promoter_flank_bp %||%
@@ -558,6 +792,17 @@ analysis_paths <- function(config) {
     stop("config must be returned by read_analysis_config()", call. = FALSE)
   }
   root <- normalizePath(config$config_dir, mustWork = TRUE)
+  profile_subdir <- if (identical(as.integer(config$schema_version), 2L)) {
+    config$execution_profile
+  } else {
+    NULL
+  }
+  ldak_scripts <- file.path(root, "LDAK", "scripts")
+  hhotnet_scripts <- file.path(root, "hHotnet", "scripts")
+  if (!is.null(profile_subdir)) {
+    ldak_scripts <- file.path(ldak_scripts, profile_subdir)
+    hhotnet_scripts <- file.path(hhotnet_scripts, profile_subdir)
+  }
   paths <- c(
     root = root,
     logs = file.path(root, "logs"),
@@ -566,14 +811,14 @@ analysis_paths <- function(config) {
     ldak_annotations = file.path(root, "LDAK", "annotations"),
     ldak_results = file.path(root, "LDAK", "results"),
     ldak_summary = file.path(root, "LDAK", "summary"),
-    ldak_scripts = file.path(root, "LDAK", "scripts"),
+    ldak_scripts = ldak_scripts,
     hhotnet = file.path(root, "hHotnet"),
     hhotnet_data = file.path(root, "hHotnet", "data"),
     hhotnet_intermediate = file.path(root, "hHotnet", "intermediate"),
     hhotnet_results = file.path(root, "hHotnet", "results"),
     hhotnet_summary = file.path(root, "hHotnet", "summary"),
     hhotnet_cytoscape = file.path(root, "hHotnet", "cytoscape"),
-    hhotnet_scripts = file.path(root, "hHotnet", "scripts")
+    hhotnet_scripts = hhotnet_scripts
   )
   path_names <- names(paths)
   paths <- stats::setNames(normalizePath(paths, mustWork = FALSE), path_names)
@@ -584,6 +829,10 @@ analysis_paths <- function(config) {
          paste(outside, collapse = ", "), call. = FALSE)
   }
   paths
+}
+
+script_to_analysis_root <- function(config) {
+  if (identical(as.integer(config$schema_version), 2L)) "../../.." else "../.."
 }
 
 input_paths <- function(config) {
@@ -597,11 +846,26 @@ input_paths <- function(config) {
     bfile_bim = paste0(resolve_config_path(config$reference$bfile_prefix, root), ".bim"),
     bfile_fam = paste0(resolve_config_path(config$reference$bfile_prefix, root), ".fam")
   )
+  if (!is.null(config$gwas$raw_file)) {
+    paths <- c(gwas_raw = resolve_config_path(config$gwas$raw_file, root), paths)
+  }
   if (isTRUE(config$aracne$enabled %||% TRUE)) {
     paths <- c(paths, aracne = resolve_config_path(config$aracne$file, root))
   }
   if (identical(interaction_network_type(config), "stringdb")) {
     paths <- c(paths, stringdb_cache_paths(config))
+  }
+  if (identical(config$hhotnet$execution_mode, "local_python")) {
+    paths <- c(
+      paths,
+      hhotnet_source = resolve_config_path(config$hhotnet$local_dir, root),
+      hhotnet_compat = resolve_config_path(config$hhotnet$compat_dir, root)
+    )
+  } else if (!is.null(config$hhotnet$apptainer_image)) {
+    paths <- c(
+      paths,
+      hhotnet_image = resolve_config_path(config$hhotnet$apptainer_image, root)
+    )
   }
   paths
 }

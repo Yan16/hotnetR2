@@ -66,7 +66,7 @@ enhancer_classification:
   enabled: false
 ```
 
-Thus the classification stage is skipped by `run_analysis.sh all`, and no edge
+Thus the classification stage is skipped by `run_analysis_local.sh all`, and no edge
 is removed because of an enhancer class. This is distinct from older gene-body
 or TSS profiles that classified expanded enhancers against promoter windows and
 dropped configured sources. Re-enabling classification is a separate scientific

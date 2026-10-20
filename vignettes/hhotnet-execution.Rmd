@@ -34,7 +34,6 @@ Permutation mode is the standard inference workflow:
 ```yaml
 hhotnet:
   analysis_mode: permutation
-  execution_mode: local_python
   score_name: nodes_all
   num_permutations: 100
   permutation_seed: 0
@@ -57,20 +56,20 @@ Manual-delta mode is an exploratory observed-hierarchy workflow:
 hhotnet:
   analysis_mode: manual_delta
   delta_values: [0.05, 0.1, 0.2, 0.5]
-  execution_mode: local_python
   score_name: nodes_all
   num_permutations: 0
   permutation_seed: 0
   lower_size_bound: 10
 ```
 
-It is currently supported only with `local_python`. The `hotnet` stage stops
+It is currently supported only when the selected execution profile uses
+`hhotnet.mode: local_python`. The `hotnet` stage stops
 after similarity matrices are built. The `exports` stage constructs or reuses
 the observed hierarchy and cuts it at the requested delta values using HHN's
 native semantics.
 
 ```{r manual-cuts}
-config <- hotnetR2::read_analysis_config("analysis.yaml")
+config <- hotnetR2::read_analysis_config("analysis.yaml", profile = "local")
 hotnetR2::extract_hhotnet_delta_clusters(
   config,
   deltas = c(0.05, 0.1, 0.2, 0.5),

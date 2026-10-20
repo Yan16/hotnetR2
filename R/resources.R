@@ -1,12 +1,14 @@
-#' Initialize a portable v2 or v3 analysis project
+#' Initialize a portable schema-v2 analysis
 #'
-#' Creates an analysis YAML using project-relative input paths. Large datasets
-#' and external executables are provisioned separately. The profiles preserve
-#' the historical v2/v3 decisions, including interval boundary arithmetic.
+#' Creates a schema-v2 analysis YAML, local/HPC launchers, and profile-specific
+#' job scripts using project-relative paths. The `profile` argument retains the
+#' historical v2/v3 scientific choices; execution profiles are named `local`
+#' and `hpc` in both cases.
 #'
 #' @param path New analysis directory; must not already contain analysis.yaml.
 #' @param profile Either `v2` (gene body) or `v3` (TSS).
-#' @param tools Named list overriding `ldak_exe`, `hhotnet_dir`, and `python`.
+#' @param tools Named list overriding local `ldak_exe`, `hhotnet_dir`, and
+#'   `python` paths.
 #' @return Path to the created YAML file.
 #' @export
 initialize_analysis <- function(path, profile = c("v2", "v3"), tools = list()) {
@@ -16,18 +18,25 @@ initialize_analysis <- function(path, profile = c("v2", "v3"), tools = list()) {
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   config <- yaml::read_yaml(system.file("extdata", paste0(profile, ".yaml"), package = "hotnetR2"))
   config$analysis$name <- basename(normalizePath(path))
-  config$project$root <- "."
-  config$resources <- list(cache_dir = ".cache", profile = profile)
-  config$reference$ldak_exe <- tools$ldak_exe %||% "tools/ldak"
-  config$hhotnet$local_dir <- tools$hhotnet_dir %||% "tools/hierarchical-hotnet"
-  config$hhotnet$python_executable <- tools$python %||% "python3"
-  config$hhotnet$compat_dir <- "tools/compat"
+  config$project$root <- ".."
+  config$resources <- list(cache_dir = ".cache", scientific_profile = profile)
   config$enhancer_classification$source_analysis <- "."
   config$validation <- NULL
-  tool_root <- file.path(path, "tools")
-  dir.create(tool_root, showWarnings = FALSE)
-  file.copy(system.file("compat", package = "hotnetR2"), tool_root, recursive = TRUE)
+  config <- legacy_to_schema_v2(config)
+  config$execution$profiles$local$ldak$executable <-
+    tools$ldak_exe %||% "software/ldak6.3.mac"
+  config$execution$profiles$local$hhotnet$source_dir <-
+    tools$hhotnet_dir %||% "software/hierarchical-hotnet"
+  config$execution$profiles$local$hhotnet$python_executable <-
+    tools$python %||% "python3"
   yaml::write_yaml(config, file)
+  generate_analysis_scripts(file, overwrite = TRUE)
+  project_root <- normalizePath(file.path(path, ".."), mustWork = TRUE)
+  compat <- check_project_compat(project_root)
+  message(
+    "Shared h-HotNet compatibility: ", compat$status, " (", compat$path, "). ",
+    compat$detail
+  )
   normalizePath(file)
 }
 
