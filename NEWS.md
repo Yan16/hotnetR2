@@ -1,3 +1,9 @@
+# hotnetR2 0.2.7
+
+- Recover JEME `E###` tissue codes from `nfile` and the packaged tissue key
+  when simplified caches omit the direct `tiss` column. Unknown legacy file
+  identifiers alone fall back to `desc1`.
+
 # hotnetR2 0.2.6
 
 - Prefer stable JEME `tiss` codes such as `E092` when aggregating annotation

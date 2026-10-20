@@ -120,8 +120,10 @@ Standard summaries use `Gene_Name` as their sole node identifier; the former
 duplicate `gene` column is not written. The standard enhancer table adds
 `original_promoter`, collapsing sorted distinct raw JEME promoter labels with
 semicolons for each enhancer. Its `tissues` provenance column uses stable JEME
-codes such as `E092` rather than JEME tissue descriptions; HiC entries retain
-their native tissue labels because the HiC source has no Roadmap `E###` code.
+codes such as `E092` rather than JEME tissue descriptions. Codes are read
+directly from `tiss` or recovered from simplified-cache `nfile` identifiers via
+the packaged tissue key. HiC entries retain their native tissue labels because
+the HiC source has no Roadmap `E###` code.
 The long enhancer table keeps one
 `original_promoter` per association together with raw JEME `promoterFull` and
 `ENSG`, harmonized `promoter`, source JEME `conf_score`, `tissue` (for example

@@ -140,11 +140,12 @@ get_jeme <- function(key_column = NULL, value = NULL, method = c("lasso", "elast
 #'   }
 #' }
 #' Each returned data frame contains aggregated identifier columns (`files`, `nfiles`)
-#' and a `tissues` column when available. `tiss` codes are preferred over tissue
-#' descriptions so annotation provenance and standard LDAK summaries retain
-#' stable identifiers such as `E092`; legacy inputs without `tiss` fall back to
-#' `desc1`. Column names reflect the conventions used by the input JEME data and
-#' by `promoter_range()` processing.
+#' and a `tissues` column when available. Direct `tiss` codes are preferred;
+#' simplified caches that contain only `nfile` recover the same code from the
+#' packaged JEME tissue key. This keeps annotation provenance and standard LDAK
+#' summaries on stable identifiers such as `E092`. Unknown legacy identifiers
+#' fall back to `desc1`. Column names reflect the conventions used by the input
+#' JEME data and by `promoter_range()` processing.
 #' @importFrom dplyr mutate select arrange distinct case_when across .data all_of group_by summarise filter if_all bind_rows
 #' @export
 extract_jeme_nodes <- function(jeme_data) {
@@ -158,12 +159,41 @@ extract_jeme_nodes <- function(jeme_data) {
   id_cols <- c("file", "nfile")
   id_cols <- id_cols[id_cols %in% colnames(jeme_data)]
 
-  tissue_col <- if ("tiss" %in% colnames(jeme_data)) {
-    "tiss"
-  } else if ("desc1" %in% colnames(jeme_data)) {
-    "desc1"
-  } else {
-    NULL
+  tissue_values <- rep(NA_character_, nrow(jeme_data))
+  if ("tiss" %in% colnames(jeme_data)) {
+    tissue_values <- trimws(as.character(jeme_data$tiss))
+  }
+  unresolved <- is.na(tissue_values) | !nzchar(tissue_values)
+  if (any(unresolved) && "nfile" %in% colnames(jeme_data)) {
+    key_env <- new.env(parent = emptyenv())
+    utils::data("key_tissues_jeme", package = "hotnetR2", envir = key_env)
+    keys <- key_env$key_tissues_jeme
+    if (is.null(keys) || !all(c("nfile", "tiss") %in% names(keys))) {
+      stop("Internal JEME tissue key lacks nfile/tiss", call. = FALSE)
+    }
+    lookup <- unique(data.frame(
+      nfile = as.character(keys$nfile),
+      tiss = trimws(as.character(keys$tiss)),
+      stringsAsFactors = FALSE
+    ))
+    conflicting <- unique(lookup$nfile[duplicated(lookup$nfile)])
+    if (length(conflicting)) {
+      stop("Internal JEME tissue key maps nfile to multiple tissue codes: ",
+           paste(utils::head(conflicting, 10L), collapse = ", "), call. = FALSE)
+    }
+    code_by_nfile <- stats::setNames(lookup$tiss, lookup$nfile)
+    tissue_values[unresolved] <- unname(
+      code_by_nfile[as.character(jeme_data$nfile[unresolved])]
+    )
+  }
+  unresolved <- is.na(tissue_values) | !nzchar(tissue_values)
+  if (any(unresolved) && "desc1" %in% colnames(jeme_data)) {
+    tissue_values[unresolved] <- trimws(as.character(jeme_data$desc1[unresolved]))
+  }
+  tissue_col <- NULL
+  if (length(tissue_values) && any(!is.na(tissue_values) & nzchar(tissue_values))) {
+    jeme_data$.annotation_tissue <- tissue_values
+    tissue_col <- ".annotation_tissue"
   }
 
   # Internal helper for efficient aggregation
