@@ -53,7 +53,7 @@ for complete scientific sections.
 
 ```yaml
 requirements:
-  hotnetR2: ">= 0.3.0"
+  hotnetR2: ">= 0.3.1"
   hhotnet_compat: ">= 1.0.0"
 
 execution:
@@ -79,6 +79,7 @@ execution:
       ldak:
         executable: software/ldak7.01.linux
         version: ">= 7.01"
+        version_check: warn
       hhotnet:
         mode: apptainer
         image: software/hhotnet.sif
@@ -92,9 +93,14 @@ execution:
         qos: general-compute
 ```
 
-Version requirements use minimum comparisons. The exact observed executable
-version and SHA-256 hash are still recorded and participate in result-reuse
-fingerprints.
+Version requirements normally use minimum comparisons. LDAK 7.01 for Linux is
+an exception because its `--version` banner reports only `Version 6` and cannot
+verify the configured 7.01 release. The HPC profile therefore uses
+`version_check: warn`: preflight prints a warning and preserves the raw banner,
+configured requirement, executable path, and SHA-256 rather than failing an
+invalid comparison. Executable existence, permission, platform, and input
+checks remain mandatory. Profiles with `version_check: enforce` still require
+an observed version greater than or equal to the configured minimum.
 
 ## Optional and advanced settings
 

@@ -15,6 +15,8 @@ check_execution_profile(config, probe_versions = TRUE)
 A data frame of preflight checks.
 }
 \description{
-Validates OS/architecture, executable permission, and minimum LDAK version.
-Exact observed versions remain available in the report for provenance.
+Validates OS/architecture, executable permission, and the configured LDAK
+version policy. A profile can use \code{version_check: warn} when its LDAK build
+is known to print an unreliable version banner; the raw output remains in
+the report and provenance, but it does not block execution.
 }

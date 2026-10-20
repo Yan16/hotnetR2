@@ -94,6 +94,7 @@ write_analysis_provenance <- function(config, checksum = FALSE) {
     ldak_probe <- probe_executable_version(ldak_path)
     runtime$ldak$observed_version <- ldak_probe$version
     runtime$ldak$version_output <- ldak_probe$output
+    runtime$ldak$version_probe_status <- ldak_probe$status
   }
   if (identical(config$hhotnet$execution_mode, "apptainer")) {
     image <- if (is.null(config$hhotnet$apptainer_image)) NA_character_ else

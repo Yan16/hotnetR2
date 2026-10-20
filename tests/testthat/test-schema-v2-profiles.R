@@ -58,6 +58,12 @@ test_that("schema v2 validates profiles, advanced settings, and minimum versions
   expect_error(read_analysis_config(file), "installed version")
   expect_true(hotnetR2:::version_meets_requirement("7.1", ">= 6.3"))
   expect_false(hotnetR2:::version_meets_requirement("6.2", ">= 6.3"))
+
+  config$requirements$hotnetR2 <- ">= 0.3.1"
+  config$execution$profiles$hpc$ldak$version_check <- "invalid"
+  yaml::write_yaml(config, file)
+  expect_error(read_analysis_config(file, profile = "hpc"),
+               "version_check must be enforce or warn")
 })
 
 test_that("execution preflight accepts newer LDAK versions with exact reporting", {
@@ -80,6 +86,41 @@ test_that("execution preflight accepts newer LDAK versions with exact reporting"
   report <- check_execution_profile(read_analysis_config(file, profile = "local"))
   expect_true(all(report$status == "OK"))
   expect_identical(report$observed[report$check == "ldak_version"], "7.1")
+})
+
+test_that("advisory LDAK version banners warn without failing preflight", {
+  testthat::skip_on_os("windows")
+  source <- system.file("extdata", "v2.yaml", package = "hotnetR2", mustWork = TRUE)
+  config <- hotnetR2:::legacy_to_schema_v2(yaml::read_yaml(source))
+  root <- withr::local_tempdir()
+  executable <- file.path(root, "ldak-test")
+  writeLines(c(
+    "#!/usr/bin/env bash",
+    "echo 'LDAK - Software for obtaining Linkage Disequilibrium Adjusted Kinships'",
+    "echo 'Version 6 - Help pages at www.dougspeed.com'"
+  ), executable)
+  Sys.chmod(executable, "0755")
+  config$execution$profiles$local$platform$os <-
+    hotnetR2:::normalise_platform_os(Sys.info()[["sysname"]])
+  config$execution$profiles$local$platform$architecture <-
+    hotnetR2:::normalise_architecture(R.version$arch)
+  config$execution$profiles$local$ldak <- list(
+    executable = executable, version = ">= 7.01", version_check = "warn"
+  )
+  file <- file.path(root, "analysis.yaml")
+  yaml::write_yaml(config, file)
+
+  report <- check_execution_profile(read_analysis_config(file, profile = "local"))
+  version_row <- report[report$check == "ldak_version", , drop = FALSE]
+  expect_identical(version_row$status, "WARN")
+  expect_identical(version_row$observed, "unavailable/unreliable")
+  expect_match(version_row$detail, "Version comparison skipped", fixed = TRUE)
+  expect_match(version_row$detail, "Version 6", fixed = TRUE)
+  expect_false(any(report$status == "FAIL"))
+
+  dispatcher <- readLines(system.file("scripts", "run_analysis.R", package = "hotnetR2"))
+  expect_true(any(grepl('status == "WARN"', dispatcher, fixed = TRUE)))
+  expect_true(any(grepl('status == "FAIL"', dispatcher, fixed = TRUE)))
 })
 
 test_that("project paths accept relative symlinks and leading-slash absolute paths", {

@@ -28,7 +28,15 @@ if (utils::compareVersion(installed_version, minimum_version) < 0L) {
 config <- hotnetR2::read_analysis_config(config_file, profile = profile)
 profile_check <- hotnetR2::check_execution_profile(config)
 print(profile_check, row.names = FALSE)
-if (!all(profile_check$status == "OK")) {
+profile_warnings <- profile_check[profile_check$status == "WARN", , drop = FALSE]
+if (nrow(profile_warnings)) {
+  warning(
+    "Execution-profile warning(s): ",
+    paste(paste0(profile_warnings$check, ": ", profile_warnings$detail), collapse = "; "),
+    call. = FALSE, immediate. = TRUE
+  )
+}
+if (any(profile_check$status == "FAIL")) {
   stop("Execution-profile preflight failed.", call. = FALSE)
 }
 inputs <- hotnetR2::check_analysis_inputs(config, write_report = FALSE)

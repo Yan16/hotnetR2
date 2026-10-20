@@ -1,3 +1,11 @@
+# hotnetR2 0.3.1
+
+- Add an explicit LDAK `version_check` policy. The HPC profile uses `warn`
+  because the Linux 7.01 binary reports the non-release banner `Version 6`;
+  launchers now warn and retain the raw banner and executable hash instead of
+  rejecting the run through an invalid minimum-version comparison. Platform,
+  permission, executable, and input failures remain fatal.
+
 # hotnetR2 0.3.0
 
 - Introduce `analysis.yaml` schema version 2 with shared scientific settings

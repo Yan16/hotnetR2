@@ -41,8 +41,10 @@ probe_executable_version <- function(executable, timeout = 10000L) {
 
 #' Check the selected execution profile on the current host
 #'
-#' Validates OS/architecture, executable permission, and minimum LDAK version.
-#' Exact observed versions remain available in the report for provenance.
+#' Validates OS/architecture, executable permission, and the configured LDAK
+#' version policy. A profile can use `version_check: warn` when its LDAK build
+#' is known to print an unreliable version banner; the raw output remains in
+#' the report and provenance, but it does not block execution.
 #'
 #' @param config Configuration returned by [read_analysis_config()].
 #' @param probe_versions Whether to execute harmless `--version` probes.
@@ -102,12 +104,24 @@ check_execution_profile <- function(config, probe_versions = TRUE) {
   requirement <- runtime$ldak$version %||% NULL
   if (!is.null(requirement) && isTRUE(probe_versions) && ldak_executable) {
     probe <- probe_executable_version(ldak)
-    ok <- !is.na(probe$version) &&
+    policy <- runtime$ldak$version_check %||% "enforce"
+    advisory <- identical(policy, "warn")
+    ok <- !advisory && !is.na(probe$version) &&
       version_meets_requirement(probe$version, requirement, "LDAK version requirement")
+    observed <- if (is.na(probe$version)) "unavailable/unreliable" else probe$version
+    detail <- if (advisory) {
+      paste0(
+        "Version comparison skipped because this profile uses version_check: warn. ",
+        "Verify the executable source and SHA-256. Raw --version output: ",
+        probe$output
+      )
+    } else {
+      probe$output
+    }
     rows[[length(rows) + 1L]] <- data.frame(
-      check = "ldak_version", status = if (ok) "OK" else "FAIL",
-      expected = requirement, observed = probe$version %||% NA_character_,
-      detail = probe$output, stringsAsFactors = FALSE
+      check = "ldak_version", status = if (advisory) "WARN" else if (ok) "OK" else "FAIL",
+      expected = requirement, observed = observed,
+      detail = detail, stringsAsFactors = FALSE
     )
   }
   dplyr::bind_rows(rows)
@@ -271,7 +285,7 @@ legacy_to_schema_v2 <- function(config) {
     score_infinity_cap = old_score_cap
   )
   config$requirements <- list(
-    hotnetR2 = ">= 0.3.0",
+    hotnetR2 = ">= 0.3.1",
     hhotnet_compat = ">= 1.0.0"
   )
 
@@ -324,7 +338,10 @@ legacy_to_schema_v2 <- function(config) {
           "gcc/11.2.0", "bedtools/2.30.0", "openmpi", "r",
           "r-bundle-bioconductor"
         )),
-        ldak = list(executable = "software/ldak7.01.linux", version = ">= 7.01"),
+        ldak = list(
+          executable = "software/ldak7.01.linux", version = ">= 7.01",
+          version_check = "warn"
+        ),
         hhotnet = list(mode = "apptainer", image = "software/hhotnet.sif"),
         resources = list(ldak_threads = ldak_threads, hhotnet_cpus = threads),
         scheduler = list(
@@ -476,7 +493,7 @@ generate_analysis_scripts <- function(config_file = "analysis.yaml", overwrite =
     stop("Profile script generation requires schema_version: 2", call. = FALSE)
   }
   analysis_root <- dirname(config_file)
-  requirement <- raw$requirements$hotnetR2 %||% ">= 0.3.0"
+  requirement <- raw$requirements$hotnetR2 %||% ">= 0.3.1"
   minimum <- version_requirement_minimum(requirement, "requirements.hotnetR2")
   dispatcher <- file.path(analysis_root, "run_analysis.R")
   source_dispatcher <- system.file("scripts", "run_analysis.R", package = "hotnetR2",

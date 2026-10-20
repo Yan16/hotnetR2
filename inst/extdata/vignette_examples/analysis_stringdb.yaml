@@ -112,7 +112,7 @@ advanced_settings:
     retain_non_enhancer_edges: yes
   score_infinity_cap: ~
 requirements:
-  hotnetR2: '>= 0.3.0'
+  hotnetR2: '>= 0.3.1'
   hhotnet_compat: '>= 1.0.0'
 execution:
   default_profile: local
@@ -147,6 +147,7 @@ execution:
       ldak:
         executable: software/ldak7.01.linux
         version: '>= 7.01'
+        version_check: warn
       hhotnet:
         mode: apptainer
         image: software/hhotnet.sif

@@ -158,7 +158,7 @@ normalize_schema_v2 <- function(config, profile = NULL) {
     c("platform", "environment", "ldak", "hhotnet", "resources", "scheduler"),
     paste0("execution.profiles.", selected$name)
   )
-  assert_known_fields(runtime$ldak, c("executable", "version"),
+  assert_known_fields(runtime$ldak, c("executable", "version", "version_check"),
                       paste0("execution.profiles.", selected$name, ".ldak"))
   assert_known_fields(
     runtime$hhotnet,
@@ -194,6 +194,10 @@ normalize_schema_v2 <- function(config, profile = NULL) {
   if (!is.null(runtime$ldak$version)) {
     version_requirement_minimum(runtime$ldak$version,
       paste0("execution.profiles.", selected$name, ".ldak.version"))
+  }
+  version_check <- runtime$ldak$version_check %||% "enforce"
+  if (!version_check %in% c("enforce", "warn")) {
+    stop("ldak.version_check must be enforce or warn", call. = FALSE)
   }
   platform <- runtime$platform %||% list()
   assert_known_fields(platform, c("os", "architecture"),
