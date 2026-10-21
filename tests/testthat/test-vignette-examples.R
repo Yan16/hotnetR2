@@ -36,7 +36,7 @@ test_that("schema-v2 dispatchers and generated launchers parse", {
   testthat::skip_on_os("windows")
   for (profile in c("local", "hpc")) {
     script <- tempfile(fileext = ".sh")
-    writeLines(hotnetR2:::launcher_lines(profile, "0.3.1"), script)
+    writeLines(hotnetR2:::launcher_lines(profile, "0.3.3"), script)
     expect_identical(system2("bash", c("-n", script)), 0L)
   }
 })

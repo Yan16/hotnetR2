@@ -112,7 +112,9 @@ check_execution_profile <- function(config, probe_versions = TRUE) {
     detail <- if (advisory) {
       paste0(
         "Version comparison skipped because this profile uses version_check: warn. ",
-        "Verify the executable source and SHA-256. Raw --version output: ",
+        "Verify the executable source and SHA-256. Probe exit status: ",
+        if (is.na(probe$status)) "unavailable" else probe$status,
+        ". Raw --version output: ",
         probe$output
       )
     } else {
@@ -285,7 +287,7 @@ legacy_to_schema_v2 <- function(config) {
     score_infinity_cap = old_score_cap
   )
   config$requirements <- list(
-    hotnetR2 = ">= 0.3.1",
+    hotnetR2 = ">= 0.3.3",
     hhotnet_compat = ">= 1.0.0"
   )
 
@@ -323,7 +325,10 @@ legacy_to_schema_v2 <- function(config) {
     profiles = list(
       local = list(
         platform = list(os = "macos", architecture = "arm64"),
-        ldak = list(executable = local_ldak, version = ">= 6.3"),
+        ldak = list(
+          executable = local_ldak, version = ">= 6.3",
+          version_check = "warn"
+        ),
         hhotnet = list(
           mode = "local_python",
           source_dir = "software/hierarchical-hotnet",
@@ -456,12 +461,12 @@ launcher_lines <- function(profile, minimum_version, modules = character()) {
       "  case \"$component\" in",
       "    ldak)",
       "      \"$r_script\" --vanilla \"$dispatcher\" \"$config_file\" \"$profile\" generate-ldak \"$minimum_version\"",
-      "      sbatch \"$analysis_root/LDAK/scripts/hpc/run_ldak_enhancer.sh\"",
-      "      sbatch \"$analysis_root/LDAK/scripts/hpc/run_ldak_promoter.sh\"",
+      "      sbatch --export=ALL,HOTNETR2_ANALYSIS_ROOT=\"$analysis_root\" \"$analysis_root/LDAK/scripts/hpc/run_ldak_enhancer.sh\"",
+      "      sbatch --export=ALL,HOTNETR2_ANALYSIS_ROOT=\"$analysis_root\" \"$analysis_root/LDAK/scripts/hpc/run_ldak_promoter.sh\"",
       "      ;;",
       "    hhotnet|hotnet)",
       "      \"$r_script\" --vanilla \"$dispatcher\" \"$config_file\" \"$profile\" generate-hotnet \"$minimum_version\"",
-      "      sbatch \"$analysis_root/hHotnet/scripts/hpc/run_hhotnet.sh\" \"${@:3}\"",
+      "      sbatch --export=ALL,HOTNETR2_ANALYSIS_ROOT=\"$analysis_root\" \"$analysis_root/hHotnet/scripts/hpc/run_hhotnet.sh\" \"${@:3}\"",
       "      ;;",
       "    *) echo 'Usage: run_analysis_hpc.sh submit {ldak|hhotnet} [network ...]' >&2; exit 2 ;;",
       "  esac",
@@ -493,7 +498,7 @@ generate_analysis_scripts <- function(config_file = "analysis.yaml", overwrite =
     stop("Profile script generation requires schema_version: 2", call. = FALSE)
   }
   analysis_root <- dirname(config_file)
-  requirement <- raw$requirements$hotnetR2 %||% ">= 0.3.1"
+  requirement <- raw$requirements$hotnetR2 %||% ">= 0.3.3"
   minimum <- version_requirement_minimum(requirement, "requirements.hotnetR2")
   dispatcher <- file.path(analysis_root, "run_analysis.R")
   source_dispatcher <- system.file("scripts", "run_analysis.R", package = "hotnetR2",

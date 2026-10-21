@@ -14,6 +14,8 @@ test_that("schema v1 migrates to equivalent local and HPC scientific settings", 
   hpc <- read_analysis_config(migrated, profile = "hpc")
   expect_identical(local$execution_profile, "local")
   expect_identical(hpc$execution_profile, "hpc")
+  expect_identical(local$selected_execution$ldak$version_check, "warn")
+  expect_identical(hpc$selected_execution$ldak$version_check, "warn")
   expect_identical(local$ldak$pruning, hpc$ldak$pruning)
   expect_identical(local$networks, hpc$networks)
   expect_identical(local$reference$ldak_exe, "analysis1/ldak6.2.mac")
@@ -34,6 +36,39 @@ test_that("schema v1 migrates to equivalent local and HPC scientific settings", 
   expect_identical(system2("bash", c("-n", shQuote(file.path(root, "run_analysis_hpc.sh")))), 0L)
   expect_identical(system2("bash", c("-n", shQuote(file.path(root, "LDAK/scripts/local/run_ldak_enhancer.sh")))), 0L)
   expect_identical(system2("bash", c("-n", shQuote(file.path(root, "hHotnet/scripts/hpc/run_hhotnet.sh")))), 0L)
+
+  hpc_launcher <- readLines(file.path(root, "run_analysis_hpc.sh"))
+  expect_length(grep("sbatch --export=ALL,HOTNETR2_ANALYSIS_ROOT=", hpc_launcher,
+                     fixed = TRUE), 3L)
+  ldak_hpc <- readLines(file.path(root, "LDAK/scripts/hpc/run_ldak_enhancer.sh"))
+  hhotnet_hpc <- readLines(file.path(root, "hHotnet/scripts/hpc/run_hhotnet.sh"))
+  expect_true(any(grepl('[[ -n "${HOTNETR2_ANALYSIS_ROOT:-}" ]]', ldak_hpc,
+                        fixed = TRUE)))
+  expect_true(any(grepl('[[ -n "${HOTNETR2_ANALYSIS_ROOT:-}" ]]', hhotnet_hpc,
+                        fixed = TRUE)))
+
+  expect_spool_root <- function(script) {
+    lines <- readLines(script)
+    start <- grep('if [[ -n "${HOTNETR2_ANALYSIS_ROOT:-}" ]]', lines,
+                  fixed = TRUE)[[1L]]
+    finish <- grep("^PROJECT_ROOT=", lines)[[1L]]
+    probe <- tempfile("slurm-spool-", fileext = ".sh")
+    writeLines(c(
+      "#!/usr/bin/env bash", "set -euo pipefail", lines[start:finish],
+      'printf "%s\\n%s\\n" "$ANALYSIS_ROOT" "$PROJECT_ROOT"'
+    ), probe)
+    result <- processx::run(
+      "bash", probe,
+      env = c(HOTNETR2_ANALYSIS_ROOT = root),
+      error_on_status = TRUE
+    )
+    expect_identical(
+      strsplit(trimws(result$stdout), "\\n", fixed = FALSE)[[1L]],
+      c(normalizePath(root), normalizePath(file.path(root, "..")))
+    )
+  }
+  expect_spool_root(file.path(root, "LDAK/scripts/hpc/run_ldak_enhancer.sh"))
+  expect_spool_root(file.path(root, "hHotnet/scripts/hpc/run_hhotnet.sh"))
 })
 
 test_that("schema v2 validates profiles, advanced settings, and minimum versions", {
@@ -59,7 +94,7 @@ test_that("schema v2 validates profiles, advanced settings, and minimum versions
   expect_true(hotnetR2:::version_meets_requirement("7.1", ">= 6.3"))
   expect_false(hotnetR2:::version_meets_requirement("6.2", ">= 6.3"))
 
-  config$requirements$hotnetR2 <- ">= 0.3.1"
+  config$requirements$hotnetR2 <- ">= 0.3.3"
   config$execution$profiles$hpc$ldak$version_check <- "invalid"
   yaml::write_yaml(config, file)
   expect_error(read_analysis_config(file, profile = "hpc"),
@@ -80,6 +115,7 @@ test_that("execution preflight accepts newer LDAK versions with exact reporting"
     hotnetR2:::normalise_architecture(R.version$arch)
   config$execution$profiles$local$ldak$executable <- executable
   config$execution$profiles$local$ldak$version <- ">= 6.3"
+  config$execution$profiles$local$ldak$version_check <- "enforce"
   file <- file.path(root, "analysis.yaml")
   yaml::write_yaml(config, file)
 
@@ -88,7 +124,7 @@ test_that("execution preflight accepts newer LDAK versions with exact reporting"
   expect_identical(report$observed[report$check == "ldak_version"], "7.1")
 })
 
-test_that("advisory LDAK version banners warn without failing preflight", {
+test_that("advisory LDAK version banners and probe errors do not fail preflight", {
   testthat::skip_on_os("windows")
   source <- system.file("extdata", "v2.yaml", package = "hotnetR2", mustWork = TRUE)
   config <- hotnetR2:::legacy_to_schema_v2(yaml::read_yaml(source))
@@ -97,7 +133,9 @@ test_that("advisory LDAK version banners warn without failing preflight", {
   writeLines(c(
     "#!/usr/bin/env bash",
     "echo 'LDAK - Software for obtaining Linkage Disequilibrium Adjusted Kinships'",
-    "echo 'Version 6 - Help pages at www.dougspeed.com'"
+    "echo 'Version 6 - Help pages at www.dougspeed.com'",
+    "echo 'Error, there must be an even number of arguments (not 1)'",
+    "exit 1"
   ), executable)
   Sys.chmod(executable, "0755")
   config$execution$profiles$local$platform$os <-
@@ -115,7 +153,9 @@ test_that("advisory LDAK version banners warn without failing preflight", {
   expect_identical(version_row$status, "WARN")
   expect_identical(version_row$observed, "unavailable/unreliable")
   expect_match(version_row$detail, "Version comparison skipped", fixed = TRUE)
+  expect_match(version_row$detail, "Probe exit status: 1", fixed = TRUE)
   expect_match(version_row$detail, "Version 6", fixed = TRUE)
+  expect_match(version_row$detail, "even number of arguments", fixed = TRUE)
   expect_false(any(report$status == "FAIL"))
 
   dispatcher <- readLines(system.file("scripts", "run_analysis.R", package = "hotnetR2"))

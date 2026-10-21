@@ -53,7 +53,7 @@ for complete scientific sections.
 
 ```yaml
 requirements:
-  hotnetR2: ">= 0.3.1"
+  hotnetR2: ">= 0.3.3"
   hhotnet_compat: ">= 1.0.0"
 
 execution:
@@ -64,6 +64,7 @@ execution:
       ldak:
         executable: software/ldak6.3.mac
         version: ">= 6.3"
+        version_check: warn
       hhotnet:
         mode: local_python
         source_dir: software/hierarchical-hotnet
@@ -93,14 +94,16 @@ execution:
         qos: general-compute
 ```
 
-Version requirements normally use minimum comparisons. LDAK 7.01 for Linux is
-an exception because its `--version` banner reports only `Version 6` and cannot
-verify the configured 7.01 release. The HPC profile therefore uses
+Version requirements normally use minimum comparisons. Both current LDAK
+builds are exceptions: macOS 6.3 and Linux 7.01 each print only `Version 6`,
+and the macOS binary additionally rejects the unpaired `--version` argument
+after printing its banner. The local and HPC profiles therefore use
 `version_check: warn`: preflight prints a warning and preserves the raw banner,
-configured requirement, executable path, and SHA-256 rather than failing an
-invalid comparison. Executable existence, permission, platform, and input
-checks remain mandatory. Profiles with `version_check: enforce` still require
-an observed version greater than or equal to the configured minimum.
+probe exit status, configured requirement, executable path, and SHA-256 rather
+than failing an invalid comparison. Executable existence, permission,
+platform, and input checks remain mandatory. A profile using a binary with a
+reliable version command can set `version_check: enforce` and require an
+observed version greater than or equal to the configured minimum.
 
 ## Optional and advanced settings
 

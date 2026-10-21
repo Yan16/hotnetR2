@@ -123,7 +123,7 @@ advanced_settings:
     retain_non_enhancer_edges: yes
   score_infinity_cap: ~
 requirements:
-  hotnetR2: '>= 0.3.1'
+  hotnetR2: '>= 0.3.3'
   hhotnet_compat: '>= 1.0.0'
 execution:
   default_profile: local
@@ -135,6 +135,7 @@ execution:
       ldak:
         executable: software/ldak6.3.mac
         version: '>= 6.3'
+        version_check: warn
       hhotnet:
         mode: local_python
         source_dir: software/hierarchical-hotnet

@@ -1,3 +1,18 @@
+# hotnetR2 0.3.3
+
+- Make the local macOS LDAK version probe advisory as well. LDAK 6.3 prints
+  only `Version 6` and then rejects the unpaired `--version` argument, so it
+  cannot verify `>= 6.3`. Both current LDAK profiles now warn while preserving
+  the raw output, exit status, configured release, executable path, and hash.
+
+# hotnetR2 0.3.2
+
+- Fix HPC job path resolution under Slurm. `sbatch` executes a spool copy of a
+  submitted script, so `BASH_SOURCE[0]` cannot locate the analysis directory.
+  The generated HPC launcher now exports the resolved analysis root to both
+  LDAK jobs and the h-HotNet job; direct script execution retains its
+  script-relative fallback.
+
 # hotnetR2 0.3.1
 
 - Add an explicit LDAK `version_check` policy. The HPC profile uses `warn`
