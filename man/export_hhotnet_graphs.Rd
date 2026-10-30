@@ -27,5 +27,8 @@ A data frame listing written exports.
 }
 \description{
 Produces a complete node TSV, complete edge TSV, GraphML, Cytoscape.js JSON,
-and CX2. CX2 preserves every column of the corresponding exported edge TSV.
+and CX2. GraphML records the analysis as its collection name and the selected
+network as its network name. CX2 preserves every column of the corresponding
+exported edge TSV and uses editable visual mappings rather than node or edge
+bypasses.
 }

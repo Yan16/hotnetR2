@@ -19,5 +19,6 @@ A validation table, written below \code{hHotnet/summary}.
 }
 \description{
 Checks TSV endpoint integrity, GraphML readability, Cytoscape.js element
-counts, and CX2 structural IDs and edge-attribute declarations.
+counts, serialized collection/network identity, and CX2 structural IDs and
+edge-attribute declarations.
 }

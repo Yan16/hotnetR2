@@ -62,10 +62,10 @@ test_that("schema v1 migrates to equivalent local and HPC scientific settings", 
       env = c(HOTNETR2_ANALYSIS_ROOT = root),
       error_on_status = TRUE
     )
-    expect_identical(
-      strsplit(trimws(result$stdout), "\\n", fixed = FALSE)[[1L]],
-      c(normalizePath(root), normalizePath(file.path(root, "..")))
-    )
+    actual <- strsplit(trimws(result$stdout), "\\n", fixed = FALSE)[[1L]]
+    actual <- vapply(actual, normalizePath, character(1), mustWork = TRUE)
+    expect_identical(unname(actual),
+                     c(normalizePath(root), normalizePath(file.path(root, ".."))))
   }
   expect_spool_root(file.path(root, "LDAK/scripts/hpc/run_ldak_enhancer.sh"))
   expect_spool_root(file.path(root, "hHotnet/scripts/hpc/run_hhotnet.sh"))
@@ -94,7 +94,7 @@ test_that("schema v2 validates profiles, advanced settings, and minimum versions
   expect_true(hotnetR2:::version_meets_requirement("7.1", ">= 6.3"))
   expect_false(hotnetR2:::version_meets_requirement("6.2", ">= 6.3"))
 
-  config$requirements$hotnetR2 <- ">= 0.3.3"
+  config$requirements$hotnetR2 <- ">= 0.3.4"
   config$execution$profiles$hpc$ldak$version_check <- "invalid"
   yaml::write_yaml(config, file)
   expect_error(read_analysis_config(file, profile = "hpc"),

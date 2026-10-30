@@ -116,6 +116,10 @@ output-local; compare exact membership, not cluster number, across analyses.
 
 hotnetR2 fingerprints content used by package-owned stages. Changed or unstamped
 result directories can be moved to `superseded-*` rather than overwritten.
+Generated local/HPC permutation jobs additionally move a network's existing
+results to `superseded-hhotnet-*` before regenerating any upstream artifact.
+They rerun final hierarchy processing when an upstream artifact was regenerated
+or is newer than the result, and report unchanged complete results as reused.
 Runtime identity still matters: record the HHN commit, Python packages, compiled
 extension, platform and seeds. Existing similarity matrices are not, by
 themselves, proof that they match a changed network.

@@ -1,3 +1,33 @@
+# hotnetR2 0.3.6
+
+- Correct CX2 network identity so its reserved `name` is the selected network
+  (for example, `network_4`), while `collection_name` is the analysis name.
+  GraphML and CX2 now expose the same explicit collection/network metadata.
+- Add `import_hhotnet_cytoscape()` to import either format through Cytoscape
+  Automation and assign different root-collection and network names. This is
+  required because direct single-network file import initializes both names
+  from the network name.
+- Validate collection/network identity in both GraphML and CX2 exports.
+
+# hotnetR2 0.3.5
+
+- Name GraphML exports with the analysis name as `collection_name` and the
+  selected network (for example, `network_4`) as both `network_name` and the
+  graph `name` used by Cytoscape.
+- Replace CX2 node and edge visual bypasses with editable passthrough mappings
+  for labels, shapes, colors, node sizes, edge widths, and edge line styles.
+
+# hotnetR2 0.3.4
+
+- Make generated local/HPC h-HotNet runners invalidate final results whenever
+  they regenerate a similarity matrix, observed scores, permutation bins,
+  permuted scores, or hierarchies. Existing per-network results are moved into
+  a recoverable `superseded-hhotnet-*` directory before replacement.
+- Detect results that predate upstream artifacts, require both the cluster TSV
+  and size PDF for reuse, and record `archived`, `complete`, or `reused` status
+  explicitly. Byte-identical observed scores are no longer recopied merely by
+  restarting a job.
+
 # hotnetR2 0.3.3
 
 - Make the local macOS LDAK version probe advisory as well. LDAK 6.3 prints

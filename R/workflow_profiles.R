@@ -287,7 +287,7 @@ legacy_to_schema_v2 <- function(config) {
     score_infinity_cap = old_score_cap
   )
   config$requirements <- list(
-    hotnetR2 = ">= 0.3.3",
+    hotnetR2 = ">= 0.3.4",
     hhotnet_compat = ">= 1.0.0"
   )
 
@@ -498,7 +498,7 @@ generate_analysis_scripts <- function(config_file = "analysis.yaml", overwrite =
     stop("Profile script generation requires schema_version: 2", call. = FALSE)
   }
   analysis_root <- dirname(config_file)
-  requirement <- raw$requirements$hotnetR2 %||% ">= 0.3.3"
+  requirement <- raw$requirements$hotnetR2 %||% ">= 0.3.4"
   minimum <- version_requirement_minimum(requirement, "requirements.hotnetR2")
   dispatcher <- file.path(analysis_root, "run_analysis.R")
   source_dispatcher <- system.file("scripts", "run_analysis.R", package = "hotnetR2",

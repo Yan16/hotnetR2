@@ -442,6 +442,12 @@ hhotnet_igraph_from_tables <- function(nodes, edges) {
   igraph::graph_from_data_frame(edges[, edge_columns, drop = FALSE], directed = FALSE, vertices = nodes)
 }
 
+name_hhotnet_graph <- function(graph, analysis, network) {
+  graph <- igraph::set_graph_attr(graph, "name", network)
+  graph <- igraph::set_graph_attr(graph, "collection_name", analysis)
+  igraph::set_graph_attr(graph, "network_name", network)
+}
+
 row_as_json_list <- function(data, index) {
   values <- as.list(data[index, , drop = FALSE])
   lapply(values, function(value) unname(value[[1]]))
@@ -456,6 +462,10 @@ cx2_type <- function(x) {
 
 cx2_attribute_declarations <- function(data) {
   stats::setNames(lapply(data, function(column) list(d = cx2_type(column))), names(data))
+}
+
+cx2_passthrough_mapping <- function(attribute, type) {
+  list(type = "PASSTHROUGH", definition = list(attribute = attribute, type = type))
 }
 
 write_hhotnet_cytoscape_json <- function(nodes, edges, file, analysis, network) {
@@ -493,7 +503,6 @@ write_hhotnet_cytoscape_json <- function(nodes, edges, file, analysis, network) 
 }
 
 write_hhotnet_cx2 <- function(nodes, edges, file, analysis, network, component_filter) {
-  network_name <- tools::file_path_sans_ext(basename(file))
   node_ids <- stats::setNames(seq_len(nrow(nodes)) - 1L, nodes$name)
   if (anyDuplicated(names(node_ids))) stop("CX2 node names must be unique", call. = FALSE)
   cx_nodes <- lapply(seq_len(nrow(nodes)), function(i) {
@@ -507,30 +516,33 @@ write_hhotnet_cx2 <- function(nodes, edges, file, analysis, network, component_f
       v = row_as_json_list(edges, i)
     )
   })
-  node_bypasses <- lapply(seq_len(nrow(nodes)), function(i) {
-    list(id = unname(node_ids[[nodes$name[[i]]]]), v = list(
-      NODE_SHAPE = nodes$cy_shape[[i]], NODE_BACKGROUND_COLOR = nodes$fill_color[[i]],
-      NODE_WIDTH = nodes$node_size[[i]], NODE_HEIGHT = nodes$node_size[[i]]
-    ))
-  })
-  edge_bypasses <- lapply(seq_len(nrow(edges)), function(i) {
-    list(id = i - 1L, v = list(
-      EDGE_LINE_COLOR = edges$edge_color[[i]], EDGE_WIDTH = edges$edge_width[[i]],
-      EDGE_LINE_STYLE = edges$edge_line_style[[i]]
-    ))
-  })
+  node_mappings <- list(
+    NODE_LABEL = cx2_passthrough_mapping("label", "string"),
+    NODE_SHAPE = cx2_passthrough_mapping("cy_shape", "string"),
+    NODE_BACKGROUND_COLOR = cx2_passthrough_mapping("fill_color", "string"),
+    NODE_WIDTH = cx2_passthrough_mapping("node_size", "double"),
+    NODE_HEIGHT = cx2_passthrough_mapping("node_size", "double")
+  )
+  edge_mappings <- list(
+    EDGE_LINE_COLOR = cx2_passthrough_mapping("edge_color", "string"),
+    EDGE_WIDTH = cx2_passthrough_mapping("edge_width", "double"),
+    EDGE_LINE_STYLE = cx2_passthrough_mapping("edge_line_style", "string")
+  )
   cx2 <- list(
     list(CXVersion = "2.0", hasFragments = FALSE),
     list(attributeDeclarations = list(list(
       networkAttributes = list(
-        name = list(d = "string"), analysis = list(d = "string"), network = list(d = "string"),
+        name = list(d = "string"), collection_name = list(d = "string"),
+        network_name = list(d = "string"), analysis = list(d = "string"),
+        network = list(d = "string"),
         component_filter = list(d = "boolean")
       ),
       nodes = cx2_attribute_declarations(nodes),
       edges = cx2_attribute_declarations(edges)
     ))),
     list(networkAttributes = list(list(
-      name = network_name, analysis = analysis, network = network,
+      name = network, collection_name = analysis, network_name = network,
+      analysis = analysis, network = network,
       component_filter = isTRUE(component_filter)
     ))),
     list(nodes = cx_nodes),
@@ -541,12 +553,9 @@ write_hhotnet_cx2 <- function(nodes, edges, file, analysis, network, component_f
         node = list(NODE_SHAPE = "ELLIPSE", NODE_BACKGROUND_COLOR = "#D3D3D3", NODE_WIDTH = 30, NODE_HEIGHT = 30),
         edge = list(EDGE_WIDTH = 1, EDGE_LINE_COLOR = "#D3D3D3")
       ),
-      nodeMapping = list(NODE_LABEL = list(
-        type = "PASSTHROUGH", definition = list(attribute = "label", type = "string")
-      ))
+      nodeMapping = node_mappings,
+      edgeMapping = edge_mappings
     ))),
-    list(nodeBypasses = node_bypasses),
-    list(edgeBypasses = edge_bypasses),
     list(visualEditorProperties = list(list(nodeSizeLocked = TRUE))),
     list(status = list(list(success = TRUE, error = "")))
   )
@@ -561,7 +570,10 @@ hhotnet_export_prefix <- function(config, network, filter_components) {
 #' Export completed h-HotNet input graphs and attributes
 #'
 #' Produces a complete node TSV, complete edge TSV, GraphML, Cytoscape.js JSON,
-#' and CX2. CX2 preserves every column of the corresponding exported edge TSV.
+#' and CX2. GraphML records the analysis as its collection name and the selected
+#' network as its network name. CX2 preserves every column of the corresponding
+#' exported edge TSV and uses editable visual mappings rather than node or edge
+#' bypasses.
 #'
 #' @param config A configuration returned by [read_analysis_config()].
 #' @param networks `NULL` for the configured default, one network name, or a
@@ -597,10 +609,12 @@ export_hhotnet_graphs <- function(config, networks = NULL, filter_components = T
     readr::write_tsv(selected$nodes, node_file, na = "NA")
     readr::write_tsv(selected$edges, edge_file, na = "NA")
     graph <- hhotnet_igraph_from_tables(selected$nodes, selected$edges)
+    graph <- name_hhotnet_graph(graph, config$analysis$name, network)
     igraph::write_graph(graph, graphml_file, format = "graphml")
     write_hhotnet_cytoscape_json(selected$nodes, selected$edges, cyjs_file, config$analysis$name, network)
     write_hhotnet_cx2(selected$nodes, selected$edges, cx2_file, config$analysis$name, network, filter_components)
     data.frame(
+      collection_name = config$analysis$name, network_name = network,
       network = network, filter_components = isTRUE(filter_components), nodes = nrow(selected$nodes), edges = nrow(selected$edges),
       node_file = node_file, edge_file = edge_file, graphml_file = graphml_file,
       cytoscape_json_file = cyjs_file, cx2_file = cx2_file, stringsAsFactors = FALSE
@@ -612,6 +626,116 @@ export_hhotnet_graphs <- function(config, networks = NULL, filter_components = T
   manifest
 }
 
+cyrest_request <- function(base.url, path, method = "GET", body = NULL) {
+  url <- paste0(sub("/+$", "", base.url), "/", sub("^/+", "", path))
+  handle <- curl::new_handle()
+  curl::handle_setheaders(handle, Accept = "application/json", `Content-Type` = "application/json")
+  if (!identical(method, "GET")) {
+    payload <- if (is.null(body)) "{}" else jsonlite::toJSON(body, auto_unbox = TRUE, null = "null")
+    curl::handle_setopt(handle, customrequest = method, postfields = payload)
+  }
+  response <- tryCatch(
+    curl::curl_fetch_memory(url, handle = handle),
+    error = function(error) {
+      stop("Could not connect to Cytoscape CyREST at ", base.url,
+           ". Confirm that Cytoscape Desktop is running. ", conditionMessage(error), call. = FALSE)
+    }
+  )
+  content <- rawToChar(response$content)
+  if (response$status_code < 200L || response$status_code >= 300L) {
+    stop("Cytoscape CyREST request failed (HTTP ", response$status_code, ") for ", path,
+         if (nzchar(content)) paste0(": ", content) else "", call. = FALSE)
+  }
+  if (!nzchar(content)) return(invisible(NULL))
+  jsonlite::fromJSON(content, simplifyVector = TRUE)
+}
+
+cyrest_command <- function(base.url, namespace, command, arguments) {
+  path <- paste0("commands/", utils::URLencode(namespace, reserved = TRUE), "/",
+                 utils::URLencode(command, reserved = TRUE))
+  cyrest_request(base.url, path, method = "POST", body = arguments)
+}
+
+cyrest_import_named_network <- function(file, collection_name, network_name, base.url) {
+  cyrest_request(base.url, "version")
+  cyrest_command(base.url, "network", "load file", list(file = file))
+  current <- cyrest_command(
+    base.url, "network", "get attribute",
+    list(network = "current", namespace = "default", columnList = "SUID")
+  )
+  network_suid <- suppressWarnings(as.numeric(unlist(current$data)[[1L]]))
+  if (!is.finite(network_suid)) {
+    stop("Cytoscape did not return the imported network SUID", call. = FALSE)
+  }
+  cyrest_command(
+    base.url, "network", "rename",
+    list(name = network_name, sourceNetwork = paste0("SUID:", network_suid))
+  )
+  collection <- cyrest_request(
+    base.url, paste0("collections?subsuid=", utils::URLencode(network_suid, reserved = TRUE))
+  )
+  collection_suid <- suppressWarnings(as.numeric(unlist(collection)[[1L]]))
+  if (!is.finite(collection_suid)) {
+    stop("Cytoscape did not return the imported network collection SUID", call. = FALSE)
+  }
+  cyrest_request(
+    base.url, paste0("collections/", collection_suid, "/tables/default"), method = "PUT",
+    body = list(key = "SUID", data = list(list(SUID = collection_suid, name = collection_name)))
+  )
+  list(network_suid = network_suid, collection_suid = collection_suid)
+}
+
+#' Import an exported h-HotNet graph into Cytoscape Desktop
+#'
+#' GraphML and CX2 each describe one network, not a Cytoscape root collection
+#' plus a separately named subnetwork. Consequently, importing either file
+#' directly makes Cytoscape initialize the collection from the network name.
+#' This helper imports the selected file through Cytoscape Automation, then
+#' explicitly assigns the analysis name to the root collection and the
+#' configured network name to the imported network.
+#'
+#' Cytoscape Desktop must be running with its CyREST interface available.
+#'
+#' @param config A configuration returned by [read_analysis_config()].
+#' @param network Exactly one configured network name.
+#' @param format Export format to import: `"cx2"` or `"graphml"`.
+#' @param filter_components Match the setting used when graph exports were written.
+#' @param base.url Cytoscape CyREST base URL.
+#' @return Invisibly, a one-row data frame containing the Cytoscape network and
+#'   collection identifiers and their assigned names.
+#' @export
+import_hhotnet_cytoscape <- function(config, network, format = c("cx2", "graphml"),
+                                     filter_components = TRUE,
+                                     base.url = "http://localhost:1234/v1") {
+  format <- match.arg(format)
+  requested <- resolve_networks(config, network)
+  if (length(requested) != 1L) {
+    stop("network must select exactly one configured network", call. = FALSE)
+  }
+  network <- requested[[1L]]
+  prefix <- hhotnet_export_prefix(config, network, filter_components)
+  extension <- if (identical(format, "cx2")) ".cx2" else ".graphml"
+  file <- file.path(analysis_paths(config)[["hhotnet_cytoscape"]], paste0(prefix, extension))
+  if (!file.exists(file)) {
+    stop("Missing h-HotNet export: ", file, ". Run the exports step first.", call. = FALSE)
+  }
+  file <- normalizePath(file, mustWork = TRUE)
+  imported <- cyrest_import_named_network(
+    file = file, collection_name = config$analysis$name,
+    network_name = network, base.url = base.url
+  )
+
+  invisible(data.frame(
+    collection_name = config$analysis$name,
+    network_name = network,
+    collection_suid = as.character(imported$collection_suid),
+    network_suid = as.character(imported$network_suid),
+    format = format,
+    file = file,
+    stringsAsFactors = FALSE
+  ))
+}
+
 cx2_aspect <- function(cx2, name) {
   index <- which(vapply(cx2, function(aspect) name %in% names(aspect), logical(1)))
   if (!length(index)) return(NULL)
@@ -621,7 +745,8 @@ cx2_aspect <- function(cx2, name) {
 #' Validate Phase 8 graph exports
 #'
 #' Checks TSV endpoint integrity, GraphML readability, Cytoscape.js element
-#' counts, and CX2 structural IDs and edge-attribute declarations.
+#' counts, serialized collection/network identity, and CX2 structural IDs and
+#' edge-attribute declarations.
 #'
 #' @param config A configuration returned by [read_analysis_config()].
 #' @param networks `NULL` for the configured default, one network name, or a
@@ -644,6 +769,7 @@ validate_hhotnet_exports <- function(config, networks = NULL, filter_components 
     if (!files_exist) {
       return(data.frame(network = network, files_exist = FALSE, unique_node_names = FALSE,
                         valid_endpoints = FALSE, graphml_readable = FALSE,
+                        graphml_identity = FALSE, cx2_identity = FALSE,
                         cyjs_counts_match = FALSE, cx2_counts_match = FALSE,
                         cx2_valid_endpoints = FALSE, cx2_all_edge_attributes = FALSE,
                         valid = FALSE, stringsAsFactors = FALSE))
@@ -653,10 +779,20 @@ validate_hhotnet_exports <- function(config, networks = NULL, filter_components 
     edges <- readr::read_tsv(edge_file, col_types = text_columns, show_col_types = FALSE, progress = FALSE)
     unique_node_names <- "name" %in% names(nodes) && !anyDuplicated(nodes$name) && all(nzchar(nodes$name))
     valid_endpoints <- all(c("from", "to") %in% names(edges)) && all(edges$from %in% nodes$name) && all(edges$to %in% nodes$name)
-    graphml_readable <- !inherits(try(igraph::read_graph(graphml_file, format = "graphml"), silent = TRUE), "try-error")
+    graph <- try(igraph::read_graph(graphml_file, format = "graphml"), silent = TRUE)
+    graphml_readable <- !inherits(graph, "try-error")
+    graphml_identity <- graphml_readable &&
+      identical(igraph::graph_attr(graph, "collection_name"), config$analysis$name) &&
+      identical(igraph::graph_attr(graph, "network_name"), network) &&
+      identical(igraph::graph_attr(graph, "name"), network)
     cyjs <- jsonlite::read_json(cyjs_file, simplifyVector = FALSE)
     cyjs_counts_match <- !is.null(cyjs$elements) && length(cyjs$elements$nodes) == nrow(nodes) && length(cyjs$elements$edges) == nrow(edges)
     cx2 <- jsonlite::read_json(cx2_file, simplifyVector = FALSE)
+    cx2_network_attributes <- cx2_aspect(cx2, "networkAttributes")
+    cx2_identity <- length(cx2_network_attributes) == 1L &&
+      identical(cx2_network_attributes[[1L]]$collection_name, config$analysis$name) &&
+      identical(cx2_network_attributes[[1L]]$network_name, network) &&
+      identical(cx2_network_attributes[[1L]]$name, network)
     cx_nodes <- cx2_aspect(cx2, "nodes")
     cx_edges <- cx2_aspect(cx2, "edges")
     declarations <- cx2_aspect(cx2, "attributeDeclarations")
@@ -670,9 +806,12 @@ validate_hhotnet_exports <- function(config, networks = NULL, filter_components 
       all(vapply(cx_edges, function(edge) all(names(edges) %in% names(edge$v)), logical(1)))
     } else TRUE
     cx2_all_edge_attributes <- all(names(edges) %in% declared_edges) && cx2_edge_values_complete
-    valid <- files_exist && unique_node_names && valid_endpoints && graphml_readable && cyjs_counts_match && cx2_counts_match && cx2_valid_endpoints && cx2_all_edge_attributes
+    valid <- files_exist && unique_node_names && valid_endpoints && graphml_readable &&
+      graphml_identity && cx2_identity && cyjs_counts_match && cx2_counts_match &&
+      cx2_valid_endpoints && cx2_all_edge_attributes
     data.frame(network = network, files_exist = files_exist, unique_node_names = unique_node_names,
                valid_endpoints = valid_endpoints, graphml_readable = graphml_readable,
+               graphml_identity = graphml_identity, cx2_identity = cx2_identity,
                cyjs_counts_match = cyjs_counts_match, cx2_counts_match = cx2_counts_match,
                cx2_valid_endpoints = cx2_valid_endpoints, cx2_all_edge_attributes = cx2_all_edge_attributes,
                valid = valid, stringsAsFactors = FALSE)
